@@ -1,0 +1,9 @@
+This repo contains things not interesting or complete enough to have their own.
+
+   * intset -- compress a stream of integers
+
+   * lz -- lempel-ziv compression
+
+   * threadtree -- a threaded binary-tree
+
+
