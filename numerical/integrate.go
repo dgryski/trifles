@@ -57,7 +57,7 @@ func trapezoid_iterative(start float64, end float64, steps int, fp func(float64)
 func trapezoid_iterative_helper(start float64, end float64, steps int, fp func(float64) float64, old_estimate float64) float64 {
 
 	if steps == 1 {
-		return (f(start) + f(end)) * (end - start) / 2.0
+		return (fp(start) + fp(end)) * (end - start) / 2.0
 	}
 
 	n := 1 << uint(steps-2)         // number of new points
@@ -66,7 +66,7 @@ func trapezoid_iterative_helper(start float64, end float64, steps int, fp func(f
 	total := 0.0
 
 	for i := 0; i < n; i++ {
-		total += f(x + float64(i)*h)
+		total += fp(x + float64(i)*h)
 	}
 
 	return (old_estimate + h*total) / 2.0
