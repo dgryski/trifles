@@ -9,3 +9,5 @@ This repo contains things not interesting or complete enough to have their own.
    * numerical -- numerical integration and root finding
 
    * maze -- maze generation stuff
+
+   * hist -- simple command-line histogramming tool
