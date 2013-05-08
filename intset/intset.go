@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-const SIZE = 1000
+const SIZE = 1024
 
 func vint_encode(enc []uint8, n uint) []uint8 {
 
