@@ -291,7 +291,7 @@ func (n *Node) walkLinkReverse(f func(*Node)) {
 	}
 }
 
-// fisher-yates 
+// fisher-yates
 func shuffle(array []int) {
 
 	for i := len(array) - 1; i >= 1; i-- {

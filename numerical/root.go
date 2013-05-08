@@ -139,7 +139,7 @@ func ridder(f func(x float64) float64, a, b float64) (r float64) {
 
 	}
 
-        // too many iterations
+	// too many iterations
 	return 0
 
 }
