@@ -253,11 +253,9 @@ func main() {
 	enc = riceEncodeArray(numbers[:])
 	dec = riceDecodeArray(SIZE, enc)
 	fmt.Println("t = ", time.Since(t0))
+	compare(dec, numbers[:])
 
 	fmt.Println("rice")
 	fmt.Println("size of original    : ", 4*SIZE)
 	fmt.Println("size of encoded data: ", len(enc))
-
-	compare(dec, numbers[:])
-
 }
