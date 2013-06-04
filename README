@@ -13,3 +13,5 @@ This repo contains things not interesting or complete enough to have their own.
    * hist -- simple command-line histogramming tool
 
    * simhash -- trivial simhash implementation
+
+   * wscat -- trivial websocket netcat
