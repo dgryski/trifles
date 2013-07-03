@@ -15,3 +15,5 @@ This repo contains things not interesting or complete enough to have their own.
    * simhash -- trivial simhash implementation
 
    * wscat -- trivial websocket netcat
+
+   * servedir -- trivial http fileserver
