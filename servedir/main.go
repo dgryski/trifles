@@ -14,12 +14,12 @@ func main() {
 
 	log.Println("Serving files in the current directory on port", *port)
 
-        fserver := http.FileServer(http.Dir("."))
+	fserver := http.FileServer(http.Dir("."))
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-            log.Println(r.URL)
-            fserver.ServeHTTP(w, r)
-        })
+		log.Println(r.RemoteAddr, r.URL)
+		fserver.ServeHTTP(w, r)
+	})
 
 	portStr := fmt.Sprintf(":%d", *port)
 	err := http.ListenAndServe(portStr, nil)
