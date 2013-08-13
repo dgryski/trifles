@@ -17,3 +17,5 @@ This repo contains things not interesting or complete enough to have their own.
    * wscat -- trivial websocket netcat
 
    * servedir -- trivial http fileserver
+
+   * rndtxt -- generate random text strings
