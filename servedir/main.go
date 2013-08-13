@@ -9,6 +9,7 @@ import (
 
 func main() {
 	port := flag.Int("p", 8080, "port to listen on")
+	setNoCache := flag.Bool("no-cache", false, "set no-cache header on requests")
 
 	flag.Parse()
 
@@ -18,6 +19,9 @@ func main() {
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		log.Println(r.RemoteAddr, r.URL)
+		if *setNoCache {
+			w.Header().Set("Cache-Control", "no-cache")
+		}
 		fserver.ServeHTTP(w, r)
 	})
 
