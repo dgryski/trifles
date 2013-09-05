@@ -12,8 +12,8 @@ import (
 )
 
 type Config struct {
-	Pushbullet PBConfig
 	Nma        NMAConfig
+	Pushbullet PBConfig
 	Pushover   POConfig
 }
 
@@ -65,35 +65,52 @@ func main() {
 	title := "Test Message"
 	body := "Test Body Hello World"
 
-	for _, u := range conf.Nma.APIKeys {
-		c := nma.New(u)
-		n := &nma.Notification{Event: title, Description: body}
-		err := c.Notify(n)
-		if err != nil {
-			log.Println("Unable to notify nma:", u, ":", err)
-		}
-	}
+	done := make(chan struct{})
 
-	for _, u := range conf.Pushbullet.Users {
-		c := pushbullet.New(u.APIKey)
-		for _, d := range u.Devices {
-			err := c.PushNote(d, title, body)
+	go func() {
+
+		for _, u := range conf.Nma.APIKeys {
+			c := nma.New(u)
+			n := &nma.Notification{Application: "mpush", Event: title, Description: body}
+			err := c.Notify(n)
 			if err != nil {
-				log.Println("Unable to notify pushbullet:", u.APIKey, "/", d, ":", err)
+				log.Println("Unable to notify nma:", u, ":", err)
 			}
 		}
-	}
 
-	for _, u := range conf.Pushover.Users {
-		c := pushover.New(u, conf.Pushover.APIKey)
-		n := pushover.Notification{
-			Title:     title,
-			Message:   body,
-			Timestamp: time.Now(),
+		done <- struct{}{}
+	}()
+
+	go func() {
+		for _, u := range conf.Pushbullet.Users {
+			c := pushbullet.New(u.APIKey)
+			for _, d := range u.Devices {
+				err := c.PushNote(d, title, body)
+				if err != nil {
+					log.Println("Unable to notify pushbullet:", u.APIKey, "/", d, ":", err)
+				}
+			}
 		}
-		_, err := c.Notify(n)
-		if err != nil {
-			log.Println("Unable to notify pushover:", u, ":", err)
+		done <- struct{}{}
+	}()
+
+	go func() {
+		for _, u := range conf.Pushover.Users {
+			c := pushover.New(u, conf.Pushover.APIKey)
+			n := pushover.Notification{
+				Title:     title,
+				Message:   body,
+				Timestamp: time.Now(),
+			}
+			_, err := c.Notify(n)
+			if err != nil {
+				log.Println("Unable to notify pushover:", u, ":", err)
+			}
 		}
+		done <- struct{}{}
+	}()
+
+	for i := 0; i < 3; i++ {
+		<-done
 	}
 }
