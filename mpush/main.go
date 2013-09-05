@@ -12,9 +12,9 @@ import (
 )
 
 type Config struct {
-	pb    PBConfig
-	nma   NMAConfig
-	pover POConfig
+	Pushbullet PBConfig
+	Nma        NMAConfig
+	Pushover   POConfig
 }
 
 type PBUser struct {
@@ -23,7 +23,7 @@ type PBUser struct {
 }
 
 type PBConfig struct {
-	Users []PBUser
+	Users []PBUser `json:"users"`
 }
 
 type NMAConfig struct {
@@ -32,7 +32,7 @@ type NMAConfig struct {
 
 type POConfig struct {
 	APIKey string   `json:"apikey"`
-	Users  []string `json:"user"`
+	Users  []string `json:"users"`
 }
 
 func readConfig() (Config, error) {
@@ -50,6 +50,7 @@ func readConfig() (Config, error) {
 	if err = dec.Decode(&cfg); err != nil {
 		return Config{}, err
 	}
+
 	return cfg, nil
 }
 
@@ -64,7 +65,7 @@ func main() {
 	title := "Test Message"
 	body := "Test Body Hello World"
 
-	for _, u := range conf.nma.APIKeys {
+	for _, u := range conf.Nma.APIKeys {
 		c := nma.New(u)
 		n := &nma.Notification{}
 		err := c.Notify(n)
@@ -73,7 +74,7 @@ func main() {
 		}
 	}
 
-	for _, u := range conf.pb.Users {
+	for _, u := range conf.Pushbullet.Users {
 		c := pushbullet.New(u.APIKey)
 		for _, d := range u.Devices {
 			err := c.PushNote(d, title, body)
@@ -83,8 +84,8 @@ func main() {
 		}
 	}
 
-	for _, u := range conf.pover.Users {
-		c := pushover.New(u, conf.pover.APIKey)
+	for _, u := range conf.Pushover.Users {
+		c := pushover.New(u, conf.Pushover.APIKey)
 		n := pushover.Notification{
 			Title:     title,
 			Message:   body,
