@@ -67,7 +67,7 @@ func main() {
 
 	for _, u := range conf.Nma.APIKeys {
 		c := nma.New(u)
-		n := &nma.Notification{}
+		n := &nma.Notification{Event: title, Description: body}
 		err := c.Notify(n)
 		if err != nil {
 			log.Println("Unable to notify nma:", u, ":", err)
