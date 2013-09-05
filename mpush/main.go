@@ -27,7 +27,7 @@ type PBConfig struct {
 }
 
 type NMAConfig struct {
-	APIKeys []string `json:"apikey"`
+	APIKeys []string `json:"apikeys"`
 }
 
 type POConfig struct {
