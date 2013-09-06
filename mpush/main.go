@@ -126,16 +126,16 @@ func main() {
 
 	log.Println("looking for distribution list: ", *list)
 
-	conf, err := loadDistributionList(datastore, []byte(*list))
+	targets, err := loadDistributionList(datastore, []byte(*list))
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	done := make(chan struct{})
 
-	go SendNMA(*title, *body, conf.Nma, done)
-	go SendPushover(*title, *body, conf.Pushover, done)
-	go SendPushBullet(*title, *body, conf.Pushbullet, done)
+	go SendNMA(*title, *body, targets.Nma, done)
+	go SendPushover(*title, *body, targets.Pushover, done)
+	go SendPushBullet(*title, *body, targets.Pushbullet, done)
 
 	for i := 0; i < 3; i++ {
 		<-done
