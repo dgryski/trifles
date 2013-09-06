@@ -2,12 +2,12 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
+	"github.com/cznic/kv"
 	"github.com/dustin/go-nma"
 	"github.com/jdiez17/go-pushover"
 	"github.com/xconstruct/go-pushbullet"
 	"log"
-	"os"
-	"path/filepath"
 	"time"
 )
 
@@ -35,80 +35,106 @@ type POConfig struct {
 	Users  []string `json:"users"`
 }
 
-func readConfig() (Config, error) {
-	cfgfile := filepath.Join(os.Getenv("HOME"), ".mpush.config.json")
-	f, err := os.Open(cfgfile)
+func readConfig(datastore *kv.DB, list []byte) (Config, error) {
+
+	v, err := datastore.Get(nil, list)
 	if err != nil {
 		return Config{}, err
 	}
-	defer func() {
-		f.Close()
-	}()
 
 	var cfg Config
-	dec := json.NewDecoder(f)
-	if err = dec.Decode(&cfg); err != nil {
+	if err = json.Unmarshal(v, &cfg); err != nil {
 		return Config{}, err
 	}
 
 	return cfg, nil
 }
 
-func main() {
+// don't actually send the notifications
+// TODO(dgryski): replace with mocks
+const debug = true
 
-	conf, err := readConfig()
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	title := "Test Message"
-	body := "Test Body Hello World"
-
-	done := make(chan struct{})
-
-	go func() {
-
-		for _, u := range conf.Nma.APIKeys {
-			c := nma.New(u)
-			n := &nma.Notification{Application: "mpush", Event: title, Description: body}
+func SendNMA(title, body string, nmaconf NMAConfig, done chan struct{}) {
+	for _, u := range nmaconf.APIKeys {
+		c := nma.New(u)
+		n := &nma.Notification{Application: "mpush", Event: title, Description: body}
+		if debug {
+			log.Println("pretending to notify nma user", u)
+		} else {
 			err := c.Notify(n)
 			if err != nil {
 				log.Println("Unable to notify nma:", u, ":", err)
 			}
 		}
+	}
 
-		done <- struct{}{}
-	}()
+	done <- struct{}{}
+}
 
-	go func() {
-		for _, u := range conf.Pushbullet.Users {
-			c := pushbullet.New(u.APIKey)
-			for _, d := range u.Devices {
+func SendPushover(title, body string, poconf POConfig, done chan struct{}) {
+	for _, u := range poconf.Users {
+		c := pushover.New(u, poconf.APIKey)
+		n := pushover.Notification{
+			Title:     title,
+			Message:   body,
+			Timestamp: time.Now(),
+		}
+		if debug {
+			log.Println("pretending to notify pushover user", u)
+		} else {
+			_, err := c.Notify(n)
+			if err != nil {
+				log.Println("Unable to notify pushover:", u, ":", err)
+			}
+		}
+	}
+	done <- struct{}{}
+}
+
+func SendPushBullet(title, body string, pbconf PBConfig, done chan struct{}) {
+	for _, u := range pbconf.Users {
+		c := pushbullet.New(u.APIKey)
+		for _, d := range u.Devices {
+			if debug {
+				log.Println("pretending to notify pushbullet user", u)
+			} else {
 				err := c.PushNote(d, title, body)
 				if err != nil {
 					log.Println("Unable to notify pushbullet:", u.APIKey, "/", d, ":", err)
 				}
 			}
 		}
-		done <- struct{}{}
-	}()
+	}
+	done <- struct{}{}
+}
 
-	go func() {
-		for _, u := range conf.Pushover.Users {
-			c := pushover.New(u, conf.Pushover.APIKey)
-			n := pushover.Notification{
-				Title:     title,
-				Message:   body,
-				Timestamp: time.Now(),
-			}
-			_, err := c.Notify(n)
-			if err != nil {
-				log.Println("Unable to notify pushover:", u, ":", err)
-			}
-		}
-		done <- struct{}{}
-	}()
+func main() {
+
+	list := flag.String("list", "", "the target list")
+	title := flag.String("t", "", "title of the message")
+	body := flag.String("b", "", "the body of the message")
+
+	flag.Parse()
+
+	datastore, err := kv.Open("mpush.kvdb", &kv.Options{})
+	defer datastore.Close()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Println("looking for distribution list: ", *list)
+
+	conf, err := readConfig(datastore, []byte(*list))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	done := make(chan struct{})
+
+	go SendNMA(*title, *body, conf.Nma, done)
+	go SendPushover(*title, *body, conf.Pushover, done)
+	go SendPushBullet(*title, *body, conf.Pushbullet, done)
 
 	for i := 0; i < 3; i++ {
 		<-done
