@@ -2,12 +2,12 @@ package main
 
 import (
 	"encoding/json"
-	"flag"
 	"github.com/cznic/kv"
 	"github.com/dustin/go-nma"
 	"github.com/jdiez17/go-pushover"
 	"github.com/xconstruct/go-pushbullet"
 	"log"
+	"net/http"
 	"time"
 )
 
@@ -108,36 +108,53 @@ func SendPushBullet(title, body string, pbconf PBConfig, done chan struct{}) {
 	done <- struct{}{}
 }
 
-func main() {
+func pushHandler(w http.ResponseWriter, r *http.Request, datastore *kv.DB) {
 
-	list := flag.String("list", "", "the target list")
-	title := flag.String("t", "", "title of the message")
-	body := flag.String("b", "", "the body of the message")
-
-	flag.Parse()
-
-	datastore, err := kv.Open("mpush.kvdb", &kv.Options{})
-
-	defer datastore.Close()
-
+	err := r.ParseForm()
 	if err != nil {
-		log.Fatal(err)
+		http.Error(w, "", http.StatusBadRequest)
+		return
 	}
 
-	log.Println("looking for distribution list: ", *list)
+	list := r.PostFormValue("list")
+	title := r.PostFormValue("title")
+	body := r.PostFormValue("body")
 
-	targets, err := loadDistributionList(datastore, []byte(*list))
+	if list == "" {
+		http.Error(w, "", http.StatusNotFound)
+		return
+	}
+
+	log.Println("looking for distribution list: ", list)
+
+	targets, err := loadDistributionList(datastore, []byte(list))
 	if err != nil {
-		log.Fatal(err)
+		http.Error(w, "", http.StatusBadRequest)
+		return
 	}
 
 	done := make(chan struct{})
 
-	go SendNMA(*title, *body, targets.Nma, done)
-	go SendPushover(*title, *body, targets.Pushover, done)
-	go SendPushBullet(*title, *body, targets.Pushbullet, done)
+	go SendNMA(title, body, targets.Nma, done)
+	go SendPushover(title, body, targets.Pushover, done)
+	go SendPushBullet(title, body, targets.Pushbullet, done)
 
 	for i := 0; i < 3; i++ {
 		<-done
 	}
+
+}
+
+func main() {
+
+	datastore, err := kv.Open("mpush.kvdb", &kv.Options{})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer datastore.Close()
+
+	http.HandleFunc("/push", func(w http.ResponseWriter, r *http.Request) { pushHandler(w, r, datastore) })
+
+	http.ListenAndServe(":8080", nil)
 }
