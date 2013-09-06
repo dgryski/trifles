@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-type Config struct {
+type DistributionList struct {
 	Nma        NMAConfig
 	Pushbullet PBConfig
 	Pushover   POConfig
@@ -35,19 +35,19 @@ type POConfig struct {
 	Users  []string `json:"users"`
 }
 
-func readConfig(datastore *kv.DB, list []byte) (Config, error) {
+func loadDistributionList(datastore *kv.DB, list []byte) (DistributionList, error) {
 
 	v, err := datastore.Get(nil, list)
 	if err != nil {
-		return Config{}, err
+		return DistributionList{}, err
 	}
 
-	var cfg Config
-	if err = json.Unmarshal(v, &cfg); err != nil {
-		return Config{}, err
+	var l DistributionList
+	if err = json.Unmarshal(v, &l); err != nil {
+		return DistributionList{}, err
 	}
 
-	return cfg, nil
+	return l, nil
 }
 
 // don't actually send the notifications
@@ -117,6 +117,7 @@ func main() {
 	flag.Parse()
 
 	datastore, err := kv.Open("mpush.kvdb", &kv.Options{})
+
 	defer datastore.Close()
 
 	if err != nil {
@@ -125,7 +126,7 @@ func main() {
 
 	log.Println("looking for distribution list: ", *list)
 
-	conf, err := readConfig(datastore, []byte(*list))
+	conf, err := loadDistributionList(datastore, []byte(*list))
 	if err != nil {
 		log.Fatal(err)
 	}
