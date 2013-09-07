@@ -129,8 +129,6 @@ func pushHandler(w http.ResponseWriter, r *http.Request, datastore *kv.DB) {
 		return
 	}
 
-	log.Println("looking for distribution list: ", list)
-
 	targets, err := loadDistributionList(datastore, []byte(list))
 	if err != nil {
 		http.Error(w, "", http.StatusBadRequest)
@@ -160,5 +158,5 @@ func main() {
 
 	http.HandleFunc("/push", func(w http.ResponseWriter, r *http.Request) { pushHandler(w, r, datastore) })
 
-	http.ListenAndServe(":8080", nil)
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
