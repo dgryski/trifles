@@ -59,9 +59,11 @@ func loadDistributionList(datastore Getter, list []byte) (DistributionList, erro
 const debug = true
 
 func SendNMA(title, body string, nmaconf NMAConfig, done chan struct{}) {
+
+	n := &nma.Notification{Application: "mpush", Event: title, Description: body}
+
 	for _, u := range nmaconf.APIKeys {
 		c := nma.New(u)
-		n := &nma.Notification{Application: "mpush", Event: title, Description: body}
 		if debug {
 			log.Println("pretending to notify nma user", u)
 		} else {
@@ -76,13 +78,15 @@ func SendNMA(title, body string, nmaconf NMAConfig, done chan struct{}) {
 }
 
 func SendPushover(title, body string, poconf POConfig, done chan struct{}) {
+
+	n := pushover.Notification{
+		Title:     title,
+		Message:   body,
+		Timestamp: time.Now(),
+	}
+
 	for _, u := range poconf.Users {
 		c := pushover.New(u, poconf.APIKey)
-		n := pushover.Notification{
-			Title:     title,
-			Message:   body,
-			Timestamp: time.Now(),
-		}
 		if debug {
 			log.Println("pretending to notify pushover user", u)
 		} else {
