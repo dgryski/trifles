@@ -58,7 +58,7 @@ func loadDistributionList(datastore Getter, list []byte) (DistributionList, erro
 // TODO(dgryski): replace with mocks
 const debug = true
 
-func SendNMA(title, body string, nmaconf NMAConfig, done chan struct{}) {
+func sendNMA(title, body string, nmaconf NMAConfig, done chan struct{}) {
 
 	n := &nma.Notification{Application: "mpush", Event: title, Description: body}
 
@@ -77,7 +77,7 @@ func SendNMA(title, body string, nmaconf NMAConfig, done chan struct{}) {
 	done <- struct{}{}
 }
 
-func SendPushover(title, body string, poconf POConfig, done chan struct{}) {
+func sendPushover(title, body string, poconf POConfig, done chan struct{}) {
 
 	n := pushover.Notification{
 		Title:     title,
@@ -99,7 +99,7 @@ func SendPushover(title, body string, poconf POConfig, done chan struct{}) {
 	done <- struct{}{}
 }
 
-func SendPushBullet(title, body string, pbconf PBConfig, done chan struct{}) {
+func sendPushBullet(title, body string, pbconf PBConfig, done chan struct{}) {
 	for _, u := range pbconf.Users {
 		c := pushbullet.New(u.APIKey)
 		for _, d := range u.Devices {
@@ -141,14 +141,13 @@ func pushHandler(w http.ResponseWriter, r *http.Request, datastore *kv.DB) {
 
 	done := make(chan struct{})
 
-	go SendNMA(title, body, targets.Nma, done)
-	go SendPushover(title, body, targets.Pushover, done)
-	go SendPushBullet(title, body, targets.Pushbullet, done)
+	go sendNMA(title, body, targets.Nma, done)
+	go sendPushover(title, body, targets.Pushover, done)
+	go sendPushBullet(title, body, targets.Pushbullet, done)
 
 	for i := 0; i < 3; i++ {
 		<-done
 	}
-
 }
 
 func main() {
