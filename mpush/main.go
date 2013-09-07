@@ -35,7 +35,11 @@ type POConfig struct {
 	Users  []string `json:"users"`
 }
 
-func loadDistributionList(datastore *kv.DB, list []byte) (DistributionList, error) {
+type Getter interface {
+	Get(dst, src []byte) ([]byte, error)
+}
+
+func loadDistributionList(datastore Getter, list []byte) (DistributionList, error) {
 
 	v, err := datastore.Get(nil, list)
 	if err != nil {
