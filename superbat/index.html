@@ -1,0 +1,77 @@
+<!doctype html>
+<!-- from http://www.speg.com/batman/ -->
+<html lang="en">
+<head>
+	<title>Batman!</title>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/coffee-script/1.6.3/coffee-script.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+        <script src="//batmanjs.org/lib/batman.js"></script>
+        <script src="//batmanjs.org/lib/batman.jquery.js"></script>
+        <script type="text/coffeescript">
+class Super extends Batman.App
+    @root 'hero#index'
+    @route "/stats", "hero#stats"
+ 
+class Super.HeroController extends Batman.Controller
+    routingKey: 'hero'
+    index: ->
+            @set 'currentHeroes', Super.Hero.get('all')
+            console.log 'Superheroes ready!'
+    stats: ->
+            @set 'currentHeroes', Super.Hero.get('all')
+    createHero: ->
+            newHero = new Super.Hero(Name: '', Power: Math.floor(Math.random() * 100))
+            newHero.save()
+            console.log 'Created', newHero
+    saveHero: (node, event, context) ->
+            hero = context.get('hero')
+            hero.save()
+    deleteHero: (node, event, context) ->
+            hero = context.get('hero')
+            hero.destroy()
+            @set 'currentHeroes', Super.Hero.get('all')
+
+class Super.JSONRestStorage extends Batman.RestStorage
+    serializeAsForm: false
+ 
+class Super.Hero extends Batman.Model
+    @persist Super.JSONRestStorage
+    @primaryKey: 'Id'
+    @encode 'Id', 'Name', 'Power'
+    @resourceName: 'hero'
+    @url: '/api/heros'
+    @classAccessor 'statistics', ->
+  	heroes = @get 'all'
+  	totalPower = 0
+  	heroes.forEach (h) ->
+  		totalPower += h.get 'Power'
+  	return [heroes.length, totalPower/heroes.length]
+ 
+window.Super = Super
+Super.run()
+</script>
+</head>
+<body>
+ 
+<div data-yield="main">
+</div>
+ 
+<div data-defineview="hero/index">
+      
+    <ul>
+    <li data-foreach-hero="currentHeroes">
+    <input type="text" data-bind="hero.Name" data-event-change="saveHero"/><span data-bind="hero.Power"></span><a data-event-click="deleteHero">X</a>
+    </li>
+    </ul>
+      <button data-event-click="createHero">New Hero</button>
+      <a data-route="'/stats'">Stats</a>
+</div>
+ 
+<div data-defineview="hero/stats">
+    Number of heroes: <strong data-bind="Hero.statistics[0]"></strong><br />
+    Average Power: <strong data-bind="Hero.statistics[1]"></strong> 
+    <a data-route="'/'">back</a>
+</div>
+ 
+</body>
+</html>

@@ -1,0 +1,5 @@
+Playing around with batmanjs and go-restful.
+
+The batmanjs example is from http://www.speg.com/batman/
+
+The go code is modified sample from https://github.com/emicklei/go-restful/blob/master/examples/restful-user-resource.go

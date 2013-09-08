@@ -21,3 +21,5 @@ This repo contains things not interesting or complete enough to have their own.
    * rndtxt -- generate random text strings
 
    * mpush -- push to multiple notification services (pushbullet, nma, pushover)
+
+   * superbat -- batmanjs and go-restful playground
