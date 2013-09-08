@@ -9,9 +9,9 @@ import (
 	"github.com/gorilla/schema"
 	"github.com/jdiez17/go-pushover"
 	"github.com/xconstruct/go-pushbullet"
-
 	"log"
 	"net/http"
+	"path"
 	"time"
 )
 
@@ -26,13 +26,27 @@ type DistributionList struct {
 	Pushover   POConfig
 }
 
+// Global Filter
+func globalLogging(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
+	log.Printf("[global-filter (logger)] %s,%s\n", req.Request.Method, req.Request.URL)
+	chain.ProcessFilter(req, resp)
+}
+
+// WebService Filter
+func webserviceLogging(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
+	log.Printf("[webservice-filter (logger)] %s,%s\n", req.Request.Method, req.Request.URL)
+	chain.ProcessFilter(req, resp)
+}
+
 func (u DistributionListResource) Register(container *restful.Container) {
 	ws := new(restful.WebService)
 	ws.Path("/api/lists").
 		Consumes(restful.MIME_XML, restful.MIME_JSON).
 		Produces(restful.MIME_JSON, restful.MIME_XML) // you can specify this per route as well
 
-	ws.Route(ws.GET("/").To(u.allLists).
+	ws.Filter(webserviceLogging)
+
+	ws.Route(ws.GET("").To(u.allLists).
 		// docs
 		Doc("get all lists").
 		Writes([]DistributionList{})) // on the response
@@ -235,7 +249,7 @@ type PushNotification struct {
 	Body  string
 }
 
-var decoder *schema.Decoder
+var decoder = schema.NewDecoder()
 
 func pushHandler(request *restful.Request, response *restful.Response, datastore *kv.DB) {
 
@@ -281,33 +295,57 @@ func pushHandler(request *restful.Request, response *restful.Response, datastore
 	}
 }
 
+var rootdir = "."
+
+func staticFromPathParam(req *restful.Request, resp *restful.Response) {
+	http.ServeFile(
+		resp.ResponseWriter,
+		req.Request,
+		path.Join(rootdir+"/static/", req.PathParameter("resource")))
+}
+
+func staticFromQueryParam(req *restful.Request, resp *restful.Response) {
+	http.ServeFile(
+		resp.ResponseWriter,
+		req.Request,
+		path.Join(rootdir+"/static/", req.QueryParameter("resource")))
+}
+
 func main() {
 
-	decoder = schema.NewDecoder()
-
 	datastore, err := kv.Open("mpush.kvdb", &kv.Options{})
+
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	defer datastore.Close()
 
 	wsContainer := restful.NewContainer()
+
+	restful.Filter(globalLogging)
+
 	dsl := DistributionListResource{datastore}
 	dsl.Register(wsContainer)
 
-	ws := new(restful.WebService)
+	wsPush := new(restful.WebService)
 
-	ws.Route(ws.POST("/api/push").
+	wsPush.Path("/api/push")
+	wsPush.Route(wsPush.POST("").
 		Consumes("application/x-www-form-urlencoded").
 		To(func(request *restful.Request, response *restful.Response) { pushHandler(request, response, datastore) }).
 		// docs
 		Doc("push to a distribution list").
-		Param(ws.BodyParameter("List", "list to send to").DataType("string")).
-		Param(ws.BodyParameter("Title", "title of notification").DataType("string")).
-		Param(ws.BodyParameter("Body", "body of notification").DataType("string")).
+		Param(wsPush.BodyParameter("List", "list to send to").DataType("string")).
+		Param(wsPush.BodyParameter("Title", "title of notification").DataType("string")).
+		Param(wsPush.BodyParameter("Body", "body of notification").DataType("string")).
 		Reads(PushNotification{})) // from the request
-	wsContainer.Add(ws)
+	wsContainer.Add(wsPush)
+
+	// static files
+	wsStatic := new(restful.WebService)
+	wsStatic.Route(wsStatic.GET("/static/{resource}").To(staticFromPathParam))
+	wsStatic.Route(wsStatic.GET("/static").To(staticFromQueryParam))
+	wsContainer.Add(wsStatic)
 
 	// Optionally, you can install the Swagger Service which provides a nice Web UI on your REST API
 	// You need to download the Swagger HTML5 assets and change the FilePath location in the config below.
