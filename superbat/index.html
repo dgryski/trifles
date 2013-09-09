@@ -60,7 +60,7 @@ Super.run()
       
     <ul>
     <li data-foreach-hero="Hero.all">
-    <input type="text" data-bind="hero.Name" data-event-change="saveHero"/><span data-bind="hero.Power"></span><a data-event-click="deleteHero">X</a>
+    <input type="text" data-bind="hero.Name" data-event-focusout="saveHero"/><span data-bind="hero.Power"></span><a data-event-click="deleteHero">X</a>
     </li>
     </ul>
       <button data-event-click="createHero">New Hero</button>
