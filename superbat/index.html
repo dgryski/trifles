@@ -41,13 +41,14 @@ class Super.Hero extends Batman.Model
     @resourceName: 'hero'
     @url: '/api/heros'
     @classAccessor 'statistics', ->
-  	heroes = @get 'all'
-  	totalPower = 0
-  	heroes.forEach (h) ->
-  		totalPower += h.get 'Power'
-  	return [heroes.length, totalPower/heroes.length]
- 
+        heroes =  @get "all"
+        totalPower = 0
+        heroes.forEach (h) ->
+            totalPower += h.get 'Power'
+        return [heroes.length, totalPower/heroes.length]
+
 window.Super = Super
+console.log("Running super")
 Super.run()
 </script>
 </head>
