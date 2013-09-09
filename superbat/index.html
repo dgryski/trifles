@@ -15,10 +15,9 @@ class Super extends Batman.App
 class Super.HeroController extends Batman.Controller
     routingKey: 'hero'
     index: ->
-            @set 'currentHeroes', Super.Hero.get('all')
             console.log 'Superheroes ready!'
     stats: ->
-            @set 'currentHeroes', Super.Hero.get('all')
+
     createHero: ->
             newHero = new Super.Hero(Name: '', Power: Math.floor(Math.random() * 100))
             newHero.save()
@@ -60,7 +59,7 @@ Super.run()
 <div data-defineview="hero/index">
       
     <ul>
-    <li data-foreach-hero="currentHeroes">
+    <li data-foreach-hero="Hero.all">
     <input type="text" data-bind="hero.Name" data-event-change="saveHero"/><span data-bind="hero.Power"></span><a data-event-click="deleteHero">X</a>
     </li>
     </ul>
