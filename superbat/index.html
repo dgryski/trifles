@@ -28,7 +28,8 @@ class Super.HeroController extends Batman.Controller
     deleteHero: (node, event, context) ->
             hero = context.get('hero')
             hero.destroy()
-            @set 'currentHeroes', Super.Hero.get('all')
+            # destroy is async, but we want to repaint before the REST call returns
+            Super.Hero.get("loaded").remove(hero)
 
 class Super.JSONRestStorage extends Batman.RestStorage
     serializeAsForm: false
