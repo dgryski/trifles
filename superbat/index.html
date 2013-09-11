@@ -9,14 +9,20 @@
         <script src="//batmanjs.org/lib/batman.jquery.js"></script>
         <script type="text/coffeescript">
 class Super extends Batman.App
-    @root 'hero#index'
-    @route "/stats", "hero#stats"
+    @root 'heros#index'
+    @route "/stats", "heros#stats"
+    @resources 'hero'
  
-class Super.HeroController extends Batman.Controller
-    routingKey: 'hero'
+class Super.HerosController extends Batman.Controller
+    routingKey: 'heros'
     index: ->
             console.log 'Superheroes ready!'
     stats: ->
+            console.log 'stats'
+    show: (params) ->
+            Super.Hero.find params.id, (err, hero) =>
+                @set 'currentHero', hero
+            console.log 'show'
 
     createHero: ->
             newHero = new Super.Hero(Name: '', Power: Math.floor(Math.random() * 100))
@@ -56,21 +62,27 @@ Super.run()
  
 <div data-yield="main">
 </div>
- 
-<div data-defineview="hero/index">
+
+<div data-defineview="heros/index">
       
     <ul>
     <li data-foreach-hero="Hero.all">
-    <input type="text" data-bind="hero.Name" data-event-focusout="saveHero"/><span data-bind="hero.Power"></span><a data-event-click="deleteHero">X</a>
+    <input type="text" data-bind="hero.Name" data-event-focusout="saveHero"/><span data-bind="hero.Power"></span> <a data-route="hero">(more...)</a><a data-event-click="deleteHero">X</a> 
     </li>
     </ul>
       <button data-event-click="createHero">New Hero</button>
       <a data-route="'/stats'">Stats</a>
 </div>
  
-<div data-defineview="hero/stats">
+<div data-defineview="heros/stats">
     Number of heroes: <strong data-bind="Hero.statistics[0]"></strong><br />
-    Average Power: <strong data-bind="Hero.statistics[1]"></strong> 
+    Average Power: <strong data-bind="Hero.statistics[1]"></strong> <br />
+    <a data-route="'/'">back</a>
+</div>
+
+<div data-defineview="heros/show">
+    Hero: <strong data-bind="currentHero.Name"></strong><br />
+    Power: <strong data-bind="currentHero.Power"></strong><br />
     <a data-route="'/'">back</a>
 </div>
  
