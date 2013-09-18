@@ -23,3 +23,5 @@ This repo contains things not interesting or complete enough to have their own.
    * mpush -- push to multiple notification services (pushbullet, nma, pushover)
 
    * superbat -- batmanjs and go-restful playground
+
+   * msgrpc -- msgpack rpc python/go interop samples
