@@ -25,3 +25,5 @@ This repo contains things not interesting or complete enough to have their own.
    * superbat -- batmanjs and go-restful playground
 
    * msgrpc -- msgpack rpc python/go interop samples
+
+   * quantile -- testing different streaming quantile estimators
