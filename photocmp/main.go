@@ -52,17 +52,23 @@ func main() {
 			w.Header().Set("Cache-Control", "no-cache")
 		}
 
-		offset := r.FormValue("offset")
+		pageStr := r.FormValue("page")
 
-		offs, err := strconv.Atoi(offset)
+		page, err := strconv.Atoi(pageStr)
 		if err != nil {
-			log.Println("invalid param for offset, zeroing")
-			offs = 0
+			log.Println("invalid param for page, zeroing")
+			page = 0
 		}
 
-		limit := offs + *photosPerPage
+		offset := page * *photosPerPage
+		limit := offset + *photosPerPage
 		if limit > len(photos) {
 			limit = len(photos)
+		}
+
+		prev := page - 1
+		if prev < 0 {
+			prev = 0
 		}
 
 		tmplParams := struct {
@@ -70,9 +76,9 @@ func main() {
 			Next   int
 			Prev   int
 		}{
-			Photos: photos[offs:limit],
-			Next:   limit,
-			Prev:   offs,
+			Photos: photos[offset:limit],
+			Next:   page + 1,
+			Prev:   prev,
 		}
 
 		compareTMPL.Execute(w, tmplParams)
@@ -97,6 +103,6 @@ var compareTMPL = template.Must(template.New("compare").Parse(
 <img src="/dir2/{{ . }}">
 {{ end }}
 
-<a href="/compare?offset={{ .Next }}">Next</a>
-<a href="/compare?offset={{ .Prev }}">Prev</a>
+<a href="/compare?page={{ .Next }}">Next</a>
+<a href="/compare?page={{ .Prev }}">Prev</a>
 </body>`))
