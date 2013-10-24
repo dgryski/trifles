@@ -62,6 +62,11 @@ func main() {
 
 		offset := page * *photosPerPage
 		limit := offset + *photosPerPage
+
+		if offset > len(photos) {
+			offset = len(photos)
+		}
+
 		if limit > len(photos) {
 			limit = len(photos)
 		}
