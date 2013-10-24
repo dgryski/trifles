@@ -103,10 +103,14 @@ func addFileNames(m map[string]struct{}, paths []string) {
 var compareTMPL = template.Must(template.New("compare").Parse(
 	`<html><head></head>
 <body>
+<table>
 {{ range .Photos }}
-<img src="/dir1/{{ . }}">
-<img src="/dir2/{{ . }}">
+<tr>
+<td><img src="/dir1/{{ . }}"></td>
+<td><img src="/dir2/{{ . }}"></td>
+</tr>
 {{ end }}
+</table>
 
 <a href="/compare?page={{ .Next }}">Next</a>
 <a href="/compare?page={{ .Prev }}">Prev</a>
