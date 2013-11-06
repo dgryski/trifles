@@ -27,3 +27,5 @@ This repo contains things not interesting or complete enough to have their own.
    * msgrpc -- msgpack rpc python/go interop samples
 
    * quantile -- testing different streaming quantile estimators
+
+   * wtflog -- logging package with some renamed log levels
