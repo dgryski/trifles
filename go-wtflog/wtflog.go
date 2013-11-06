@@ -1,4 +1,7 @@
-// Package wtflog provides some more accurate logging levels
+// Package wtflog provides more intuitive logging levels
+/*
+Original proposal https://twitter.com/jbarnette/status/144791640589078530
+*/
 package wtflog
 
 import (
