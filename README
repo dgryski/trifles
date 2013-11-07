@@ -29,3 +29,5 @@ This repo contains things not interesting or complete enough to have their own.
    * quantile -- testing different streaming quantile estimators
 
    * wtflog -- logging package with some renamed log levels
+
+   * qrshow -- display QR codes in a terminal
