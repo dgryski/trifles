@@ -32,10 +32,11 @@ func main() {
 
 	code, _ := qr.Encode(data, qrLevel)
 
+	black := "\033[30;40m"
 	white := "\033[30;47m"
 	reset := "\033[0m"
 
-	fmt.Print(reset + white)
+	fmt.Print(reset)
 
 	// two pixel border
 	for i := 0; i < 2; i++ {
@@ -43,15 +44,14 @@ func main() {
 		for x := 0; x < code.Size; x++ {
 			fmt.Print("  ")
 		}
-		fmt.Println(white + "    " + reset)
+		fmt.Println("    " + reset)
 	}
 
 	for x := 0; x < code.Size; x++ {
 		fmt.Print(white + "    ") // two pixel border
 		for y := 0; y < code.Size; y++ {
-			// invert, actually
 			if code.Black(x, y) {
-				fmt.Print(reset + "  ")
+				fmt.Print(black + "  ")
 			} else {
 				fmt.Print(white + "  ")
 			}
