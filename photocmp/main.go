@@ -5,16 +5,18 @@ import (
 	"fmt"
 	"html/template"
 	"log"
+	"math/rand"
 	"net/http"
 	"path/filepath"
 	"sort"
 	"strconv"
+	"time"
 )
 
 func main() {
 	port := flag.Int("p", 8080, "port to listen on")
 	setNoCache := flag.Bool("no-cache", false, "set no-cache header on requests")
-	// shufflePhotos := flag.Bool("shuffle", false, "shuffle photo order")
+	shufflePhotos := flag.Bool("shuffle", false, "shuffle photo order")
 	photosPerPage := flag.Int("n", 30, "photos per page")
 
 	flag.Parse()
@@ -41,6 +43,17 @@ func main() {
 	}
 
 	sort.Strings(photos)
+
+	if *shufflePhotos {
+		rand.Seed(time.Now().UnixNano())
+		perm := rand.Perm(len(photos))
+		dst := make([]string, len(photos))
+		for i, v := range perm {
+			dst[i] = photos[v]
+		}
+
+		photos = dst
+	}
 
 	// set up handler to serve our files
 	http.Handle("/dir1/", http.StripPrefix("/dir1/", http.FileServer(http.Dir(dir1))))
