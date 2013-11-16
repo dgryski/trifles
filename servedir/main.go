@@ -8,14 +8,15 @@ import (
 )
 
 func main() {
+	dir := flag.String("d", ".", "directory to serve")
 	port := flag.Int("p", 8080, "port to listen on")
 	setNoCache := flag.Bool("no-cache", false, "set no-cache header on requests")
 
 	flag.Parse()
 
-	log.Println("Serving files in the current directory on port", *port)
+	log.Println("Serving files from", *dir, "on port", *port)
 
-	fserver := http.FileServer(http.Dir("."))
+	fserver := http.FileServer(http.Dir(*dir))
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		log.Println(r.RemoteAddr, r.URL)
