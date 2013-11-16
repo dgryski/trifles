@@ -36,7 +36,7 @@ func main() {
 	addFileNames(m, d2files)
 
 	var photos []string
-	for k, _ := range m {
+	for k := range m {
 		photos = append(photos, k)
 	}
 
