@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"flag"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"runtime/pprof"
@@ -182,7 +183,6 @@ func main() {
 
 	var optDecompress = flag.Bool("d", false, "decompress")
 	var optCpuProfile = flag.String("cpuprofile", "", "profile")
-
 	flag.Parse()
 
 	if *optCpuProfile != "" {
@@ -194,17 +194,9 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	var bufin [16 * 1024]uint8
-	var buf []uint8
-
-	for {
-		n, err := os.Stdin.Read(bufin[:])
-		if n == 0 && err == io.EOF {
-			break
-		} else if err != nil {
-			log.Fatal("error during read: ", err)
-		}
-		buf = append(buf, bufin[0:n]...)
+	buf, err := ioutil.ReadAll(os.Stdin)
+	if err != nil {
+		log.Fatal("error during read: ", err)
 	}
 
 	if *optDecompress {
