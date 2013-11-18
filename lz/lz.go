@@ -10,7 +10,70 @@ import (
 	"runtime/pprof"
 )
 
-func find_longest_match(buf []uint8, s []uint8) (length int, offs int) {
+const hlog = 17
+const hsize = 1 << hlog
+
+var dict = make([]int, hsize)
+
+const fnv1a = 0x1000193
+
+func loadUint32(buf []uint8) uint32 {
+	return uint32(buf[0]) | uint32(buf[1])<<8 | uint32(buf[2])<<16 | uint32(buf[3])<<24
+}
+
+func find_longest_match_fast(fileoffs int, buf []uint8, s []uint8) (length int, offs int) {
+
+	if len(s) < 4 {
+		return 0, 0
+	}
+
+	h := (loadUint32(s) * fnv1a) % (1 << (hlog - 1))
+
+	h *= 2
+
+	m1 := dict[h]
+	m2 := dict[h+1]
+
+	dict[h] = dict[h+1]
+	dict[h+1] = fileoffs
+
+	l1, o1 := check_match(fileoffs, m1, buf, s)
+	l2, o2 := check_match(fileoffs, m2, buf, s)
+
+	if l1 > l2 {
+		return l1, o1
+	}
+
+	return l2, o2
+}
+
+func check_match(fileoffs, offs int, buf, s []byte) (int, int) {
+
+	if offs == 0 || (fileoffs-offs) > 4096 {
+		return 0, 0
+	}
+
+	/*
+	         bufoffs
+	   buf = [ . . . . . . o . . . . . . . . . . . . . . . ] fileoffs
+	*/
+
+	bufoffs := fileoffs - len(buf)
+	o := offs - bufoffs
+
+	match := buf[o:]
+
+	var length int
+	for length = 0; length < len(s) && length < len(match) && match[length] == s[length]; {
+		length++
+	}
+
+	return length, o
+}
+
+func find_longest_match_best(fileoffs int, buf []uint8, s []uint8) (length int, offs int) {
+
+	return find_longest_match_fast(fileoffs, buf, s)
 
 	max_length := 0
 	max_offs := 0
@@ -66,7 +129,7 @@ func compress(buf []byte, w io.Writer) {
 
 	for fileoffs < n {
 		minoffs := max(fileoffs-4096, 0)
-		l, o := find_longest_match(buf[minoffs:fileoffs], buf[fileoffs:])
+		l, o := find_longest_match_best(fileoffs, buf[minoffs:fileoffs], buf[fileoffs:])
 
 		ctrlbits <<= 1
 		ctrln++
@@ -74,7 +137,7 @@ func compress(buf []byte, w io.Writer) {
 		if l > 2 {
 
 			minoffs1 := max(1+fileoffs-4096, 0)
-			l1, o1 := find_longest_match(buf[minoffs1:fileoffs+1], buf[fileoffs+1:])
+			l1, o1 := find_longest_match_best(fileoffs, buf[minoffs1:fileoffs+1], buf[fileoffs+1:])
 
 			if l1 > l {
 				// found a better match if we pretend this char didn't match
