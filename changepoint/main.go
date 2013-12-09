@@ -114,7 +114,7 @@ func main() {
 	for scanner.Scan() {
 		item, err := strconv.ParseFloat(scanner.Text(), 64)
 		if err != nil {
-			fmt.Println("error parsing <%s>: %s\n", scanner.Text(), err)
+			fmt.Printf("error parsing <%s>: %s\n", scanner.Text(), err)
 			continue
 		}
 
