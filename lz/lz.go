@@ -73,8 +73,6 @@ func check_match(fileoffs, offs int, buf, s []byte) (int, int) {
 
 func find_longest_match_best(fileoffs int, buf []uint8, s []uint8) (length int, offs int) {
 
-	return find_longest_match_fast(fileoffs, buf, s)
-
 	max_length := 0
 	max_offs := 0
 
@@ -107,7 +105,7 @@ func max(a, b int) int {
 	return b
 }
 
-func compress(buf []byte, w io.Writer) {
+func compress(buf []byte, w io.Writer, matcher func(int, []byte, []byte) (int, int)) {
 
 	var ctrlbits uint8
 	var ctrln int
@@ -129,7 +127,7 @@ func compress(buf []byte, w io.Writer) {
 
 	for fileoffs < n {
 		minoffs := max(fileoffs-4096, 0)
-		l, o := find_longest_match_best(fileoffs, buf[minoffs:fileoffs], buf[fileoffs:])
+		l, o := matcher(fileoffs, buf[minoffs:fileoffs], buf[fileoffs:])
 
 		ctrlbits <<= 1
 		ctrln++
@@ -137,7 +135,7 @@ func compress(buf []byte, w io.Writer) {
 		if l > 2 {
 
 			minoffs1 := max(1+fileoffs-4096, 0)
-			l1, o1 := find_longest_match_best(fileoffs, buf[minoffs1:fileoffs+1], buf[fileoffs+1:])
+			l1, o1 := matcher(fileoffs, buf[minoffs1:fileoffs+1], buf[fileoffs+1:])
 
 			if l1 > l {
 				// found a better match if we pretend this char didn't match
@@ -246,7 +244,23 @@ func main() {
 
 	var optDecompress = flag.Bool("d", false, "decompress")
 	var optCpuProfile = flag.String("cpuprofile", "", "profile")
+	var optFast = flag.Bool("fast", false, "compress faster")
+	var optBest = flag.Bool("best", false, "compress better")
 	flag.Parse()
+
+	if *optFast && *optBest {
+		log.Fatal("only one of -fast / -best allowed")
+	}
+
+	// default
+	matcher := find_longest_match_best
+
+	switch {
+	case *optFast:
+		matcher = find_longest_match_fast
+	case *optBest:
+		matcher = find_longest_match_best
+	}
 
 	if *optCpuProfile != "" {
 		f, err := os.Create(*optCpuProfile)
@@ -266,7 +280,7 @@ func main() {
 		decompress(buf, os.Stdout)
 	} else {
 		stdout := bufio.NewWriter(os.Stdout)
-		compress(buf, stdout)
+		compress(buf, stdout, matcher)
 		stdout.Flush()
 	}
 
