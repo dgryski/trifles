@@ -9,7 +9,7 @@ import (
 
 func main() {
 
-	level := flag.String("-level", "m", "QR level: L/M/Q/H")
+	level := flag.String("level", "m", "QR level: L/M/Q/H")
 
 	flag.Parse()
 
