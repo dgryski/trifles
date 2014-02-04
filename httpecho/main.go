@@ -1,16 +1,21 @@
 package main
 
 import (
+	"encoding/base64"
 	"encoding/json"
+	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
+	"unicode/utf8"
 )
 
 type response struct {
-	Args map[string]string `json:"args"`
-	Data string            `json:"data"`
-	// File    map[string]string `json:"file"`
+	Args    map[string]string `json:"args"`
+	Data    string            `json:"data"`
+	Files   map[string]string `json:"files"`
 	Form    map[string]string `json:"form"`
 	Headers map[string]string `json:"headers"`
 	URL     string            `json:"url"`
@@ -29,9 +34,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		resp.Args[k] = v[0]
 	}
 
-	body, _ := ioutil.ReadAll(r.Body)
-	resp.Data = string(body)
-
 	resp.Form = make(map[string]string)
 	for k, v := range r.PostForm {
 		resp.Form[k] = v[0]
@@ -44,7 +46,52 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	resp.URL = r.URL.String()
 
-	if r.Header.Get("Content-Type") == "application/json" {
+	switch {
+
+	case strings.HasPrefix(r.Header.Get("Content-Type"), "multipart/form-data"):
+
+		m, err := r.MultipartReader()
+		if err != nil {
+			resp.Files["<error>"] = err.Error()
+			break
+		}
+
+		resp.Files = make(map[string]string)
+		// we can parse multipart form data
+		for {
+			p, err := m.NextPart()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				resp.Files["<error>"] = err.Error()
+				break
+			}
+
+			b, _ := ioutil.ReadAll(p)
+
+			var s string
+			if utf8.Valid(b) {
+				s = string(b)
+			} else {
+				ctype := p.Header.Get("Content-Type")
+				if ctype == "" {
+					ctype = "application/octet-stream"
+				}
+				s = fmt.Sprintf("data:%s;base64,%s", ctype, base64.StdEncoding.EncodeToString(b))
+			}
+
+			if p.FileName() != "" {
+				resp.Files[p.FormName()] = s
+			} else {
+				resp.Form[p.FormName()] = s
+			}
+		}
+
+	case strings.HasPrefix(r.Header.Get("Content-Type"), "application/json"):
+		body, _ := ioutil.ReadAll(r.Body)
+		resp.Data = string(body)
+
 		var j interface{}
 
 		err := json.Unmarshal(body, &j)
@@ -54,6 +101,10 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			// invalid JSON passed in body
 			resp.Json = "<invalid json>"
 		}
+
+	default:
+		body, _ := ioutil.ReadAll(r.Body)
+		resp.Data = string(body)
 	}
 
 	j, _ := json.Marshal(resp)
