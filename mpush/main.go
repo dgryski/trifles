@@ -2,17 +2,17 @@ package main
 
 import (
 	"encoding/json"
+	"log"
+	"net/http"
+	"path"
+
+	"github.com/AlekSi/pushover"
 	"github.com/cznic/kv"
 	"github.com/dustin/go-nma"
 	"github.com/emicklei/go-restful"
 	"github.com/emicklei/go-restful/swagger"
 	"github.com/gorilla/schema"
-	"github.com/jdiez17/go-pushover"
 	"github.com/xconstruct/go-pushbullet"
-	"log"
-	"net/http"
-	"path"
-	"time"
 )
 
 type DistributionListResource struct {
@@ -206,18 +206,13 @@ func sendNMA(pn *PushNotification, nmaconf NMAConfig, done chan struct{}) {
 
 func sendPushover(pn *PushNotification, poconf POConfig, done chan struct{}) {
 
-	n := pushover.Notification{
-		Title:     pn.Title,
-		Message:   pn.Body,
-		Timestamp: time.Now(),
-	}
+	pushover.DefaultClient.Token = poconf.APIKey
 
 	for _, u := range poconf.Users {
-		c := pushover.New(u, poconf.APIKey)
 		if debug {
 			log.Println("pretending to notify pushover user", u)
 		} else {
-			_, err := c.Notify(n)
+			err := pushover.SendMessage(u, pn.Title, pn.Body)
 			if err != nil {
 				log.Println("Unable to notify pushover:", u, ":", err)
 			}
