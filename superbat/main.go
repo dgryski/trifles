@@ -1,17 +1,18 @@
 package main
 
-// mostly https://github.com/emicklei/go-restful/blob/master/examples/restful-user-resource.go
-
 import (
-	"github.com/emicklei/go-restful"
-	"github.com/emicklei/go-restful/swagger"
-	"log"
+	"encoding/json"
+	"io/ioutil"
 	"net/http"
-	"path"
 	"strconv"
+
+	"github.com/codegangsta/martini"
+	"github.com/codegangsta/martini-contrib/render"
 )
 
-type HeroResource struct {
+type HeroDB interface{}
+
+type heroDB struct {
 	heros    map[int]Hero
 	numHeros int
 }
@@ -26,173 +27,99 @@ type BatmanRequest struct {
 	Hero Hero
 }
 
-// Global Filter
-func globalLogging(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
-	log.Printf("[global-filter (logger)] %s,%s\n", req.Request.Method, req.Request.URL)
-	chain.ProcessFilter(req, resp)
-}
-
-// WebService Filter
-func webserviceLogging(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
-	log.Printf("[webservice-filter (logger)] %s,%s\n", req.Request.Method, req.Request.URL)
-	chain.ProcessFilter(req, resp)
-}
-
-func (u HeroResource) Register(container *restful.Container) {
-	ws := new(restful.WebService)
-	ws.Path("/api/heros").
-		Consumes(restful.MIME_XML, restful.MIME_JSON).
-		Produces(restful.MIME_JSON, restful.MIME_XML) // you can specify this per route as well
-
-	ws.Filter(webserviceLogging)
-
-	ws.Route(ws.GET("").To(u.allHeros).
-		// docs
-		Doc("get all heros").
-		Writes([]Hero{})) // on the response
-
-	ws.Route(ws.GET("/{hero-id}").To(u.findHero).
-		// docs
-		Doc("get a hero").
-		Param(ws.PathParameter("list-id", "identifier of the hero").DataType("string")).
-		Writes(Hero{})) // on the response
-
-	ws.Route(ws.POST("").To(u.createHero).
-		// docs
-		Doc("create a hero").
-		Param(ws.BodyParameter("Hero", "representation of a hero").DataType("main.Hero")).
-		Reads(Hero{})) // from the request
-
-	ws.Route(ws.PUT("/{hero-id}").To(u.updateHero).
-		// docs
-		Doc("update a hero").
-		Param(ws.PathParameter("hero-id", "identifier of the hero").DataType("string")).
-		Param(ws.BodyParameter("Hero", "representation of a hero").DataType("main.Hero")).
-		Reads(Hero{})) // from the request
-
-	ws.Route(ws.DELETE("/{hero-id}").To(u.removeHero).
-		// docs
-		Doc("delete a hero").
-		Param(ws.PathParameter("hero-id", "identifier of the hero").DataType("string")))
-
-	container.Add(ws)
-}
-
-func (u HeroResource) allHeros(request *restful.Request, response *restful.Response) {
+func allHeros(db HeroDB, parms martini.Params, r render.Render) {
+	u := (db).(*heroDB)
 	var heros []Hero
 
 	for _, v := range u.heros {
 		heros = append(heros, v)
 	}
-	response.WriteEntity(heros)
+	r.JSON(http.StatusOK, heros)
 }
 
-func (u HeroResource) findHero(request *restful.Request, response *restful.Response) {
-	ids := request.PathParameter("hero-id")
+func findHero(db HeroDB, parms martini.Params, r render.Render) {
+	u := (db).(*heroDB)
 
-	id, _ := strconv.Atoi(ids)
+	id, _ := strconv.Atoi(parms["id"])
 
 	hero, ok := u.heros[id]
-
 	if !ok {
-		response.AddHeader("Content-Type", "text/plain")
-		response.WriteErrorString(http.StatusNotFound, "Hero could not be found.")
+		r.Error(http.StatusNotFound)
 		return
 	}
 
-	response.WriteEntity(hero)
+	r.JSON(http.StatusOK, hero)
 }
 
-func (u *HeroResource) updateHero(request *restful.Request, response *restful.Response) {
+func updateHero(db HeroDB, req *http.Request, r render.Render) {
+	u := (db).(*heroDB)
 
 	breq := new(BatmanRequest)
-	err := request.ReadEntity(&breq)
+	body, _ := ioutil.ReadAll(req.Body)
+	req.Body.Close()
+
+	err := json.Unmarshal(body, &breq)
 	hero := breq.Hero
 
-	if err == nil {
-		u.heros[hero.Id] = hero
-		response.WriteEntity(hero)
-	} else {
-		response.AddHeader("Content-Type", "text/plain")
-		response.WriteErrorString(http.StatusInternalServerError, err.Error())
+	if err != nil {
+		r.Error(http.StatusInternalServerError)
+		return
 	}
+
+	u.heros[hero.Id] = hero
+	r.JSON(http.StatusOK, hero)
 }
 
-func (u *HeroResource) createHero(request *restful.Request, response *restful.Response) {
+func createHero(db HeroDB, req *http.Request, r render.Render) {
+	u := (db).(*heroDB)
 
 	breq := new(BatmanRequest)
-	err := request.ReadEntity(&breq)
+	body, _ := ioutil.ReadAll(req.Body)
+	req.Body.Close()
+	err := json.Unmarshal(body, &breq)
 	hero := breq.Hero
 
 	u.numHeros++
 
 	hero.Id = u.numHeros
 
-	if err == nil {
-		u.heros[hero.Id] = hero
-		response.WriteHeader(http.StatusCreated)
-		response.WriteEntity(hero)
-	} else {
-		response.AddHeader("Content-Type", "text/plain")
-		response.WriteErrorString(http.StatusInternalServerError, err.Error())
+	if err != nil {
+		r.Error(http.StatusInternalServerError)
 	}
+
+	u.heros[hero.Id] = hero
+	r.JSON(http.StatusCreated, hero)
 }
 
-func (u *HeroResource) removeHero(request *restful.Request, response *restful.Response) {
-	ids := request.PathParameter("hero-id")
-
-	id, _ := strconv.Atoi(ids)
+func removeHero(db HeroDB, parms martini.Params, r render.Render) {
+	u := (db).(*heroDB)
+	id, _ := strconv.Atoi(parms["id"])
 
 	delete(u.heros, id)
-}
 
-var rootdir = "."
-
-func staticFromPathParam(req *restful.Request, resp *restful.Response) {
-	http.ServeFile(
-		resp.ResponseWriter,
-		req.Request,
-		path.Join(rootdir, req.PathParameter("resource")))
-}
-
-func staticFromQueryParam(req *restful.Request, resp *restful.Response) {
-	http.ServeFile(
-		resp.ResponseWriter,
-		req.Request,
-		path.Join(rootdir, req.QueryParameter("resource")))
+	r.JSON(http.StatusOK, nil)
 }
 
 func main() {
 
-	wsContainer := restful.NewContainer()
+	m := martini.Classic()
 
-	restful.Filter(globalLogging)
+	m.Use(render.Renderer())
 
-	herostore := make(map[int]Hero)
+	// Setup routes
+	r := martini.NewRouter()
+	r.Get(`/api/heros`, allHeros)
+	r.Get(`/api/heros/:id`, findHero)
+	r.Post(`/api/heros`, createHero)
+	r.Put(`/api/heros/:id`, updateHero)
+	r.Delete(`/api/heros/:id`, removeHero)
 
-	herows := HeroResource{heros: herostore, numHeros: 0}
-	herows.Register(wsContainer)
+	// Inject database
+	u := &heroDB{make(map[int]Hero), 0}
+	m.MapTo(u, (*HeroDB)(nil))
 
-	// static files
-	wsStatic := new(restful.WebService)
-	wsStatic.Route(wsStatic.GET("/static/{resource}").To(staticFromPathParam))
-	wsStatic.Route(wsStatic.GET("/static").To(staticFromQueryParam))
-	wsContainer.Add(wsStatic)
+	// Add the router action
+	m.Action(r.Handle)
 
-	// Optionally, you can install the Swagger Service which provides a nice Web UI on your REST API
-	// You need to download the Swagger HTML5 assets and change the FilePath location in the config below.
-	// Open http://localhost:8080/apidocs and enter http://localhost:8080/apidocs.json in the api input field.
-	config := swagger.Config{
-		WebServices:    wsContainer.RegisteredWebServices(), // you control what services are visible
-		WebServicesUrl: "http://localhost:8080",
-		ApiPath:        "/apidocs.json",
-
-		// Optionally, specifiy where the UI is located
-		SwaggerPath:     "/apidocs/",
-		SwaggerFilePath: "/home/dgryski/work/src/cvs/swagger-ui/dist"}
-	swagger.RegisterSwaggerService(config, wsContainer)
-
-	log.Printf("start listening on localhost:8080")
-	server := &http.Server{Addr: ":8080", Handler: wsContainer}
-	log.Fatal(server.ListenAndServe())
+	m.Run()
 }
