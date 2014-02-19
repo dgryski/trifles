@@ -37,3 +37,5 @@ This repo contains things not interesting or complete enough to have their own.
    * nlz -- asm code to find number of leading zeros
 
    * httpecho -- server to dump information about an http request
+
+   * lzpack -- trivial packed format for lz4 compression
