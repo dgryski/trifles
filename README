@@ -39,3 +39,5 @@ This repo contains things not interesting or complete enough to have their own.
    * httpecho -- server to dump information about an http request
 
    * lzpack -- trivial packed format for lz4 compression
+
+   * grinderplot -- generate a flot chart from grinder logs
