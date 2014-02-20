@@ -29,7 +29,7 @@ func main() {
 			parts := bytes.Split(line, []byte{','})
 			epochms, reqms := parts[3], parts[4]
 			epoch, _ := strconv.Atoi(string(bytes.TrimSpace(epochms)))
-			epoch /= 1000
+			epoch /= 1000 * 60
 			latency, _ := strconv.Atoi(string(bytes.TrimSpace(reqms)))
 			data[epoch] = append(data[epoch], latency)
 		}
@@ -46,7 +46,7 @@ func main() {
 	var graphdata [][]int
 	for _, epoch := range epochs {
 		l := len(data[epoch])
-		graphdata = append(graphdata, []int{epoch, data[epoch][(50*l)/100], data[epoch][(75*l)/100], data[epoch][(95*l)/100], data[epoch][(99*l)/100]})
+		graphdata = append(graphdata, []int{epoch * 1000 * 60, data[epoch][(50*l)/100], data[epoch][(75*l)/100], data[epoch][(95*l)/100], data[epoch][(99*l)/100], l})
 	}
 
 	reportTmpl.Execute(os.Stdout, graphdata)
@@ -62,16 +62,15 @@ var reportTmpl = template.Must(template.New("report").Parse(`
 
     var data = {{ . }};
 
-    var p50 = data.map(function(e) { return [e[0], e[1]] });
-    var p75 = data.map(function(e) { return [e[0], e[2]] });
-    var p95 = data.map(function(e) { return [e[0], e[3]] });
-    var p99 = data.map(function(e) { return [e[0], e[4]] });
+    var p50 = data.map(function(e) { return [e[5], e[1]] });
+    var p75 = data.map(function(e) { return [e[5], e[2]] });
+    var p95 = data.map(function(e) { return [e[5], e[3]] });
+    var p99 = data.map(function(e) { return [e[5], e[4]] });
 
     $(document).ready(function() {
         $.plot($("#placeholder"), [p50, p75, p95, p99 ], {
                 lines: { show: false },
                 points: { show: true, fillColor: false },
-                xaxis: { mode: "time" }
             })
     })
 
