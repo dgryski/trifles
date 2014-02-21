@@ -4,13 +4,16 @@ import (
 	"bufio"
 	"bytes"
 	"flag"
-	"html/template"
+	htemplate "html/template"
 	"os"
 	"sort"
 	"strconv"
+	ttemplate "text/template"
 )
 
 func main() {
+
+	outputCSV := flag.Bool("csv", false, "output CSV instead of HTML")
 
 	flag.Parse()
 
@@ -49,10 +52,36 @@ func main() {
 		graphdata = append(graphdata, []int{epoch * 1000 * 60, data[epoch][(50*l)/100], data[epoch][(75*l)/100], data[epoch][(95*l)/100], data[epoch][(99*l)/100], l})
 	}
 
+	if *outputCSV {
+		csvTmpl.Execute(os.Stdout, graphdata)
+		return
+	}
+
 	reportTmpl.Execute(os.Stdout, graphdata)
 }
 
-var reportTmpl = template.Must(template.New("report").Parse(`
+func joinInts(ints []int) string {
+
+	b := make([]byte, 0, len(ints)*21)
+
+	needComma := false
+	for _, v := range ints {
+		if needComma {
+			b = append(b, ',')
+		}
+		b = strconv.AppendInt(b, int64(v), 10)
+		needComma = true
+	}
+
+	return string(b)
+}
+
+var csvTmpl = ttemplate.Must(ttemplate.New("report").Funcs(ttemplate.FuncMap{"joinInts": joinInts}).Parse("" +
+	`epoch,p50,p75,p95,p99,requests
+{{ range . }}{{ joinInts . }}
+{{ end }}`))
+
+var reportTmpl = htemplate.Must(htemplate.New("report").Parse(`
 <html>
 <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/flot/0.8.2/jquery.flot.min.js"></script>
