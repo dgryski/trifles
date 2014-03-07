@@ -41,3 +41,5 @@ This repo contains things not interesting or complete enough to have their own.
    * lzpack -- trivial packed format for lz4 compression
 
    * grinderplot -- generate a flot chart from grinder logs
+
+   * worker -- framework for spawning concurrent workers
