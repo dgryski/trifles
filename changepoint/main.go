@@ -24,8 +24,6 @@ type streamDetector struct {
 	buffer []float64
 	bufidx int
 
-	items int
-
 	detector *change.Detector
 }
 
@@ -44,9 +42,7 @@ func New(windowSize int, minSample int, blockSize int) *streamDetector {
 
 func (s *streamDetector) Push(item float64) *change.ChangePoint {
 	s.buffer[s.bufidx] = item
-
 	s.bufidx++
-	s.items++
 
 	if s.bufidx < s.blockSize {
 		return nil
@@ -116,7 +112,7 @@ func main() {
 		if r != nil {
 			diff := math.Abs(r.Difference / r.Before.Mean())
 			if r.Difference != 0 && diff > 0.06 {
-				log.Printf("difference found at offset=%d: %f %v\n", s.items-s.windowSize+r.Index, diff, r)
+				log.Printf("difference found at offset=%d: %f %v\n", items-s.windowSize+r.Index, diff, r)
 				changePoints = append(changePoints, items-s.windowSize+r.Index)
 			}
 		}
