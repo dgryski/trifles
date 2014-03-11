@@ -32,8 +32,6 @@ This repo contains things not interesting or complete enough to have their own.
 
    * qrshow -- display QR codes in a terminal
 
-   * changepoint -- trivial changepoint detector
-
    * nlz -- asm code to find number of leading zeros
 
    * httpecho -- server to dump information about an http request
