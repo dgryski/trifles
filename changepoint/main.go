@@ -15,8 +15,52 @@ import (
 	"github.com/dgryski/go-change"
 )
 
+type streamDetector struct {
+	windowSize int
+	blockSize  int
+
+	data []float64
+
+	buffer []float64
+	bufidx int
+
+	items int
+
+	detector *change.Detector
+}
+
+func New(windowSize int, minSample int, blockSize int) *streamDetector {
+	return &streamDetector{
+		windowSize: windowSize,
+		blockSize:  blockSize,
+		data:       make([]float64, windowSize),
+		buffer:     make([]float64, blockSize),
+		detector: &change.Detector{
+			MinSampleSize: minSample,
+			TConf:         change.Conf99p5,
+		},
+	}
+}
+
+func (s *streamDetector) Push(item float64) *change.ChangePoint {
+	s.buffer[s.bufidx] = item
+
+	s.bufidx++
+	s.items++
+
+	if s.bufidx < s.blockSize {
+		return nil
+	}
+
+	copy(s.data[0:], s.data[s.blockSize:])
+	copy(s.data[s.windowSize-s.blockSize:], s.buffer)
+	s.bufidx = 0
+
+	return s.detector.Check(s.data)
+}
+
 func main() {
-	window := flag.Int("w", 120, "window size")
+	windowSize := flag.Int("w", 120, "window size")
 	minSample := flag.Int("ms", 30, "min sample size")
 	blockSize := flag.Int("bs", 10, "block size")
 	compressPoints := flag.Int("cp", 10, "compress points for graph display")
@@ -41,22 +85,15 @@ func main() {
 
 	scanner := bufio.NewScanner(f)
 
-	data := make([]float64, *window)
-	buffer := make([]float64, *blockSize)
-	var bufidx int
-	var items int
-
-	var detector = change.Detector{
-		MinSampleSize: *minSample,
-		TConf:         change.Conf99p5,
-	}
+	s := New(*windowSize, *minSample, *blockSize)
 
 	type graphPoints [2]float64
-
 	var graphData []graphPoints
 	var last []float64
 
 	var changePoints []int
+
+	var items int
 
 	for scanner.Scan() {
 		item, err := strconv.ParseFloat(scanner.Text(), 64)
@@ -66,6 +103,7 @@ func main() {
 		}
 
 		last = append(last, item)
+		items++
 		if items > 0 && items%*compressPoints == 0 {
 			sort.Float64s(last)
 			median := last[*compressPoints/2]
@@ -74,23 +112,12 @@ func main() {
 			graphData = append(graphData, [2]float64{float64(items), median})
 		}
 
-		buffer[bufidx] = item
-
-		bufidx++
-		items++
-		if bufidx == *blockSize {
-			copy(data[0:], data[*blockSize:])
-			copy(data[*window-*blockSize:], buffer)
-			bufidx = 0
-
-			if items >= *window {
-				r := detector.Check(data)
-				//				s := onlinestats.NewSlice(data)
-				diff := math.Abs(r.Difference / r.Before.Mean())
-				if r.Difference != 0 && diff > 0.06 {
-					log.Printf("difference found at offset=%d: %f %v\n", items-*window+r.Index, diff, r)
-					changePoints = append(changePoints, items-*window+r.Index)
-				}
+		r := s.Push(item)
+		if r != nil {
+			diff := math.Abs(r.Difference / r.Before.Mean())
+			if r.Difference != 0 && diff > 0.06 {
+				log.Printf("difference found at offset=%d: %f %v\n", s.items-s.windowSize+r.Index, diff, r)
+				changePoints = append(changePoints, items-s.windowSize+r.Index)
 			}
 		}
 	}
