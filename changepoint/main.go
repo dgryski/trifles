@@ -15,46 +15,6 @@ import (
 	"github.com/dgryski/go-change"
 )
 
-type streamDetector struct {
-	windowSize int
-	blockSize  int
-
-	data []float64
-
-	buffer []float64
-	bufidx int
-
-	detector *change.Detector
-}
-
-func New(windowSize int, minSample int, blockSize int) *streamDetector {
-	return &streamDetector{
-		windowSize: windowSize,
-		blockSize:  blockSize,
-		data:       make([]float64, windowSize),
-		buffer:     make([]float64, blockSize),
-		detector: &change.Detector{
-			MinSampleSize: minSample,
-			TConf:         change.Conf99p5,
-		},
-	}
-}
-
-func (s *streamDetector) Push(item float64) *change.ChangePoint {
-	s.buffer[s.bufidx] = item
-	s.bufidx++
-
-	if s.bufidx < s.blockSize {
-		return nil
-	}
-
-	copy(s.data[0:], s.data[s.blockSize:])
-	copy(s.data[s.windowSize-s.blockSize:], s.buffer)
-	s.bufidx = 0
-
-	return s.detector.Check(s.data)
-}
-
 func main() {
 	windowSize := flag.Int("w", 120, "window size")
 	minSample := flag.Int("ms", 30, "min sample size")
@@ -81,7 +41,7 @@ func main() {
 
 	scanner := bufio.NewScanner(f)
 
-	s := New(*windowSize, *minSample, *blockSize)
+	s := change.NewStream(*windowSize, *minSample, *blockSize, change.Conf99p5)
 
 	type graphPoints [2]float64
 	var graphData []graphPoints
@@ -109,11 +69,12 @@ func main() {
 		}
 
 		r := s.Push(item)
+
 		if r != nil {
 			diff := math.Abs(r.Difference / r.Before.Mean())
 			if r.Difference != 0 && diff > 0.06 {
-				log.Printf("difference found at offset=%d: %f %v\n", items-s.windowSize+r.Index, diff, r)
-				changePoints = append(changePoints, items-s.windowSize+r.Index)
+				log.Printf("difference found at offset=%d: %f %v\n", items-*windowSize+r.Index, diff, r)
+				changePoints = append(changePoints, items-*windowSize+r.Index)
 			}
 		}
 	}
