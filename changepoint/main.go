@@ -21,6 +21,7 @@ func main() {
 	blockSize := flag.Int("bs", 10, "block size")
 	compressPoints := flag.Int("cp", 10, "compress points for graph display")
 	fname := flag.String("f", "", "file name")
+	ymin := flag.Int("ymin", 0, "minimum y value for graph")
 
 	flag.Parse()
 
@@ -95,9 +96,11 @@ func main() {
 	}
 
 	reportTmpl.Execute(os.Stdout, struct {
+		YMin         int
 		GraphData    []graphPoints
 		ChangePoints []int
 	}{
+		*ymin,
 		graphData,
 		changePoints,
 	})
@@ -115,7 +118,7 @@ var reportTmpl = template.Must(template.New("report").Parse(`
 
     $(document).ready(function() {
         $.plot($("#placeholder"), [data], {
-             yaxis: { min: 2000 },
+             yaxis: { min: {{ .YMin }} },
              grid: {
                 markings: [
                   {{ range .ChangePoints }}{ color: '#000', lineWidth: 1, xaxis: { from: {{ . }}, to: {{ . }} } },
