@@ -43,3 +43,5 @@ This repo contains things not interesting or complete enough to have their own.
    * worker -- framework for spawning concurrent workers
 
    * gddo -- search godoc.org from the command line
+
+   * uuid -- generate random UUIDs
