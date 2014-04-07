@@ -4,17 +4,19 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"github.com/VividCortex/gohistogram"
-	bquantile "github.com/bmizerany/perks/quantile"
-	"github.com/dgryski/go-fastquantiles"
-	squantile "github.com/streadway/quantile"
 	"io"
 	"log"
+	"math"
 	"math/rand"
 	"os"
 	"sort"
 	"strconv"
 	"time"
+
+	"github.com/VividCortex/gohistogram"
+	bquantile "github.com/bmizerany/perks/quantile"
+	"github.com/dgryski/go-fastquantiles"
+	squantile "github.com/streadway/quantile"
 )
 
 func main() {
@@ -46,10 +48,11 @@ func main() {
 	var stream []int
 
 	bmq := bquantile.NewBiased()
-	gk := fastq.NewGK()
+	gk := fastquantiles.NewGK()
 	sq := squantile.New(squantile.Unknown(0.1))
 	vvh := gohistogram.NewHistogram(80)
-	zw := fastq.New(*zwn)
+	zeps := 1 / math.Exp(math.Log(float64(*zwn))-1)
+	zw, _ := fastquantiles.New(zeps, *zwn)
 
 	for v := range ch {
 		stream = append(stream, v)
