@@ -16,6 +16,7 @@ import (
 
 func main() {
 
+	width := flag.Int("w", 100, "display width")
 	percentiles := flag.String("p", "0.5,0.75,0.95,0.99,0.999", "percentile values to print")
 	flag.Parse()
 
@@ -56,7 +57,7 @@ func main() {
 		log.Fatal(sc.Err())
 	}
 
-	printHistogram(hist, maxcount)
+	printHistogram(hist, *width, maxcount)
 
 	fmt.Println("items: ", stats.Len())
 	fmt.Println("min: ", min)
@@ -114,14 +115,14 @@ func dupRune(r rune, n int) string {
 	return string(s)
 }
 
-func printHistogram(hist map[int]int, maxcount int) {
+func printHistogram(hist map[int]int, width, maxcount int) {
 
 	const keycols = 8
-	const starcols = 55
+	var starcols = width
 	const countcols = 8
 
-	const headerFmt = "%8s  %-55s  %8s\n"
-	const rowFmt = "%8d  %-55s  %8d\n"
+	var headerFmt = "%8s  %-" + strconv.Itoa(width) + "s %8s\n"
+	var rowFmt = "%8d  %-" + strconv.Itoa(width) + "s %8d\n"
 
 	fmt.Printf(headerFmt, "Key", "", "Count")
 
@@ -136,7 +137,7 @@ func printHistogram(hist map[int]int, maxcount int) {
 	sort.Ints(keys)
 
 	for _, k := range keys {
-		stars := dupRune('*', int(float64(starcols*(float64(hist[k])/float64(maxcount)))))
+		stars := dupRune('*', int(float64(float64(starcols)*(float64(hist[k])/float64(maxcount)))))
 		fmt.Printf(rowFmt, k, stars, hist[k])
 	}
 }
