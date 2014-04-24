@@ -2,96 +2,108 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
-	"io"
+	"log"
 	"math"
 	"os"
 	"sort"
 	"strconv"
+	"strings"
+
+	"github.com/dgryski/go-onlinestats"
 )
 
 func main() {
 
-	values := make([]int, 0, 10000)
+	percentiles := flag.String("p", "0.5,0.75,0.95,0.99,0.999", "percentile values to print")
+	flag.Parse()
+
 	hist := make(map[int]int)
 
-	br := bufio.NewReader(os.Stdin)
-
-FOR:
-	for i := 0; ; i++ {
-		b, err := br.ReadBytes('\n')
-		switch err {
-		case io.EOF:
-			break FOR
-		case nil:
-			n, _ := strconv.Atoi(string(b[:len(b)-1]))
-			values = append(values, n)
-			v := hist[n]
-			hist[n] = v + 1
-
-		default:
-			fmt.Printf("Error reading input: %v", err)
-			os.Exit(1)
-		}
-	}
-
-	sum := float64(0)
-	sumsq := float64(0)
+	stats := onlinestats.NewRunning()
 
 	min := int(math.MaxInt32)
 	max := 0
 
-	for _, v := range values {
-		f := float64(v)
-		sum += f
-		sumsq += f * f
+	maxcount := 0
 
-		if min > v {
+	sc := bufio.NewScanner(os.Stdin)
+	for sc.Scan() {
+		v, err := strconv.Atoi(sc.Text())
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if v < min {
 			min = v
 		}
 
-		if max < v {
+		if v > max {
 			max = v
 		}
-
-	}
-
-	n := len(values)
-
-	sort.Ints(values)
-
-	mean := sum / float64(n)
-	stddev := math.Sqrt(sumsq/float64(n) - mean*mean)
-
-	var median int
-
-	if n&1 == 1 {
-		median = values[(n-1)/2]
-	} else {
-		m := n / 2
-		median = int(values[m]+values[m+1]) / 2.0
-	}
-
-	mode := 0
-	maxcount := 0
-
-	for k, v := range hist {
-		if v > maxcount {
-			mode = k
-			maxcount = v
+		c := hist[v] + 1
+		if c > maxcount {
+			maxcount = c
 		}
+
+		hist[v] = c
+
+		stats.Push(float64(v))
+
+	}
+	if sc.Err() != nil {
+		log.Fatal(sc.Err())
 	}
 
 	printHistogram(hist, maxcount)
 
-	fmt.Println("items: ", n)
+	fmt.Println("items: ", stats.Len())
 	fmt.Println("min: ", min)
-	fmt.Println("mean: ", mean)
-	fmt.Println("median: ", median)
-	fmt.Println("mode: ", mode)
-	fmt.Println("count(mode): ", maxcount)
+
+	keys := make([]int, 0, len(hist))
+
+	for k := range hist {
+		keys = append(keys, k)
+	}
+
+	sort.Ints(keys)
+
+	var quantiles []float64
+
+	if *percentiles == "all" {
+		for i := 0; i < 100; i++ {
+			quantiles = append(quantiles, float64(i)/100.0)
+		}
+	} else {
+		pfloats := strings.Split(*percentiles, ",")
+		for _, p := range pfloats {
+			f, err := strconv.ParseFloat(p, 64)
+			if err != nil {
+				log.Printf("unable to parse float %s: %s\n", p, err)
+				continue
+			}
+			quantiles = append(quantiles, f)
+		}
+	}
+
+	pidx := 0
+	total := 0
+KEYS:
+	for _, k := range keys {
+		total += hist[k]
+		p := float64(total) / float64(stats.Len())
+		for quantiles[pidx] <= p {
+			fmt.Printf("% 4.1f: %d\n", quantiles[pidx]*100, k)
+			pidx++
+			if pidx == len(quantiles) {
+				break KEYS
+			}
+		}
+	}
+
 	fmt.Println("max: ", max)
-	fmt.Println("stdev: ", stddev)
+	fmt.Println("stdev: ", stats.Stddev())
 }
 
 func dupRune(r rune, n int) string {
