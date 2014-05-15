@@ -45,3 +45,5 @@ This repo contains things not interesting or complete enough to have their own.
    * gddo -- search godoc.org from the command line
 
    * uuid -- generate random UUIDs
+
+   * entropy -- reducer to compute entropy per epoch for a set of values in a category
