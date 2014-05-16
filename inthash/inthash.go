@@ -1,0 +1,119 @@
+// Package inthash is integer hashing functions
+// Taken from https://web.archive.org/web/20120720045250/http://www.cris.com/~Ttwang/tech/inthash.htm
+package inthash
+
+// Hash64 hashes a uint64
+func Hash64(key uint64) uint64 {
+	key = ^key + (key << 21) // key = (key << 21) - key - 1;
+	key = key ^ (key >> 24)
+	key = (key + (key << 3)) + (key << 8) // key * 265
+	key = key ^ (key >> 14)
+	key = (key + (key << 2)) + (key << 4) // key * 21
+	key = key ^ (key >> 28)
+	key = key + (key << 31)
+	return key
+}
+
+// Hash64Inv is the inverse of Hash64.  Hash64Inv(Hash64(x)) == x.
+func Hash64Inv(key uint64) uint64 {
+
+	// From http://naml.us/blog/2012/03/inverse-of-a-hash-function
+
+	tmp := uint64(0)
+
+	// Invert key = key + (key << 31)
+	tmp = key - (key << 31)
+	key = key - (tmp << 31)
+
+	// Invert key = key ^ (key >> 28)
+	tmp = key ^ key>>28
+	key = key ^ tmp>>28
+
+	// Invert key *= 21
+	key *= 14933078535860113213
+
+	// Invert key = key ^ (key >> 14)
+	tmp = key ^ key>>14
+	tmp = key ^ tmp>>14
+	tmp = key ^ tmp>>14
+	key = key ^ tmp>>14
+
+	// Invert key *= 265
+	key *= 15244667743933553977
+
+	// Invert key = key ^ (key >> 24)
+	tmp = key ^ key>>24
+	key = key ^ tmp>>24
+
+	// Invert key = (~key) + (key << 21)
+	tmp = ^key
+	tmp = ^(key - (tmp << 21))
+	tmp = ^(key - (tmp << 21))
+	key = ^(key - (tmp << 21))
+
+	return key
+}
+
+// Hash32 hashes a uint64
+func Hash32(key uint32) uint32 {
+	key = ^key + (key << 15) // key = (key << 15) - key - 1;
+	key = key ^ (key >> 12)
+	key = key + (key << 2)
+	key = key ^ (key >> 4)
+	key = key * 2057 // key = (key + (key << 3)) + (key << 11);
+	key = key ^ (key >> 16)
+	return key
+}
+
+// Jenkins32 is Robert Jenkins' 32-bit integer hash function
+func Jenkins32(a uint32) uint32 {
+	a = (a + 0x7ed55d16) + (a << 12)
+	a = (a ^ 0xc761c23c) ^ (a >> 19)
+	a = (a + 0x165667b1) + (a << 5)
+	a = (a + 0xd3a2646c) ^ (a << 9)
+	a = (a + 0xfd7046c5) + (a << 3)
+	a = (a ^ 0xb55a4f09) ^ (a >> 16)
+	return a
+}
+
+// Jenkins96 is Robert Jenkins' 96-bit integer hash function, mixing three uint32s into a single uint32 value.
+func Jenkins96(a, b, c uint32) uint32 {
+
+	a = a - b
+	a = a - c
+	a = a ^ (c >> 13)
+
+	b = b - c
+	b = b - a
+	b = b ^ (a << 8)
+
+	c = c - a
+	c = c - b
+	c = c ^ (b >> 13)
+
+	a = a - b
+	a = a - c
+	a = a ^ (c >> 12)
+
+	b = b - c
+	b = b - a
+	b = b ^ (a << 16)
+
+	c = c - a
+	c = c - b
+	c = c ^ (b >> 5)
+
+	a = a - b
+	a = a - c
+	a = a ^ (c >> 3)
+
+	b = b - c
+	b = b - a
+	b = b ^ (a << 10)
+
+	c = c - a
+	c = c - b
+	c = c ^ (b >> 15)
+
+	return c
+}

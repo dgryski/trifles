@@ -47,3 +47,5 @@ This repo contains things not interesting or complete enough to have their own.
    * uuid -- generate random UUIDs
 
    * entropy -- reducer to compute entropy per epoch for a set of values in a category
+
+   * inthash -- integer hashing functions
