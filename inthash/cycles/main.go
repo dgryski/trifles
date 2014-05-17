@@ -22,7 +22,7 @@ func main() {
 			break
 		}
 		b.Set(uint(i32))
-		i32 = inthash.Hash32(i32)
+		i32 = inthash.Jenkins32(i32)
 
 		if i32 == start {
 			log.Println("cycle for", start, "len=", steps)
