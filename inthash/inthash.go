@@ -1,5 +1,10 @@
 // Package inthash is integer hashing functions
-// Taken from https://web.archive.org/web/20120720045250/http://www.cris.com/~Ttwang/tech/inthash.htm
+/*
+Taken from
+    https://web.archive.org/web/20120720045250/http://www.cris.com/~Ttwang/tech/inthash.htm
+    http://burtleburtle.net/bob/hash/integer.html
+
+*/
 package inthash
 
 // Hash64 hashes a uint64
@@ -73,6 +78,17 @@ func Jenkins32(a uint32) uint32 {
 	a = (a + 0xd3a2646c) ^ (a << 9)
 	a = (a + 0xfd7046c5) + (a << 3)
 	a = (a ^ 0xb55a4f09) ^ (a >> 16)
+	return a
+}
+
+func JenkinsShift32(a uint32) uint32 {
+	a -= (a << 6)
+	a ^= (a >> 17)
+	a -= (a << 9)
+	a ^= (a << 4)
+	a -= (a << 3)
+	a ^= (a << 10)
+	a ^= (a >> 15)
 	return a
 }
 
