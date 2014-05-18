@@ -133,3 +133,29 @@ func Jenkins96(a, b, c uint32) uint32 {
 
 	return c
 }
+
+// https://en.wikipedia.org/wiki/Xorshift
+
+// Xorshift32 is an xorshift RNG
+func Xorshift32(y uint32) uint32 {
+
+	// http://www.jstatsoft.org/v08/i14/paper
+	// Marasaglia's "favourite"
+
+	y ^= (y << 13)
+	y ^= (y >> 17)
+	y ^= (y << 5)
+	return y
+}
+
+func LecuyerPanneton32(y uint32) uint32 {
+
+	// From the paper "On the xorshift random number generators"
+	// http://www.iro.umontreal.ca/~lecuyer/myftp/papers/xorshift.pdf
+	// This sequence had the best equidistribution property
+
+	y ^= (y << 7)
+	y ^= (y >> 1)
+	y ^= (y << 9)
+	return y
+}
