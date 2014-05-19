@@ -159,3 +159,11 @@ func LecuyerPanneton32(y uint32) uint32 {
 	y ^= (y << 9)
 	return y
 }
+
+// 64-bit xorshift multiply rng from http://vigna.di.unimi.it/ftp/papers/xorshift.pdf
+func XorshiftMult64(x uint64) uint64 {
+	x ^= x >> 12 // a
+	x ^= x << 25 // b
+	x ^= x >> 27 // c
+	return x * 2685821657736338717
+}
