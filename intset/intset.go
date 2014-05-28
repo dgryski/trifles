@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"github.com/dgryski/dbitstream"
 	"math/rand"
 	"sort"
 	"time"
+
+	"github.com/dgryski/go-bitstream"
 )
 
 const SIZE = 1024
@@ -97,7 +98,7 @@ func riceEncodeArray(numbers []int) []uint8 {
 
 	binary.Write(buf, binary.LittleEndian, int32(numbers[0]))
 
-	bw := dbitstream.NewWriter(buf)
+	bw := bitstream.NewWriter(buf)
 
 	l := len(numbers)
 
@@ -107,19 +108,19 @@ func riceEncodeArray(numbers []int) []uint8 {
 		q := (n - 1) / (1 << M)
 
 		for i := 0; i < q; i++ {
-			bw.WriteBit(dbitstream.Zero)
+			bw.WriteBit(bitstream.Zero)
 		}
-		bw.WriteBit(dbitstream.One)
+		bw.WriteBit(bitstream.One)
 
 		r := (n - 1) & ((1 << M) - 1)
 
 		for i := M; i >= 0; i-- {
-			var b dbitstream.Bit
+			var b bitstream.Bit
 			b = r&(1<<uint(i)) != 0
 			bw.WriteBit(b)
 		}
 	}
-	bw.Flush(dbitstream.Zero)
+	bw.Flush(bitstream.Zero)
 	return buf.Bytes()
 }
 
@@ -132,7 +133,7 @@ func riceDecodeArray(l int, enc []uint8) []int {
 	binary.Read(buf, binary.LittleEndian, &i32)
 	numbers := []int{int(i32)}
 
-	br := dbitstream.NewReader(buf)
+	br := bitstream.NewReader(buf)
 
 	prev := numbers[0]
 
