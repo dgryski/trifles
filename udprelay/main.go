@@ -72,9 +72,12 @@ func main() {
 
 	flag.Parse()
 
-	if *debugPort != 0 {
-		go http.ListenAndServe(":"+strconv.Itoa(*debugPort), nil)
-	}
+	go func() {
+		err := http.ListenAndServe(":"+strconv.Itoa(*debugPort), nil)
+		if err != nil {
+			log.Fatal("Error from ListenAndServe:", err)
+		}
+	}()
 
 	quit := make(chan struct{})
 	done := make(chan struct{})
