@@ -127,6 +127,12 @@ func main() {
 
 			totalPackets.Add(1)
 
+			if n == 0 {
+				// ignore 0 byte packets
+				log.Println("ignoring 0-byte packet")
+				continue
+			}
+
 			pkt := Arena.Alloc(4 + n)
 			copy(pkt[4:], b[:n])
 
