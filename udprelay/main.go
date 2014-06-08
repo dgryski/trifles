@@ -111,7 +111,13 @@ func main() {
 
 			for _, ch := range workerchs {
 				Arena.AddRef(pkt)
-				ch <- pkt
+				select {
+				case ch <- pkt:
+					// success
+				default:
+					// channel is full :(
+					Arena.DecRef(pkt)
+				}
 			}
 			Arena.DecRef(pkt)
 		}
