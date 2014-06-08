@@ -99,7 +99,7 @@ func main() {
 
 	Arena.arena = slab.NewArena(8192, 32*1024*1024, 2, nil)
 
-	expvar.Publish("arenaMetrics", expvar.Func(func() interface{} {
+	expvar.Publish("arenastats", expvar.Func(func() interface{} {
 		m := make(map[string]int64)
 		Arena.Stats(m)
 		return m
