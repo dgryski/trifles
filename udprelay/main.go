@@ -8,6 +8,8 @@ import (
 	"net"
 	"net/http"
 	_ "net/http/pprof"
+	"os"
+	"os/signal"
 	"strconv"
 	"sync"
 	"time"
@@ -60,12 +62,15 @@ func main() {
 		go http.ListenAndServe(":"+strconv.Itoa(*debugPort), nil)
 	}
 
+	quit := make(chan struct{})
+	done := make(chan struct{})
+
 	// start workers
 	var workerchs []chan []byte
 	for _, dst := range flag.Args() {
 		w := make(chan []byte, 100000)
 		workerchs = append(workerchs, w)
-		go worker(w, dst)
+		go worker(w, dst, quit, done)
 	}
 
 	pconn, e := net.ListenPacket("udp", ":"+strconv.Itoa(*port))
@@ -91,27 +96,38 @@ func main() {
 
 	var b [math.MaxUint16]byte
 
-	for {
-		n, _, err := pconn.ReadFrom(b[:])
-		if err != nil {
-			log.Println(err)
-			continue
+	go func() {
+		for {
+			n, _, err := pconn.ReadFrom(b[:])
+			if err != nil {
+				log.Println(err)
+				continue
+			}
+
+			pkt := Arena.Alloc(4 + n)
+			copy(pkt[4:], b[:n])
+
+			binary.LittleEndian.PutUint32(pkt[:], uint32(n))
+
+			for _, ch := range workerchs {
+				Arena.AddRef(pkt)
+				ch <- pkt
+			}
+			Arena.DecRef(pkt)
 		}
+	}()
 
-		pkt := Arena.Alloc(4 + n)
-		copy(pkt[4:], b[:n])
-
-		binary.LittleEndian.PutUint32(pkt[:], uint32(n))
-
-		for _, ch := range workerchs {
-			Arena.AddRef(pkt)
-			ch <- pkt
-		}
-		Arena.DecRef(pkt)
+	sig := make(chan os.Signal)
+	signal.Notify(sig, os.Interrupt)
+	<-sig
+	log.Println("Shutting down..")
+	close(quit)
+	for i := 0; i < len(workerchs); i++ {
+		<-done
 	}
 }
 
-func worker(w chan []byte, dst string) {
+func worker(w chan []byte, dst string, quit, done chan struct{}) {
 	conn, err := net.Dial("tcp", dst)
 	if err != nil {
 		log.Println("unable to connect: ", conn)
@@ -124,6 +140,14 @@ func worker(w chan []byte, dst string) {
 	for {
 		var pkt []byte
 		select {
+		case <-quit:
+			// shut down immediately or try to drain the work queue?
+			if len(failedPackets) != 0 {
+				dumpToFile(dst, time.Now().Unix(), failedPackets)
+			}
+			done <- struct{}{}
+			return
+
 		case epoch := <-tick:
 			if len(failedPackets) != 0 {
 				dumpToFile(dst, epoch.Unix(), failedPackets)
