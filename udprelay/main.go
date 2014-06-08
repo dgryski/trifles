@@ -75,7 +75,7 @@ func main() {
 
 	log.Println("udp server starting on port", *port)
 
-	Arena.arena = slab.NewArena(4+math.MaxUint16, 16*1024*1024, 2, nil)
+	Arena.arena = slab.NewArena(8192, 32*1024*1024, 2, nil)
 
 	// TODO(dgryski): one we have expvar, export these too
 	if *arenaStats {
@@ -89,22 +89,25 @@ func main() {
 		}()
 	}
 
+	var b [math.MaxUint16]byte
+
 	for {
-		b := Arena.Alloc(4 + math.MaxUint16)
-		n, _, err := pconn.ReadFrom(b[4:])
+		n, _, err := pconn.ReadFrom(b[:])
 		if err != nil {
 			log.Println(err)
-			Arena.DecRef(b)
 			continue
 		}
-		binary.LittleEndian.PutUint32(b[:], uint32(n))
-		pkt := b[:4+n] // trim
+
+		pkt := Arena.Alloc(4 + n)
+		copy(pkt[4:], b[:n])
+
+		binary.LittleEndian.PutUint32(pkt[:], uint32(n))
 
 		for _, ch := range workerchs {
 			Arena.AddRef(pkt)
 			ch <- pkt
 		}
-		Arena.DecRef(b)
+		Arena.DecRef(pkt)
 	}
 }
 
