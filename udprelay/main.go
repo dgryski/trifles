@@ -20,6 +20,7 @@ import (
 	"os/signal"
 	"strconv"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/couchbaselabs/go-slab"
@@ -58,6 +59,11 @@ func (a *lockedArena) Stats(m map[string]int64) map[string]int64 {
 
 var Arena lockedArena
 
+type atomicUint32 uint32
+
+func (a *atomicUint32) Add(c uint32) { atomic.AddUint32((*uint32)(a), c) }
+func (a *atomicUint32) Get() uint32  { return atomic.LoadUint32((*uint32)(a)) }
+
 func main() {
 
 	port := flag.Int("p", 12233, "udp listen port")
@@ -89,15 +95,22 @@ func main() {
 	log.Println("udp server starting on port", *port)
 
 	Arena.arena = slab.NewArena(8192, 32*1024*1024, 2, nil)
+	var totalPackets atomicUint32
 
 	// TODO(dgryski): one we have expvar, export these too
 	if *arenaStats {
 		go func() {
 			arenaStats := make(map[string]int64)
 
+			var prev uint32
 			for {
+				prev = totalPackets.Get()
 				time.Sleep(10 * time.Second)
+				newpkts := totalPackets.Get()
+
 				log.Println(Arena.Stats(arenaStats))
+				log.Println("packets=", newpkts-prev)
+				prev = newpkts
 			}
 		}()
 	}
@@ -111,6 +124,8 @@ func main() {
 				log.Println(err)
 				continue
 			}
+
+			totalPackets.Add(1)
 
 			pkt := Arena.Alloc(4 + n)
 			copy(pkt[4:], b[:n])
