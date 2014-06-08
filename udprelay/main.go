@@ -162,7 +162,11 @@ func worker(w chan []byte, dst string, quit, done chan struct{}) {
 				// TODO(dgryski): add our good friend 'exponential backoff' ?
 				if conn != nil {
 					conn.Close()
+					conn = nil
 				}
+			}
+
+			if conn == nil {
 				conn, err = net.Dial("tcp", dst)
 				if err != nil {
 					log.Println("unable to re-connect: ", dst, err)
