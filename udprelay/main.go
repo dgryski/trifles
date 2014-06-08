@@ -100,13 +100,11 @@ func main() {
 		binary.LittleEndian.PutUint32(b[:], uint32(n))
 		pkt := b[:4+n] // trim
 
-		go func(pkt []byte) {
-			for _, ch := range workerchs {
-				Arena.AddRef(pkt)
-				ch <- pkt
-			}
-			Arena.DecRef(b)
-		}(pkt)
+		for _, ch := range workerchs {
+			Arena.AddRef(pkt)
+			ch <- pkt
+		}
+		Arena.DecRef(b)
 	}
 }
 
