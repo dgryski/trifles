@@ -1,5 +1,13 @@
 package main
 
+/*
+TODO:
+    actually write files on error
+    better reconnect / error handling
+    tcp listener
+    expvar support
+*/
+
 import (
 	"encoding/binary"
 	"flag"
