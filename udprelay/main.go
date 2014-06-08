@@ -5,11 +5,11 @@ TODO:
     actually write files on error
     better reconnect / error handling
     tcp listener
-    expvar support
 */
 
 import (
 	"encoding/binary"
+	"expvar"
 	"flag"
 	"log"
 	"math"
@@ -20,7 +20,6 @@ import (
 	"os/signal"
 	"strconv"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/couchbaselabs/go-slab"
@@ -59,16 +58,17 @@ func (a *lockedArena) Stats(m map[string]int64) map[string]int64 {
 
 var Arena lockedArena
 
-type atomicUint32 uint32
-
-func (a *atomicUint32) Add(c uint32) { atomic.AddUint32((*uint32)(a), c) }
-func (a *atomicUint32) Get() uint32  { return atomic.LoadUint32((*uint32)(a)) }
+// grouped expvars for /debug/vars and graphite
+var Metrics = struct {
+	Packets *expvar.Int
+}{
+	Packets: expvar.NewInt("packets"),
+}
 
 func main() {
 
 	port := flag.Int("p", 12233, "udp listen port")
-	debugPort := flag.Int("debugPort", 0, "debug port")
-	arenaStats := flag.Bool("memstats", false, "dump arena stats")
+	debugPort := flag.Int("debugPort", 8080, "debug port")
 
 	flag.Parse()
 
@@ -95,25 +95,12 @@ func main() {
 	log.Println("udp server starting on port", *port)
 
 	Arena.arena = slab.NewArena(8192, 32*1024*1024, 2, nil)
-	var totalPackets atomicUint32
 
-	// TODO(dgryski): one we have expvar, export these too
-	if *arenaStats {
-		go func() {
-			arenaStats := make(map[string]int64)
-
-			var prev uint32
-			for {
-				prev = totalPackets.Get()
-				time.Sleep(10 * time.Second)
-				newpkts := totalPackets.Get()
-
-				log.Println(Arena.Stats(arenaStats))
-				log.Println("packets=", newpkts-prev)
-				prev = newpkts
-			}
-		}()
-	}
+	expvar.Publish("arenaMetrics", expvar.Func(func() interface{} {
+		m := make(map[string]int64)
+		Arena.Stats(m)
+		return m
+	}))
 
 	var b [math.MaxUint16]byte
 
@@ -125,7 +112,7 @@ func main() {
 				continue
 			}
 
-			totalPackets.Add(1)
+			Metrics.Packets.Add(1)
 
 			if n == 0 {
 				// ignore 0 byte packets
