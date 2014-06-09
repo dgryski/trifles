@@ -11,6 +11,7 @@ import (
 	"encoding/binary"
 	"expvar"
 	"flag"
+	"io"
 	"log"
 	"math"
 	"net"
@@ -67,7 +68,8 @@ var Metrics = struct {
 
 func main() {
 
-	port := flag.Int("p", 12233, "udp listen port")
+	proto := flag.String("proto", "udp", "listen protocol")
+	port := flag.Int("p", 12233, "listen port")
 	debugPort := flag.Int("debugPort", 8080, "debug port")
 
 	flag.Parse()
@@ -90,13 +92,6 @@ func main() {
 		go worker(w, dst, quit, done)
 	}
 
-	pconn, e := net.ListenPacket("udp", ":"+strconv.Itoa(*port))
-	if e != nil {
-		log.Fatal("udp listen error:", e)
-	}
-
-	log.Println("udp server starting on port", *port)
-
 	Arena.arena = slab.NewArena(8192, 32*1024*1024, 2, nil)
 
 	expvar.Publish("arenastats", expvar.Func(func() interface{} {
@@ -105,42 +100,14 @@ func main() {
 		return m
 	}))
 
-	var b [math.MaxUint16]byte
-
-	go func() {
-		for {
-			n, _, err := pconn.ReadFrom(b[:])
-			if err != nil {
-				log.Println(err)
-				continue
-			}
-
-			Metrics.Packets.Add(1)
-
-			if n == 0 {
-				// ignore 0 byte packets
-				log.Println("ignoring 0-byte packet")
-				continue
-			}
-
-			pkt := Arena.Alloc(4 + n)
-			copy(pkt[4:], b[:n])
-
-			binary.LittleEndian.PutUint32(pkt[:], uint32(n))
-
-			for _, ch := range workerchs {
-				Arena.AddRef(pkt)
-				select {
-				case ch <- pkt:
-					// success
-				default:
-					// channel is full :(
-					Arena.DecRef(pkt)
-				}
-			}
-			Arena.DecRef(pkt)
-		}
-	}()
+	switch *proto {
+	case "udp":
+		go udpHandler(*port, workerchs)
+	case "tcp":
+		go tcpHandler(*port, workerchs)
+	default:
+		log.Fatal("unknown protocol", *proto)
+	}
 
 	sig := make(chan os.Signal)
 	signal.Notify(sig, os.Interrupt)
@@ -149,6 +116,122 @@ func main() {
 	close(quit)
 	for i := 0; i < len(workerchs); i++ {
 		<-done
+	}
+}
+
+func udpHandler(port int, workerchs []chan []byte) {
+	pconn, e := net.ListenPacket("udp", ":"+strconv.Itoa(port))
+	if e != nil {
+		log.Fatal("udp listen error:", e)
+	}
+
+	log.Println("udp server starting on port", port)
+
+	var b [math.MaxUint16]byte
+	for {
+		n, _, err := pconn.ReadFrom(b[:])
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+
+		Metrics.Packets.Add(1)
+
+		if n == 0 {
+			// ignore 0 byte packets
+			log.Println("ignoring 0-byte packet")
+			continue
+		}
+
+		pkt := Arena.Alloc(4 + n)
+		copy(pkt[4:], b[:n])
+
+		binary.LittleEndian.PutUint32(pkt[:], uint32(n))
+
+		for _, ch := range workerchs {
+			Arena.AddRef(pkt)
+			select {
+			case ch <- pkt:
+				// success
+			default:
+				// channel is full :(
+				Arena.DecRef(pkt)
+			}
+		}
+		Arena.DecRef(pkt)
+	}
+}
+
+func tcpHandler(port int, workerchs []chan []byte) {
+	ln, e := net.Listen("tcp", ":"+strconv.Itoa(port))
+	if e != nil {
+		log.Fatal("tcp listen error:", e)
+	}
+
+	log.Println("tcp server starting on port", port)
+
+	for {
+
+		conn, err := ln.Accept()
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+
+		go func(conn net.Conn) {
+
+			defer conn.Close()
+
+			var b [math.MaxUint16]byte
+			var bsz [4]byte
+			for {
+
+				n, err := conn.Read(bsz[:])
+				if n != 4 || err != nil {
+					log.Println(err)
+					return
+				}
+
+				n = int(binary.LittleEndian.Uint16(bsz[:]))
+
+				if n == 0 {
+					// ignore 0 byte packets
+					log.Println("ignoring 0-byte packet")
+					continue
+				}
+
+				if n > math.MaxUint16 {
+					log.Println("packet > math.MaxUint16: ", n)
+					return
+				}
+
+				_, err = io.ReadFull(conn, b[:n])
+				if err != nil {
+					log.Println("short read on packet")
+					return
+				}
+
+				// same as for udp
+
+				Metrics.Packets.Add(1)
+
+				pkt := Arena.Alloc(n + 4)
+				copy(pkt[4:], b[:n])
+				binary.LittleEndian.PutUint32(pkt[:], uint32(n))
+
+				for _, ch := range workerchs {
+					Arena.AddRef(pkt)
+					select {
+					case ch <- pkt:
+						// success
+					default:
+						// channel is full :(
+						Arena.DecRef(pkt)
+					}
+				}
+				Arena.DecRef(pkt)
+			}
+		}(conn)
 	}
 }
 
