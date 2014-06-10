@@ -4,7 +4,6 @@ package main
 TODO:
     actually write files on error
     better reconnect / error handling
-    tcp listener
 */
 
 import (
@@ -61,9 +60,17 @@ var Arena lockedArena
 
 // grouped expvars for /debug/vars and graphite
 var Metrics = struct {
-	Packets *expvar.Int
+	PacketsIn  *expvar.Int
+	PacketsOut *expvar.Int
+	BytesIn    *expvar.Int
+	BytesOut   *expvar.Int
+	Failed     *expvar.Int
 }{
-	Packets: expvar.NewInt("packets"),
+	PacketsIn:  expvar.NewInt("packetsIn"),
+	PacketsOut: expvar.NewInt("packetsOut"),
+	BytesIn:    expvar.NewInt("bytesIn"),
+	BytesOut:   expvar.NewInt("bytesOut"),
+	Failed:     expvar.NewInt("failed"),
 }
 
 func main() {
@@ -135,13 +142,15 @@ func udpHandler(port int, workerchs []chan []byte) {
 			continue
 		}
 
-		Metrics.Packets.Add(1)
+		Metrics.PacketsIn.Add(1)
 
 		if n == 0 {
 			// ignore 0 byte packets
 			log.Println("ignoring 0-byte packet")
 			continue
 		}
+
+		Metrics.BytesIn.Add(int64(n))
 
 		pkt := Arena.Alloc(4 + n)
 		copy(pkt[4:], b[:n])
@@ -213,7 +222,8 @@ func tcpHandler(port int, workerchs []chan []byte) {
 
 				// same as for udp
 
-				Metrics.Packets.Add(1)
+				Metrics.PacketsIn.Add(1)
+				Metrics.BytesIn.Add(int64(n) + 4)
 
 				pkt := Arena.Alloc(n + 4)
 				copy(pkt[4:], b[:n])
@@ -301,11 +311,15 @@ func worker(w chan []byte, dst string, quit, done chan struct{}) {
 			failedPackets = append(failedPackets, pkt)
 			continue
 		}
+		Metrics.PacketsOut.Add(1)
+		Metrics.BytesOut.Add(int64(n))
 		Arena.DecRef(pkt)
 	}
 }
 
 func dumpToFile(dst string, epoch int64, failedPackets [][]byte) {
-	// nothing, for now
+	Metrics.Failed.Add(int64(len(failedPackets)))
+
+	// just log, for now
 	log.Println("dumping ", len(failedPackets), "for", dst, epoch)
 }
