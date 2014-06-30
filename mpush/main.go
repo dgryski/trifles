@@ -3,17 +3,18 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"io/ioutil"
 	"log"
 	"net/http"
-	"path"
 
 	"github.com/AlekSi/pushover"
 	"github.com/boltdb/bolt"
 	"github.com/dustin/go-nma"
-	"github.com/emicklei/go-restful"
-	"github.com/emicklei/go-restful/swagger"
-	"github.com/gorilla/schema"
+
 	"github.com/xconstruct/go-pushbullet"
+
+	"github.com/go-martini/martini"
+	"github.com/martini-contrib/render"
 )
 
 type DistributionListResource struct {
@@ -31,62 +32,12 @@ const (
 	bucketDistributionLists = "DistributionList"
 )
 
-// Global Filter
-func globalLogging(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
-	log.Printf("[global-filter (logger)] %s,%s\n", req.Request.Method, req.Request.URL)
-	chain.ProcessFilter(req, resp)
-}
+var errNotFound = errors.New("list not found")
 
-// WebService Filter
-func webserviceLogging(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
-	log.Printf("[webservice-filter (logger)] %s,%s\n", req.Request.Method, req.Request.URL)
-	chain.ProcessFilter(req, resp)
-}
-
-func (u DistributionListResource) Register(container *restful.Container) {
-	ws := new(restful.WebService)
-	ws.Path("/api/lists").
-		Consumes(restful.MIME_XML, restful.MIME_JSON).
-		Produces(restful.MIME_JSON, restful.MIME_XML) // you can specify this per route as well
-
-	ws.Filter(webserviceLogging)
-
-	ws.Route(ws.GET("").To(u.allLists).
-		// docs
-		Doc("get all lists").
-		Writes([]DistributionList{})) // on the response
-
-	ws.Route(ws.GET("/{list-id}").To(u.findList).
-		// docs
-		Doc("get a list").
-		Param(ws.PathParameter("list-id", "identifier of the list").DataType("string")).
-		Writes(DistributionList{})) // on the response
-
-	ws.Route(ws.POST("").To(u.updateList).
-		// docs
-		Doc("update a list").
-		Param(ws.BodyParameter("List", "representation of a list").DataType("main.List")).
-		Reads(DistributionList{})) // from the request
-
-	ws.Route(ws.PUT("/{list-id}").To(u.createList).
-		// docs
-		Doc("create a list").
-		Param(ws.PathParameter("list-id", "identifier of the list").DataType("string")).
-		Param(ws.BodyParameter("List", "representation of a list").DataType("main.List")).
-		Reads(DistributionList{})) // from the request
-
-	ws.Route(ws.DELETE("/{list-id}").To(u.removeList).
-		// docs
-		Doc("delete a list").
-		Param(ws.PathParameter("list-id", "identifier of the list").DataType("string")))
-
-	container.Add(ws)
-}
-
-func (u DistributionListResource) allLists(request *restful.Request, response *restful.Response) {
+func allLists(db *bolt.DB, params martini.Params, req *http.Request, r render.Render) {
 	var lists []DistributionList
 
-	u.datastore.View(
+	err := db.View(
 		func(tx *bolt.Tx) error {
 			b := tx.Bucket([]byte(bucketDistributionLists))
 
@@ -102,76 +53,118 @@ func (u DistributionListResource) allLists(request *restful.Request, response *r
 			})
 		})
 
-	response.WriteEntity(lists)
+	if err != nil {
+		r.Error(http.StatusInternalServerError)
+		return
+	}
+
+	r.JSON(http.StatusOK, lists)
 }
 
-func (u DistributionListResource) findList(request *restful.Request, response *restful.Response) {
-	id := request.PathParameter("list-id")
+func findList(db *bolt.DB, params martini.Params, req *http.Request, r render.Render) {
+	id := params["id"]
 
 	var dst []byte
-	u.datastore.View(
+	err := db.View(
 		func(tx *bolt.Tx) error {
 			b := tx.Bucket([]byte(bucketDistributionLists))
 			dst = b.Get([]byte(id))
 			return nil
 		})
 
+	if err != nil {
+		r.Error(http.StatusInternalServerError)
+		return
+	}
+
 	if dst == nil {
-		response.AddHeader("Content-Type", "text/plain")
-		response.WriteErrorString(http.StatusNotFound, "List could not be found.")
-	} else {
-		var l DistributionList
-		json.Unmarshal(dst, &l)
-		response.WriteEntity(l)
+		r.Error(http.StatusNotFound)
+		return
 	}
+
+	var l DistributionList
+	err = json.Unmarshal(dst, &l)
+
+	if err != nil {
+		r.Error(http.StatusInternalServerError)
+		return
+	}
+
+	r.JSON(http.StatusOK, l)
 }
 
-func (u *DistributionListResource) updateList(request *restful.Request, response *restful.Response) {
-	l := new(DistributionList)
-	err := request.ReadEntity(&l)
+func updateList(db *bolt.DB, params martini.Params, req *http.Request, r render.Render) {
 
-	if err == nil {
-		j, _ := json.Marshal(l)
+	var l DistributionList
 
-		u.datastore.Update(
-			func(tx *bolt.Tx) error {
-				b := tx.Bucket([]byte(bucketDistributionLists))
-				return b.Put([]byte(l.Id), j)
-			})
+	body, _ := ioutil.ReadAll(req.Body)
+	req.Body.Close()
+	err := json.Unmarshal(body, &l)
 
-		response.WriteEntity(l)
-	} else {
-		response.AddHeader("Content-Type", "text/plain")
-		response.WriteErrorString(http.StatusInternalServerError, err.Error())
+	if err != nil {
+		r.Error(http.StatusBadRequest)
+		return
 	}
+
+	if params["id"] != l.Id {
+		r.Error(http.StatusBadRequest)
+		return
+	}
+
+	// marshal back out to json to normalize our data
+	j, err := json.Marshal(l)
+
+	db.Update(
+		func(tx *bolt.Tx) error {
+			b := tx.Bucket([]byte(bucketDistributionLists))
+			return b.Put([]byte(l.Id), j)
+		})
+
+	r.Status(http.StatusOK)
 }
 
-func (u *DistributionListResource) createList(request *restful.Request, response *restful.Response) {
-	l := DistributionList{Id: request.PathParameter("list-id")}
-	err := request.ReadEntity(&l)
-	if err == nil {
-		j, _ := json.Marshal(l)
-		u.datastore.Update(
-			func(tx *bolt.Tx) error {
-				b := tx.Bucket([]byte(bucketDistributionLists))
-				return b.Put([]byte(l.Id), j)
-			})
+func createList(db *bolt.DB, params martini.Params, req *http.Request, r render.Render) {
 
-		response.WriteHeader(http.StatusCreated)
-		response.WriteEntity(l)
-	} else {
-		response.AddHeader("Content-Type", "text/plain")
-		response.WriteErrorString(http.StatusInternalServerError, err.Error())
+	var l DistributionList
+
+	body, _ := ioutil.ReadAll(req.Body)
+	req.Body.Close()
+	err := json.Unmarshal(body, &l)
+
+	if err != nil {
+		r.Error(http.StatusBadRequest)
+		return
 	}
+
+	if params["id"] != l.Id {
+		r.Error(http.StatusBadRequest)
+		return
+	}
+
+	j, _ := json.Marshal(l)
+	db.Update(
+		func(tx *bolt.Tx) error {
+			b := tx.Bucket([]byte(bucketDistributionLists))
+			return b.Put([]byte(l.Id), j)
+		})
+
+	r.JSON(http.StatusCreated, l)
 }
 
-func (u *DistributionListResource) removeList(request *restful.Request, response *restful.Response) {
-	id := request.PathParameter("list-id")
-	u.datastore.Update(
+func removeList(db *bolt.DB, params martini.Params, req *http.Request, r render.Render) {
+	id := params["id"]
+
+	err := db.Update(
 		func(tx *bolt.Tx) error {
 			b := tx.Bucket([]byte(bucketDistributionLists))
 			return b.Delete([]byte(id))
 		})
+	if err != nil {
+		r.Error(http.StatusInternalServerError)
+		return
+	}
+
+	r.Status(http.StatusOK)
 }
 
 type PBUser struct {
@@ -201,7 +194,7 @@ func loadDistributionList(bucket Getter, list []byte) (DistributionList, error) 
 	v := bucket.Get(list)
 
 	if v == nil {
-		return DistributionList{}, errors.New("no distribution found")
+		return DistributionList{}, errNotFound
 	}
 
 	var l DistributionList
@@ -275,124 +268,80 @@ type PushNotification struct {
 	Body  string
 }
 
-var decoder = schema.NewDecoder()
+func pushHandler(db *bolt.DB, params martini.Params, req *http.Request, r render.Render) {
 
-func pushHandler(request *restful.Request, response *restful.Response, datastore *bolt.DB) {
+	var pushNotification PushNotification
 
-	err := request.Request.ParseForm()
-	if err != nil {
-		response.WriteErrorString(http.StatusBadRequest, err.Error())
-		return
-	}
-
-	pushNotification := new(PushNotification)
-
-	err = decoder.Decode(pushNotification, request.Request.PostForm)
-
-	log.Println(pushNotification)
+	body, _ := ioutil.ReadAll(req.Body)
+	req.Body.Close()
+	err := json.Unmarshal(body, &pushNotification)
 
 	if err != nil {
-		response.AddHeader("Content-Type", "text/plain")
-		response.WriteErrorString(http.StatusBadRequest, err.Error())
+		r.Error(http.StatusBadRequest)
 		return
 	}
 
 	if pushNotification.List == "" {
-		response.AddHeader("Content-Type", "text/plain")
-		response.WriteErrorString(http.StatusNotFound, "User could not be found.")
+		r.Error(404)
 		return
 	}
 
 	var targets DistributionList
-	err = datastore.View(
+	err = db.View(
 		func(tx *bolt.Tx) error {
 			targets, err = loadDistributionList(tx.Bucket([]byte(bucketDistributionLists)), []byte(pushNotification.List))
 			return err
 		})
 
 	if err != nil {
-		response.AddHeader("Content-Type", "text/plain")
-		response.WriteErrorString(http.StatusBadRequest, err.Error())
+		log.Println(err)
+		if err == errNotFound {
+			r.Error(http.StatusNotFound)
+		} else {
+			r.Error(http.StatusInternalServerError)
+		}
 		return
 	}
 
 	done := make(chan struct{})
 
-	go sendNMA(pushNotification, targets.Nma, done)
-	go sendPushover(pushNotification, targets.Pushover, done)
-	go sendPushBullet(pushNotification, targets.Pushbullet, done)
+	go sendNMA(&pushNotification, targets.Nma, done)
+	go sendPushover(&pushNotification, targets.Pushover, done)
+	go sendPushBullet(&pushNotification, targets.Pushbullet, done)
 
 	for i := 0; i < 3; i++ {
 		<-done
 	}
 }
 
-var rootdir = "."
-
-func staticFromPathParam(req *restful.Request, resp *restful.Response) {
-	http.ServeFile(
-		resp.ResponseWriter,
-		req.Request,
-		path.Join(rootdir+"/static/", req.PathParameter("resource")))
-}
-
-func staticFromQueryParam(req *restful.Request, resp *restful.Response) {
-	http.ServeFile(
-		resp.ResponseWriter,
-		req.Request,
-		path.Join(rootdir+"/static/", req.QueryParameter("resource")))
-}
-
 func main() {
 
-	datastore, err := bolt.Open("mpush.db", 0666)
+	db, err := bolt.Open("mpush.db", 0666)
 
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer datastore.Close()
+	defer db.Close()
 
-	wsContainer := restful.NewContainer()
+	m := martini.Classic()
 
-	restful.Filter(globalLogging)
+	m.Use(render.Renderer())
 
-	dsl := DistributionListResource{datastore}
-	dsl.Register(wsContainer)
+	// Setup routes
+	r := martini.NewRouter()
+	r.Get(`/api/v0/lists`, allLists)
+	r.Get(`/api/v0/lists/:id`, findList)
+	r.Post(`/api/v0/lists`, createList)
+	r.Put(`/api/v0/lists/:id`, updateList)
+	r.Delete(`/api/v0/lists/:id`, removeList)
 
-	wsPush := new(restful.WebService)
+	r.Post("/api/v0/push", pushHandler)
 
-	wsPush.Path("/api/push")
-	wsPush.Route(wsPush.POST("").
-		Consumes("application/x-www-form-urlencoded").
-		To(func(request *restful.Request, response *restful.Response) { pushHandler(request, response, datastore) }).
-		// docs
-		Doc("push to a distribution list").
-		Param(wsPush.BodyParameter("List", "list to send to").DataType("string")).
-		Param(wsPush.BodyParameter("Title", "title of notification").DataType("string")).
-		Param(wsPush.BodyParameter("Body", "body of notification").DataType("string")).
-		Reads(PushNotification{})) // from the request
-	wsContainer.Add(wsPush)
+	// Inject database
+	m.Map(db)
 
-	// static files
-	wsStatic := new(restful.WebService)
-	wsStatic.Route(wsStatic.GET("/static/{resource}").To(staticFromPathParam))
-	wsStatic.Route(wsStatic.GET("/static").To(staticFromQueryParam))
-	wsContainer.Add(wsStatic)
+	// Add the router action
+	m.Action(r.Handle)
 
-	// Optionally, you can install the Swagger Service which provides a nice Web UI on your REST API
-	// You need to download the Swagger HTML5 assets and change the FilePath location in the config below.
-	// Open http://localhost:8080/apidocs and enter http://localhost:8080/apidocs.json in the api input field.
-	config := swagger.Config{
-		WebServices:    wsContainer.RegisteredWebServices(), // you control what services are visible
-		WebServicesUrl: "http://localhost:8080",
-		ApiPath:        "/apidocs.json",
-
-		// Optionally, specifiy where the UI is located
-		SwaggerPath:     "/apidocs/",
-		SwaggerFilePath: "/home/dgryski/work/src/cvs/swagger-ui/dist"}
-	swagger.RegisterSwaggerService(config, wsContainer)
-
-	log.Printf("start listening on localhost:8080")
-	server := &http.Server{Addr: ":8080", Handler: wsContainer}
-	log.Fatal(server.ListenAndServe())
+	m.Run()
 }
