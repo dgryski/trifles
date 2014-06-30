@@ -2,12 +2,13 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"path"
 
 	"github.com/AlekSi/pushover"
-	"github.com/cznic/kv"
+	"github.com/boltdb/bolt"
 	"github.com/dustin/go-nma"
 	"github.com/emicklei/go-restful"
 	"github.com/emicklei/go-restful/swagger"
@@ -16,7 +17,7 @@ import (
 )
 
 type DistributionListResource struct {
-	datastore *kv.DB
+	datastore *bolt.DB
 }
 
 type DistributionList struct {
@@ -25,6 +26,10 @@ type DistributionList struct {
 	Pushbullet PBConfig
 	Pushover   POConfig
 }
+
+const (
+	bucketDistributionLists = "DistributionList"
+)
 
 // Global Filter
 func globalLogging(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
@@ -80,18 +85,22 @@ func (u DistributionListResource) Register(container *restful.Container) {
 
 func (u DistributionListResource) allLists(request *restful.Request, response *restful.Response) {
 	var lists []DistributionList
-	e, _ := u.datastore.SeekFirst()
 
-	for {
-		_, v, err := e.Next()
-		if err != nil {
-			break
-		}
+	u.datastore.View(
+		func(tx *bolt.Tx) error {
+			b := tx.Bucket([]byte(bucketDistributionLists))
 
-		var d DistributionList
-		json.Unmarshal(v, &d)
-		lists = append(lists, d)
-	}
+			return b.ForEach(func(k, v []byte) error {
+				var d DistributionList
+				err := json.Unmarshal(v, &d)
+				// TODO(dgryski): skip invalid keys instead of aborting on corrupt db?[
+				if err != nil {
+					return err
+				}
+				lists = append(lists, d)
+				return nil
+			})
+		})
 
 	response.WriteEntity(lists)
 }
@@ -99,9 +108,15 @@ func (u DistributionListResource) allLists(request *restful.Request, response *r
 func (u DistributionListResource) findList(request *restful.Request, response *restful.Response) {
 	id := request.PathParameter("list-id")
 
-	dst, err := u.datastore.Get(nil, []byte(id))
+	var dst []byte
+	u.datastore.View(
+		func(tx *bolt.Tx) error {
+			b := tx.Bucket([]byte(bucketDistributionLists))
+			dst = b.Get([]byte(id))
+			return nil
+		})
 
-	if dst == nil || err != nil {
+	if dst == nil {
 		response.AddHeader("Content-Type", "text/plain")
 		response.WriteErrorString(http.StatusNotFound, "List could not be found.")
 	} else {
@@ -114,9 +129,16 @@ func (u DistributionListResource) findList(request *restful.Request, response *r
 func (u *DistributionListResource) updateList(request *restful.Request, response *restful.Response) {
 	l := new(DistributionList)
 	err := request.ReadEntity(&l)
+
 	if err == nil {
 		j, _ := json.Marshal(l)
-		u.datastore.Set([]byte(l.Id), j)
+
+		u.datastore.Update(
+			func(tx *bolt.Tx) error {
+				b := tx.Bucket([]byte(bucketDistributionLists))
+				return b.Put([]byte(l.Id), j)
+			})
+
 		response.WriteEntity(l)
 	} else {
 		response.AddHeader("Content-Type", "text/plain")
@@ -129,7 +151,11 @@ func (u *DistributionListResource) createList(request *restful.Request, response
 	err := request.ReadEntity(&l)
 	if err == nil {
 		j, _ := json.Marshal(l)
-		u.datastore.Set([]byte(l.Id), j)
+		u.datastore.Update(
+			func(tx *bolt.Tx) error {
+				b := tx.Bucket([]byte(bucketDistributionLists))
+				return b.Put([]byte(l.Id), j)
+			})
 
 		response.WriteHeader(http.StatusCreated)
 		response.WriteEntity(l)
@@ -141,7 +167,11 @@ func (u *DistributionListResource) createList(request *restful.Request, response
 
 func (u *DistributionListResource) removeList(request *restful.Request, response *restful.Response) {
 	id := request.PathParameter("list-id")
-	u.datastore.Delete([]byte(id))
+	u.datastore.Update(
+		func(tx *bolt.Tx) error {
+			b := tx.Bucket([]byte(bucketDistributionLists))
+			return b.Delete([]byte(id))
+		})
 }
 
 type PBUser struct {
@@ -163,18 +193,19 @@ type POConfig struct {
 }
 
 type Getter interface {
-	Get(dst, src []byte) ([]byte, error)
+	Get(key []byte) []byte
 }
 
-func loadDistributionList(datastore Getter, list []byte) (DistributionList, error) {
+func loadDistributionList(bucket Getter, list []byte) (DistributionList, error) {
 
-	v, err := datastore.Get(nil, list)
-	if err != nil {
-		return DistributionList{}, err
+	v := bucket.Get(list)
+
+	if v == nil {
+		return DistributionList{}, errors.New("no distribution found")
 	}
 
 	var l DistributionList
-	if err = json.Unmarshal(v, &l); err != nil {
+	if err := json.Unmarshal(v, &l); err != nil {
 		return DistributionList{}, err
 	}
 
@@ -246,7 +277,7 @@ type PushNotification struct {
 
 var decoder = schema.NewDecoder()
 
-func pushHandler(request *restful.Request, response *restful.Response, datastore *kv.DB) {
+func pushHandler(request *restful.Request, response *restful.Response, datastore *bolt.DB) {
 
 	err := request.Request.ParseForm()
 	if err != nil {
@@ -272,7 +303,13 @@ func pushHandler(request *restful.Request, response *restful.Response, datastore
 		return
 	}
 
-	targets, err := loadDistributionList(datastore, []byte(pushNotification.List))
+	var targets DistributionList
+	err = datastore.View(
+		func(tx *bolt.Tx) error {
+			targets, err = loadDistributionList(tx.Bucket([]byte(bucketDistributionLists)), []byte(pushNotification.List))
+			return err
+		})
+
 	if err != nil {
 		response.AddHeader("Content-Type", "text/plain")
 		response.WriteErrorString(http.StatusBadRequest, err.Error())
@@ -308,7 +345,7 @@ func staticFromQueryParam(req *restful.Request, resp *restful.Response) {
 
 func main() {
 
-	datastore, err := kv.Open("mpush.kvdb", &kv.Options{})
+	datastore, err := bolt.Open("mpush.db", 0666)
 
 	if err != nil {
 		log.Fatal(err)
