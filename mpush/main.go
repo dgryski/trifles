@@ -10,16 +10,11 @@ import (
 	"github.com/AlekSi/pushover"
 	"github.com/boltdb/bolt"
 	"github.com/dustin/go-nma"
-
 	"github.com/xconstruct/go-pushbullet"
 
 	"github.com/go-martini/martini"
 	"github.com/martini-contrib/render"
 )
-
-type DistributionListResource struct {
-	datastore *bolt.DB
-}
 
 type DistributionList struct {
 	Id         string
