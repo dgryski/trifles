@@ -53,3 +53,5 @@ This repo contains things not interesting or complete enough to have their own.
    * udprelay -- simple udp-to-tcp multiplexing relay
 
    * shufsecs -- shuffle sorted epoch-data within epochs
+
+   * strtable -- dumb string->uint32 hash table for profiling vs native maps
