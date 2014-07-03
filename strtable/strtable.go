@@ -75,22 +75,18 @@ func leveldbHash(b []byte) uint32 {
 	return h
 }
 
-type Native struct {
-	m map[string]uint32
+type Native map[string]uint32
+
+func NewNative() Native {
+	return Native(make(map[string]uint32))
 }
 
-func NewNative() *Native {
-	return &Native{
-		m: make(map[string]uint32),
-	}
-}
+func (n Native) Insert(x []byte, val uint32) (uint32, bool) {
 
-func (n *Native) Insert(x []byte, val uint32) (uint32, bool) {
-
-	if val, ok := n.m[string(x)]; ok {
+	if val, ok := n[string(x)]; ok {
 		return val, true
 	}
 
-	n.m[string(x)] = val
+	n[string(x)] = val
 	return val, false
 }
