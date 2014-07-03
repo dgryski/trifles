@@ -78,8 +78,8 @@ func leveldbHash(b []byte) uint32 {
 
 type Native map[string]uint32
 
-func NewNative() Native {
-	return Native(make(map[string]uint32))
+func NewNative(size int) Native {
+	return Native(make(map[string]uint32, size))
 }
 
 func (n Native) Insert(x []byte, val uint32) (uint32, bool) {
