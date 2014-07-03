@@ -4,9 +4,10 @@ package strtable
 import "bytes"
 
 type element struct {
-	key  []byte
+	// NOTE(dgryski): don't reorder these.  Cacheline magic discovered by benchmarking
 	hash uint32
 	val  uint32
+	key  []byte
 }
 
 type Table []element
