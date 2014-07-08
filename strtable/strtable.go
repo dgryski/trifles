@@ -10,38 +10,77 @@ type element struct {
 	key  []byte
 }
 
-type Table []element
+type Table struct {
+	t    []element
+	keys int
+}
 
 func New(keys int) *Table {
-	t := Table(make([]element, 2*keys))
+	t := Table{t: make([]element, 2*keys)}
 	return &t
 }
 
 func (t *Table) Insert(k []byte, val uint32) (uint32, bool) {
 
-	mask := uint32(len(*t) - 1)
+	mask := uint32(len(t.t) - 1)
 
 	h := leveldbHash(k) & mask
 	//  you can hack your runtime to expose this..
 	// h := uint32(runtime.BytesHash(k, 0)) & mask
-
 	slot := h
+
 	for {
-		if (*t)[slot].key == nil {
+		if (t.t)[slot].key == nil {
 			// doesn't exist -- add it
-			(*t)[slot].key = k
-			(*t)[slot].hash = h
-			(*t)[slot].val = val
+			(t.t)[slot].key = k
+			(t.t)[slot].hash = h
+			(t.t)[slot].val = val
+
+			t.keys++
+			if t.keys > len(t.t)/2 {
+				t.double()
+			}
+
 			return val, false
 		}
 
 		// slot key is not nil
-		if (*t)[slot].hash == h && bytes.Equal((*t)[slot].key, k) {
-			return (*t)[slot].val, true
+		if (t.t)[slot].hash == h && bytes.Equal((t.t)[slot].key, k) {
+			return (t.t)[slot].val, true
 		}
 
 		slot = (slot + 1) & mask
 	}
+}
+
+func (t *Table) double() {
+	newTable := make([]element, 2*len(t.t))
+	mask := uint32(len(newTable) - 1)
+
+	for _, elt := range t.t {
+
+		if elt.key == nil {
+			continue
+		}
+
+		slot := elt.hash & mask
+
+		var steps int
+
+		for {
+			if newTable[slot].key == nil {
+				// found a spot
+				newTable[slot] = elt
+				break
+			}
+
+			slot = (slot + 1) & mask
+			steps++
+		}
+	}
+
+	t.t = newTable
+
 }
 
 // leveldb's bloom filter hash, a murmur-lite
