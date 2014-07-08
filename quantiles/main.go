@@ -16,6 +16,7 @@ import (
 	"github.com/VividCortex/gohistogram"
 	bquantile "github.com/bmizerany/perks/quantile"
 	"github.com/dgryski/go-fastquantiles"
+	gogk "github.com/dgryski/go-gk"
 	squantile "github.com/streadway/quantile"
 )
 
@@ -48,8 +49,8 @@ func main() {
 	var stream []int
 
 	bmq := bquantile.NewBiased()
-	gk := fastquantiles.NewGK()
-	sq := squantile.New(squantile.Unknown(0.1))
+	gk := gogk.New(0.01)
+	sq := squantile.New(squantile.Unknown(0.01))
 	vvh := gohistogram.NewHistogram(80)
 	zeps := 1 / math.Exp(math.Log(float64(*zwn))-1)
 	zw, _ := fastquantiles.New(zeps, *zwn)
