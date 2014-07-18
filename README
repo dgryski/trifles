@@ -55,3 +55,5 @@ This repo contains things not interesting or complete enough to have their own.
    * shufsecs -- shuffle sorted epoch-data within epochs
 
    * strtable -- dumb string->uint32 hash table for profiling vs native maps
+
+   * cachetest -- playing with different caching algorithms (clock, lru, lfu, random)
