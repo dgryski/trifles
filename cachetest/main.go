@@ -2,8 +2,10 @@ package main
 
 /*
 
-clock: 2.497958238s 10000000 total 2587380 misses
+slru2080: 6.36564715s 10000000 total 2254569 misses
 lfu: 5.194561433s 10000000 total 2326371 misses
+slru5050: 6.266535668s 10000000 total 2360416 misses
+clock: 2.497958238s 10000000 total 2587380 misses
 lru: 5.020239605s 10000000 total 2643644 misses
 random: 2.523026752s 10000000 total 2900727 misses
 
@@ -19,6 +21,7 @@ import (
 	"github.com/calmh/lfucache"
 	"github.com/dgryski/trifles/cachetest/clock"
 	"github.com/dgryski/trifles/cachetest/random"
+	"github.com/dgryski/trifles/cachetest/slru"
 	"github.com/golang/groupcache/lru"
 )
 
@@ -96,6 +99,21 @@ func main() {
 			count += 1
 		}
 
+	case "slru":
+
+		cache := slru.New(200, 800)
+
+		in := bufio.NewScanner(os.Stdin)
+		for in.Scan() {
+			domain := in.Text()
+			if i := cache.Get(domain); i == nil {
+				cache.Set(domain, domain)
+				i = domain
+				miss += 1
+			}
+
+			count += 1
+		}
 	}
 
 	fmt.Printf("%s: %s %d total %d misses\n", *alg, time.Since(t0), count, miss)
