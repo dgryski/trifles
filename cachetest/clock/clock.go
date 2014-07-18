@@ -30,7 +30,7 @@ func (c *Cache) Get(key string) interface{} {
 	return c.keys[idx].value
 }
 
-func (c *Cache) Set(key, value string) {
+func (c *Cache) Set(key string, value interface{}) {
 
 	slot := len(c.data)
 

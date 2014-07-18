@@ -22,7 +22,7 @@ func (c *Cache) Get(key string) interface{} {
 	return c.data[key]
 }
 
-func (c *Cache) Set(key, value string) {
+func (c *Cache) Set(key string, value interface{}) {
 
 	slot := len(c.data)
 
