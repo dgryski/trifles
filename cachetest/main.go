@@ -29,6 +29,7 @@ import (
 
 func main() {
 
+	n := flag.Int("n", 1000, "cache size")
 	alg := flag.String("alg", "", "algorithm")
 
 	flag.Parse()
@@ -44,7 +45,7 @@ func main() {
 
 	case "random":
 
-		cache := random.New(1000)
+		cache := random.New(*n)
 
 		f = func(s string) bool {
 			if i := cache.Get(s); i == nil {
@@ -56,7 +57,7 @@ func main() {
 
 	case "lru":
 
-		cache := lru.New(1000)
+		cache := lru.New(*n)
 
 		f = func(s string) bool {
 			if _, ok := cache.Get(s); !ok {
@@ -68,7 +69,7 @@ func main() {
 
 	case "lfu":
 
-		cache := lfucache.New(1000)
+		cache := lfucache.New(*n)
 
 		f = func(s string) bool {
 			if _, ok := cache.Access(s); !ok {
@@ -81,7 +82,7 @@ func main() {
 
 	case "clock":
 
-		cache := clock.New(1000)
+		cache := clock.New(*n)
 
 		f = func(s string) bool {
 			if i := cache.Get(s); i == nil {
@@ -93,7 +94,7 @@ func main() {
 
 	case "slru":
 
-		cache := slru.New(200, 800)
+		cache := slru.New(int(float64(*n)*0.2), int(float64(*n)*0.8))
 
 		f = func(s string) bool {
 			if i := cache.Get(s); i == nil {
@@ -105,7 +106,7 @@ func main() {
 
 	case "s4lru":
 
-		cache := s4lru.New(1000)
+		cache := s4lru.New(*n)
 
 		f = func(s string) bool {
 			if i := cache.Get(s); i == nil {
