@@ -38,96 +38,92 @@ func main() {
 
 	t0 := time.Now()
 
+	var f func(string) bool
+
 	switch *alg {
 
 	case "random":
 
 		cache := random.New(1000)
 
-		in := bufio.NewScanner(os.Stdin)
-		for in.Scan() {
-			domain := in.Text()
-			if i := cache.Get(domain); i == nil {
-				cache.Set(domain, domain)
-				miss += 1
+		f = func(s string) bool {
+			if i := cache.Get(s); i == nil {
+				cache.Set(s, s)
+				return true
 			}
-
-			count += 1
+			return false
 		}
 
 	case "lru":
 
 		cache := lru.New(1000)
 
-		in := bufio.NewScanner(os.Stdin)
-		for in.Scan() {
-			domain := in.Text()
-			if _, ok := cache.Get(domain); !ok {
-				cache.Add(domain, domain)
-				miss += 1
+		f = func(s string) bool {
+			if _, ok := cache.Get(s); !ok {
+				cache.Add(s, s)
+				return true
 			}
-
-			count += 1
+			return false
 		}
 
 	case "lfu":
 
 		cache := lfucache.New(1000)
 
-		in := bufio.NewScanner(os.Stdin)
-		for in.Scan() {
-			domain := in.Text()
-			if _, ok := cache.Access(domain); !ok {
-				cache.Insert(domain, domain)
-				miss += 1
+		f = func(s string) bool {
+			if _, ok := cache.Access(s); !ok {
+				cache.Insert(s, s)
+				return true
 			}
+			return false
 
-			count += 1
 		}
 
 	case "clock":
 
 		cache := clock.New(1000)
 
-		in := bufio.NewScanner(os.Stdin)
-		for in.Scan() {
-			domain := in.Text()
-			if i := cache.Get(domain); i == nil {
-				cache.Set(domain, domain)
-				i = domain
-				miss += 1
+		f = func(s string) bool {
+			if i := cache.Get(s); i == nil {
+				cache.Set(s, s)
+				return true
 			}
-
-			count += 1
+			return false
 		}
 
 	case "slru":
 
 		cache := slru.New(200, 800)
 
-		in := bufio.NewScanner(os.Stdin)
-		for in.Scan() {
-			domain := in.Text()
-			if i := cache.Get(domain); i == nil {
-				cache.Put(domain, domain)
-				miss += 1
+		f = func(s string) bool {
+			if i := cache.Get(s); i == nil {
+				cache.Set(s, s)
+				return true
 			}
-			count += 1
+			return false
 		}
 
 	case "s4lru":
 
 		cache := s4lru.New(1000)
 
-		in := bufio.NewScanner(os.Stdin)
-		for in.Scan() {
-			domain := in.Text()
-			if i := cache.Get(domain); i == nil {
-				cache.Put(domain, domain)
-				miss += 1
+		f = func(s string) bool {
+			if i := cache.Get(s); i == nil {
+				cache.Put(s, s)
+				return true
 			}
-			count += 1
+			return false
+
 		}
+
+	}
+
+	in := bufio.NewScanner(os.Stdin)
+	for in.Scan() {
+		if f(in.Text()) {
+			miss += 1
+		}
+		count += 1
 	}
 
 	fmt.Printf("%s: %s %d total %d misses\n", *alg, time.Since(t0), count, miss)
