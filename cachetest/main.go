@@ -20,9 +20,9 @@ import (
 	"time"
 
 	"github.com/calmh/lfucache"
+	"github.com/dgryski/go-s4lru"
 	"github.com/dgryski/trifles/cachetest/clock"
 	"github.com/dgryski/trifles/cachetest/random"
-	"github.com/dgryski/trifles/cachetest/s4lru"
 	"github.com/dgryski/trifles/cachetest/slru"
 	"github.com/golang/groupcache/lru"
 )
@@ -109,8 +109,8 @@ func main() {
 		cache := s4lru.New(*n)
 
 		f = func(s string) bool {
-			if i := cache.Get(s); i == nil {
-				cache.Put(s, s)
+			if _, ok := cache.Get(s); !ok {
+				cache.Set(s, s)
 				return true
 			}
 			return false
