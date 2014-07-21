@@ -7,10 +7,9 @@ Currently implemented:
 * lfu (external, from https://github.com/calmh/lfucache )
 * clock
 * slru
-* s4lru (described in http://www.cs.cornell.edu/~qhuang/papers/sosp_fbanalysis.pdf )
+* s4lru (external, from http://github.com/dgryski/go-s4lru )
 
 usage:
 
     $  ./cachetest -n=5000 -alg=s4lru <trace.txt
-
 
