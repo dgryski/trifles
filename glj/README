@@ -1,0 +1,14 @@
+A quick demo for passing data from Go to lua via msgpack.
+
+This prevents having to send each individual array value into lua separately,
+which is a massive speedup for large arrays.
+
+Sorry about the hard-coded paths for CGO.
+
+Run ./setup.sh to grab the lua_cmsgpack.c source code from
+github.com/antirez/lua-cmsgpack . I didn't want to commit it into my repo.
+
+Demo:
+
+$ ./setup.sh && go build . && ./glj
+21
