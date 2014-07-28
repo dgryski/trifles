@@ -57,3 +57,5 @@ This repo contains things not interesting or complete enough to have their own.
    * strtable -- dumb string->uint32 hash table for profiling vs native maps
 
    * cachetest -- playing with different caching algorithms (clock, lru, lfu, random)
+
+   * glj -- passing data from go to lua with msgpack
