@@ -20,6 +20,7 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -37,6 +38,7 @@ func main() {
 
 	n := flag.Int("n", 1000, "cache size")
 	alg := flag.String("alg", "", "algorithm")
+	file := flag.String("f", "", "input file")
 
 	flag.Parse()
 
@@ -153,7 +155,17 @@ func main() {
 
 	}
 
-	in := bufio.NewScanner(os.Stdin)
+	var inputFile = os.Stdin
+	if *file != "" {
+		var err error
+		inputFile, err = os.Open(*file)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		defer inputFile.Close()
+	}
+
+	in := bufio.NewScanner(inputFile)
 	for in.Scan() {
 		if f(in.Text()) {
 			miss += 1
