@@ -47,6 +47,10 @@ func main() {
 
 	flag.Parse()
 
+	if *alg == "" {
+		log.Fatalln("no algorithm provided (-alg)")
+	}
+
 	if *cpuprofile {
 		defer profile.Start(profile.CPUProfile).Stop()
 	}
@@ -162,6 +166,8 @@ func main() {
 
 		}
 
+	default:
+		log.Fatalln("unknown algorithm")
 	}
 
 	var inputFile = os.Stdin
