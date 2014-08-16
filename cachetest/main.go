@@ -183,9 +183,9 @@ func main() {
 	in := bufio.NewScanner(inputFile)
 	for in.Scan() {
 		if f(in.Text()) {
-			miss += 1
+			miss++
 		}
-		count += 1
+		count++
 	}
 
 	if *memprofile {
