@@ -2,8 +2,12 @@ package main
 
 /*
 
+sorted by misses
+
+clockpro: 3.133172079s 10000000 total 2212461 misses
+arc: 5.136880077s 10000000 total 2220016 misses
 slru2080: 6.36564715s 10000000 total 2254569 misses
-s4lru: 3.176211561s 10000000 total 2259629 misses
+s4lru: 2.571416442s 10000000 total 2259629 misses
 lfu: 5.194561433s 10000000 total 2326371 misses
 slru5050: 6.266535668s 10000000 total 2360416 misses
 clock: 2.497958238s 10000000 total 2587380 misses
@@ -20,6 +24,8 @@ import (
 	"time"
 
 	"github.com/calmh/lfucache"
+	"github.com/dgryski/go-arc"
+	"github.com/dgryski/go-clockpro"
 	"github.com/dgryski/go-s4lru"
 	"github.com/dgryski/trifles/cachetest/clock"
 	"github.com/dgryski/trifles/cachetest/random"
@@ -42,6 +48,22 @@ func main() {
 	var f func(string) bool
 
 	switch *alg {
+
+	case "arc":
+
+		cache := arc.New(*n)
+
+		f = func(s string) bool {
+
+			var miss bool
+
+			cache.Get(s, func() interface{} {
+				miss = true
+				return s
+			})
+
+			return miss
+		}
 
 	case "random":
 
@@ -83,6 +105,18 @@ func main() {
 	case "clock":
 
 		cache := clock.New(*n)
+
+		f = func(s string) bool {
+			if i := cache.Get(s); i == nil {
+				cache.Set(s, s)
+				return true
+			}
+			return false
+		}
+
+	case "clockpro":
+
+		cache := clockpro.New(*n)
 
 		f = func(s string) bool {
 			if i := cache.Get(s); i == nil {
