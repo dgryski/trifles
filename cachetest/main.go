@@ -34,6 +34,7 @@ import (
 	"github.com/dgryski/trifles/cachetest/clock"
 	"github.com/dgryski/trifles/cachetest/random"
 	"github.com/dgryski/trifles/cachetest/slru"
+	"github.com/dgryski/trifles/cachetest/tworand"
 	"github.com/golang/groupcache/lru"
 )
 
@@ -83,6 +84,18 @@ func main() {
 	case "random":
 
 		cache := random.New(*n)
+
+		f = func(s string) bool {
+			if i := cache.Get(s); i == nil {
+				cache.Set(s, s)
+				return true
+			}
+			return false
+		}
+
+	case "tworand":
+
+		cache := tworand.New(*n)
 
 		f = func(s string) bool {
 			if i := cache.Get(s); i == nil {
