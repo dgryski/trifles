@@ -208,5 +208,5 @@ func main() {
 		e.Encode(m)
 	}
 
-	fmt.Printf("%s: %s %d total %d misses\n", *alg, time.Since(t0), count, miss)
+	fmt.Printf("%s: %s %d total %d misses (hit rate %d %%)\n", *alg, time.Since(t0), count, miss, int(100*(float64(count-miss)/float64(count))))
 }
