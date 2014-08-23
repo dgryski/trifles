@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/AlekSi/pushover"
 	"github.com/boltdb/bolt"
@@ -225,13 +226,13 @@ func sendNMA(pn *PushNotification, nmaconf NMAConfig, done chan struct{}) {
 
 func sendPushover(pn *PushNotification, poconf POConfig, done chan struct{}) {
 
-	pushover.DefaultClient.Token = poconf.APIKey
+	pushover.DefaultClient.ApplicationToken = poconf.APIKey
 
 	for _, u := range poconf.Users {
 		if debug {
 			log.Println("pretending to notify pushover user", u)
 		} else {
-			err := pushover.SendMessage(u, pn.Title, pn.Body)
+			err := pushover.Send(&pushover.Message{User: u, Title: pn.Title, Message: pn.Body, Timestamp: time.Now()})
 			if err != nil {
 				log.Println("Unable to notify pushover:", u, ":", err)
 			}
