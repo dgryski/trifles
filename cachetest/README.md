@@ -8,6 +8,8 @@ Currently implemented:
 * clock
 * slru
 * s4lru (external, from http://github.com/dgryski/go-s4lru )
+* clock-pro (external, from https://github.com/dgryski/go-clockpro )
+* arc (external, from https://github.com/dgryski/go-arc )
 
 usage:
 
