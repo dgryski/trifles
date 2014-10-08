@@ -59,3 +59,5 @@ This repo contains things not interesting or complete enough to have their own.
    * cachetest -- playing with different caching algorithms (clock, lru, lfu, random)
 
    * glj -- passing data from go to lua with msgpack
+
+   * toms -- text filter for time.Duration to milliseconds
