@@ -184,17 +184,47 @@ func FoREncode(input []int32) []byte {
 
 	prev := input[0]
 	for _, v := range input[1:] {
-		diff := prev - v
+		diff := v - prev
 		if -127 <= diff && diff < 127 {
 			b = append(b, byte(diff))
 		} else {
-			b = append(b, 0xFF)
+			b = append(b, 0x80)
 			b = appendUint32(b, v)
 		}
 		prev = v
 	}
 
 	return b
+}
+
+func FoRDecode(input []byte) []int32 {
+
+	if len(input) == 0 {
+		return nil
+	}
+
+	var output []int32
+
+	n := int32(binary.LittleEndian.Uint32(input[:]))
+	input = input[4:]
+
+	output = append(output, n)
+
+	prev := n
+	for len(input) > 0 {
+		diff := input[0]
+		input = input[1:]
+		if diff == 0x80 {
+			n = int32(binary.LittleEndian.Uint32(input[:]))
+			input = input[4:]
+		} else {
+			n = prev + int32(diff)
+		}
+		prev = n
+		output = append(output, n)
+	}
+
+	return output
 }
 
 /*
@@ -222,13 +252,11 @@ func encodeFrameList(numbers [SIZE]int) []uint8 {
 */
 
 func compare(dec, numbers []int32) {
-
 	for i := 0; i < SIZE; i++ {
 		if dec[i] != numbers[i] {
 			fmt.Println("found mismatch: ", i, " => ", dec[i], " and ", numbers[i])
 		}
 	}
-
 }
 
 func main() {
@@ -296,6 +324,7 @@ func main() {
 
 	t0 = time.Now()
 	enc = FoREncode(numbers[:])
+	dec = FoRDecode(enc[:])
 	fmt.Println("t = ", time.Since(t0))
 	compare(dec, numbers[:])
 
