@@ -164,6 +164,39 @@ func riceDecodeArray(l int, enc []uint8) []int32 {
 	return numbers
 }
 
+func appendUint32(b []byte, i int32) []byte {
+	b = append(b, byte(i))
+	b = append(b, byte(i>>8))
+	b = append(b, byte(i>>16))
+	b = append(b, byte(i>>24))
+	return b
+}
+
+func FoREncode(input []int32) []byte {
+
+	if len(input) == 0 {
+		return nil
+	}
+
+	var b []byte
+
+	b = appendUint32(b, input[0])
+
+	prev := input[0]
+	for _, v := range input[1:] {
+		diff := prev - v
+		if -127 <= diff && diff < 127 {
+			b = append(b, byte(diff))
+		} else {
+			b = append(b, 0xFF)
+			b = appendUint32(b, v)
+		}
+		prev = v
+	}
+
+	return b
+}
+
 /*
 func encodeFrameList(numbers [SIZE]int) []uint8 {
    // first, turn numbers into a bitset
@@ -260,6 +293,16 @@ func main() {
 	fmt.Println("rice")
 	fmt.Println("size of original    : ", 4*SIZE)
 	fmt.Println("size of encoded data: ", len(enc))
+
+	t0 = time.Now()
+	enc = FoREncode(numbers[:])
+	fmt.Println("t = ", time.Since(t0))
+	compare(dec, numbers[:])
+
+	fmt.Println("frame-of-reference")
+	fmt.Println("size of original    : ", 4*SIZE)
+	fmt.Println("size of encoded data: ", len(enc))
+
 }
 
 type Int32s []int32
