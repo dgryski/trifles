@@ -13,7 +13,7 @@ import (
 
 const SIZE = 1024
 
-func vint_encode(enc []uint8, n uint) []uint8 {
+func vint_encode(enc []uint8, n uint32) []uint8 {
 
 	for n >= 0x80 {
 		b := byte(n) | 0x80
@@ -24,24 +24,24 @@ func vint_encode(enc []uint8, n uint) []uint8 {
 	return append(enc, byte(n))
 }
 
-func vintEncodeArray(numbers []int) []uint8 {
+func vintEncodeArray(numbers []int32) []uint8 {
 
 	enc := make([]uint8, 0, SIZE)
 
 	for _, n := range numbers {
-		enc = vint_encode(enc, uint(n))
+		enc = vint_encode(enc, uint32(n))
 	}
 	return enc
 }
 
-func vintDecodeArray(enc []uint8) []int {
+func vintDecodeArray(enc []uint8) []int32 {
 
-	numbers := make([]int, 0, SIZE)
+	numbers := make([]int32, 0, SIZE)
 
 	s := uint(0)
-	n := 0
+	var n int32
 	for _, b := range enc {
-		n |= int(b&0x7f) << s
+		n |= int32(b&0x7f) << s
 		s += 7
 
 		if (b & 0x80) == 0 {
@@ -53,29 +53,30 @@ func vintDecodeArray(enc []uint8) []int {
 	return numbers
 }
 
-func deltaEncodeArray(numbers []int) []uint8 {
+func deltaEncodeArray(numbers []int32) []uint8 {
 
 	enc := make([]uint8, 0, SIZE)
 
-	p := 0
+	var p int32
 
 	for _, n := range numbers {
-		enc = vint_encode(enc, uint(n-p))
+		enc = vint_encode(enc, uint32(n-p))
 		p = n
 	}
 	return enc
 }
 
-func deltaDecodeArray(enc []uint8) []int {
+func deltaDecodeArray(enc []uint8) []int32 {
 
-	numbers := make([]int, 0, SIZE)
+	numbers := make([]int32, 0, SIZE)
 
-	prev := 0
+	var prev int32
 
 	s := uint(0)
-	n := 0
+	var n int32
+
 	for _, b := range enc {
-		n |= int(b&0x7f) << s
+		n |= int32(b&0x7f) << s
 		s += 7
 
 		if (b & 0x80) == 0 {
@@ -90,7 +91,7 @@ func deltaDecodeArray(enc []uint8) []int {
 
 const M = 1
 
-func riceEncodeArray(numbers []int) []uint8 {
+func riceEncodeArray(numbers []int32) []uint8 {
 
 	// first entry is numbers[0], little-endian
 
@@ -107,7 +108,7 @@ func riceEncodeArray(numbers []int) []uint8 {
 
 		q := (n - 1) / (1 << M)
 
-		for i := 0; i < q; i++ {
+		for i := int32(0); i < q; i++ {
 			bw.WriteBit(bitstream.Zero)
 		}
 		bw.WriteBit(bitstream.One)
@@ -124,21 +125,21 @@ func riceEncodeArray(numbers []int) []uint8 {
 	return buf.Bytes()
 }
 
-func riceDecodeArray(l int, enc []uint8) []int {
+func riceDecodeArray(l int, enc []uint8) []int32 {
 
 	buf := bytes.NewBuffer(enc)
 
 	// first entry is numbers[0], little-endian int32
 	var i32 int32
 	binary.Read(buf, binary.LittleEndian, &i32)
-	numbers := []int{int(i32)}
+	numbers := []int32{i32}
 
 	br := bitstream.NewReader(buf)
 
 	prev := numbers[0]
 
 	for i := 1; i < l; i++ {
-		var nr, q int
+		var nr, q int32
 		for {
 			b, _ := br.ReadBit()
 			if b {
@@ -187,7 +188,7 @@ func encodeFrameList(numbers [SIZE]int) []uint8 {
 }
 */
 
-func compare(dec, numbers []int) {
+func compare(dec, numbers []int32) {
 
 	for i := 0; i < SIZE; i++ {
 		if dec[i] != numbers[i] {
@@ -201,7 +202,7 @@ func main() {
 
 	rand.Seed(time.Now().UnixNano())
 
-	var numbers [SIZE]int
+	var numbers [SIZE]int32
 
 	quality := float32(0.4)
 
@@ -215,16 +216,16 @@ func main() {
 		*/
 		// /*
 		if rand.Float32() < quality {
-			numbers[seq] = int(frame)
+			numbers[seq] = frame
 			seq++
 		}
 		// */
 	}
 
-	sort.Ints(numbers[:])
+	sort.Sort(Int32s(numbers[:]))
 
 	var enc []byte
-	var dec []int
+	var dec []int32
 
 	t0 := time.Now()
 
@@ -260,3 +261,9 @@ func main() {
 	fmt.Println("size of original    : ", 4*SIZE)
 	fmt.Println("size of encoded data: ", len(enc))
 }
+
+type Int32s []int32
+
+func (i32s Int32s) Len() int           { return len(i32s) }
+func (i32s Int32s) Less(i, j int) bool { return i32s[i] < i32s[j] }
+func (i32s Int32s) Swap(i, j int)      { i32s[i], i32s[j] = i32s[j], i32s[i] }
