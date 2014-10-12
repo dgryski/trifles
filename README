@@ -61,3 +61,5 @@ This repo contains things not interesting or complete enough to have their own.
    * glj -- passing data from go to lua with msgpack
 
    * toms -- text filter for time.Duration to milliseconds
+
+   * bluniq -- bloom-filter based unique filter
