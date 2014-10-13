@@ -9,8 +9,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/dchest/siphash"
 	"github.com/dgryski/dgobloom"
+	"github.com/dgryski/dgohash"
 )
 
 type h32 struct {
@@ -42,8 +42,6 @@ func main() {
 
 	lines := 0
 
-	var k [16]byte
-
 	var salts []uint32
 
 	for i, needed := uint(0), dgobloom.SaltsRequired(uint32(*n), *fprate); i < needed; i++ {
@@ -52,7 +50,7 @@ func main() {
 		salts = append(salts, binary.LittleEndian.Uint32(u[:]))
 	}
 
-	b := dgobloom.NewBloomFilter(uint32(*n), *fprate, h32{siphash.New(k[:])}, salts)
+	b := dgobloom.NewBloomFilter(uint32(*n), *fprate, dgohash.NewMurmur3_x86_32(), salts)
 
 	for scanner.Scan() {
 		lines++
