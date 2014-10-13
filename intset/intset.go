@@ -185,7 +185,7 @@ func FoREncode(input []int32) []byte {
 	prev := input[0]
 	for _, v := range input[1:] {
 		diff := v - prev
-		if -127 <= diff && diff < 127 {
+		if -127 <= diff && diff <= 127 {
 			b = append(b, byte(diff))
 		} else {
 			b = append(b, 0x80)
