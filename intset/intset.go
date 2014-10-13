@@ -252,9 +252,9 @@ func encodeFrameList(numbers [SIZE]int) []uint8 {
 */
 
 func compare(dec, numbers []int32) {
-	for i := 0; i < SIZE; i++ {
-		if dec[i] != numbers[i] {
-			fmt.Println("found mismatch: ", i, " => ", dec[i], " and ", numbers[i])
+	for i, d := range dec {
+		if d != numbers[i] {
+			fmt.Println("found mismatch: ", i, " => ", d, " and ", numbers[i])
 		}
 	}
 }
