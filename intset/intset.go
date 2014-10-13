@@ -218,7 +218,7 @@ func FoRDecode(input []byte) []int32 {
 			n = int32(binary.LittleEndian.Uint32(input[:]))
 			input = input[4:]
 		} else {
-			n = prev + int32(diff)
+			n = prev + int32(int8(diff))
 		}
 		prev = n
 		output = append(output, n)
@@ -331,6 +331,13 @@ func main() {
 	fmt.Println("frame-of-reference")
 	fmt.Println("size of original    : ", 4*SIZE)
 	fmt.Println("size of encoded data: ", len(enc))
+
+	num := []int32{10001, 10002, 10001, 10005, 10003, 10400, 10500, 10300, 10200}
+	t0 = time.Now()
+	enc = FoREncode(num[:])
+	dec = FoRDecode(enc[:])
+	fmt.Println("t = ", time.Since(t0))
+	compare(dec, num[:])
 
 }
 
