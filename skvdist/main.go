@@ -19,7 +19,7 @@ import (
 	"github.com/dgryski/go-shardedkv/choosers/ketama"
 )
 
-func worker(skv shardedkv.Chooser, filech chan string, donech chan map[string]int) {
+func worker(skv shardedkv.Chooser, filech chan string, donech chan map[string]int, verbose bool) {
 
 	results := make(map[string]int)
 
@@ -38,7 +38,11 @@ func worker(skv shardedkv.Chooser, filech chan string, donech chan map[string]in
 
 		scan := bufio.NewScanner(f)
 		for scan.Scan() {
-			shard := skv.Choose(scan.Text())
+			key := scan.Text()
+			shard := skv.Choose(key)
+			if verbose {
+				fmt.Printf("%s %s\n", shard, key)
+			}
 			results[shard]++
 		}
 	}
@@ -50,6 +54,7 @@ func main() {
 
 	workers := flag.Int("w", 4, "workers")
 	chooserType := flag.String("chooser", "jump", "shardedkv chooser")
+	verbose := flag.Bool("v", false, "verbose")
 
 	flag.Parse()
 
@@ -78,7 +83,7 @@ func main() {
 	chooser.SetBuckets(buckets)
 
 	for i := 0; i < *workers; i++ {
-		go worker(chooser, filech, donech)
+		go worker(chooser, filech, donech, *verbose)
 	}
 
 	files, _ := filepath.Glob("data/*")
