@@ -1,0 +1,15 @@
+gddo: search Go packages from the command line
+
+This programs merges results from go-search.org and godoc.org
+
+To install: go get github.com/dgryski/trifles/gddo
+
+Usage: gddo search-term
+
+Example:
+
+<dgryski@kaepora[g]> gddo minhash
+github.com/dgryski/go-minhash       Package minhash implements the bottom-k sketch for streaming set similarity.
+github.com/y-matsuwitter/minhash    minhash b-bit minhash implementation for golang Requirements golang Installation Usage Author Yuki Matsumoto (@y_matsuwitter)
+github.com/AlexeyKuklin/bbitminhash bbitminhash b-bit minhash implementation for golang See: Ping Li, Christian Konig.
+github.com/cevian/disttopk      Count-Min Sketch, an approximate counting data structure for summarizing data streams
