@@ -14,7 +14,7 @@ import (
 )
 
 type Hit struct {
-	Rank     float64
+	Rank     int
 	Path     string
 	Synopsis string
 }
@@ -42,14 +42,15 @@ type GddoResults struct {
 	}
 }
 
-func getGddo(q string) []Hit {
+func getGddo(q string) map[string]Hit {
 	u := fmt.Sprintf("http://api.godoc.org/search?q=%s", url.QueryEscape(q))
 	var results GddoResults
 	get(u, &results)
 
-	var hits []Hit
+	hits := make(map[string]Hit)
 	for i, pkg := range results.Results {
-		hits = append(hits, Hit{float64(i), pkg.Path, pkg.Synopsis})
+		//	log.Println("gddo", i, pkg.Path)
+		hits[pkg.Path] = Hit{i, pkg.Path, pkg.Synopsis}
 	}
 	return hits
 }
@@ -61,14 +62,15 @@ type GcseResults struct {
 	}
 }
 
-func getGcse(q string) []Hit {
+func getGcse(q string) map[string]Hit {
 	u := fmt.Sprintf("http://go-search.org/api?action=search&q=%s", url.QueryEscape(q))
 	var results GcseResults
 	get(u, &results)
 
-	var hits []Hit
+	hits := make(map[string]Hit)
 	for i, pkg := range results.Hits {
-		hits = append(hits, Hit{float64(i), pkg.Package, pkg.Synopsis})
+		//	log.Println("gcse", i, pkg.Package)
+		hits[pkg.Package] = Hit{i, pkg.Package, pkg.Synopsis}
 	}
 	return hits
 }
@@ -77,32 +79,35 @@ func main() {
 
 	flag.Parse()
 
-	ch := make(chan []Hit)
+	ch := make(chan map[string]Hit)
 
 	query := flag.Arg(0)
 
 	go func() { ch <- getGddo(query) }()
 	go func() { ch <- getGcse(query) }()
 
-	hits := <-ch
-	hits = append(hits, <-ch...)
+	r1 := <-ch
+	r2 := <-ch
 
-	results := make(map[string]Hit)
-
-	for _, h := range hits {
-		if r, ok := results[h.Path]; ok {
-			r.Rank = (-r.Rank + h.Rank) / 2
-			results[h.Path] = r
+	for p, h := range r1 {
+		if r, ok := r2[h.Path]; ok {
+			h.Rank += r.Rank
 		} else {
-			results[h.Path] = Hit{-h.Rank, h.Path, h.Synopsis}
+			h.Rank += len(r2)
+		}
+		r1[p] = h
+	}
+
+	for p, h := range r2 {
+		if _, ok := r1[h.Path]; !ok {
+			h.Rank += len(r1)
+			r1[p] = h
 		}
 	}
 
 	var rs ResultSet
-	for _, v := range results {
-		if v.Rank >= 0 {
-			rs = append(rs, v)
-		}
+	for _, v := range r1 {
+		rs = append(rs, v)
 	}
 
 	sort.Sort(rs)
