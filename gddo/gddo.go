@@ -75,6 +75,26 @@ func getGcse(q string) map[string]Hit {
 	return hits
 }
 
+type WalkResults struct {
+	Packages []struct {
+		ImportPath string `json:"import_path"`
+		Synopsis   string `json:"synopsis"`
+	} `json:"packages"`
+}
+
+func getWalk(q string) map[string]Hit {
+	u := fmt.Sprintf("https://gowalker.org/api/v1/search?key=%s", url.QueryEscape(q))
+	var results WalkResults
+	get(u, &results)
+
+	hits := make(map[string]Hit)
+	for i, pkg := range results.Packages {
+		//	log.Println("walk", i, pkg.Package)
+		hits[pkg.ImportPath] = Hit{i, pkg.ImportPath, pkg.Synopsis}
+	}
+	return hits
+}
+
 func main() {
 
 	flag.Parse()
@@ -85,28 +105,41 @@ func main() {
 
 	go func() { ch <- getGddo(query) }()
 	go func() { ch <- getGcse(query) }()
+	go func() { ch <- getWalk(query) }()
 
-	r1 := <-ch
-	r2 := <-ch
+	var rmaps []map[string]Hit
 
-	for p, h := range r1 {
-		if r, ok := r2[h.Path]; ok {
-			h.Rank += r.Rank
-		} else {
-			h.Rank += len(r2)
-		}
-		r1[p] = h
+	for i := 0; i < 3; i++ {
+		rmaps = append(rmaps, <-ch)
 	}
 
-	for p, h := range r2 {
-		if _, ok := r1[h.Path]; !ok {
-			h.Rank += len(r1)
-			r1[p] = h
+	r := make(map[string]Hit)
+
+	for _, m := range rmaps {
+		for p, h := range m {
+			if rh, ok := r[p]; ok {
+				if rh.Synopsis == "" {
+					rh.Synopsis = h.Synopsis
+					r[p] = rh
+				}
+			} else {
+				r[p] = h
+			}
 		}
+	}
+
+	// wipe the votes
+	for p, h := range r {
+		h.Rank = 0
+		r[p] = h
+	}
+
+	for _, m := range rmaps {
+		merge(r, m)
 	}
 
 	var rs ResultSet
-	for _, v := range r1 {
+	for _, v := range r {
 		rs = append(rs, v)
 	}
 
@@ -124,4 +157,25 @@ func main() {
 		fmt.Fprintf(w, "%s\t%s\n", pkg.Path, pkg.Synopsis)
 	}
 	w.Flush()
+}
+
+func merge(r, r1 map[string]Hit) {
+
+	// Add scores for all candidates in r1
+	for p, h := range r {
+		if r, ok := r1[h.Path]; ok {
+			h.Rank += r.Rank
+		} else {
+			h.Rank += len(r1)
+		}
+		r[p] = h
+	}
+
+	// Add low scores for all candidates not in r1
+	for p, h := range r {
+		if _, ok := r1[h.Path]; !ok {
+			h.Rank += len(r1)
+			r1[p] = h
+		}
+	}
 }
