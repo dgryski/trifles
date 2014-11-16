@@ -100,7 +100,7 @@ type GithubResults struct {
 	Repositories []struct {
 		HtmlUrl     string `json:"html_url"`
 		Description string `json:"description"`
-	}
+	} `json:"items"`
 }
 
 func getGithub(q string) map[string]Hit {
