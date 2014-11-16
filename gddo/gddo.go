@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"sort"
+	"strings"
 	"text/tabwriter"
 )
 
@@ -95,6 +96,26 @@ func getWalk(q string) map[string]Hit {
 	return hits
 }
 
+type GithubResults struct {
+	Repositories []struct {
+		HtmlUrl     string `json:"html_url"`
+		Description string `json:"description"`
+	}
+}
+
+func getGithub(q string) map[string]Hit {
+	u := fmt.Sprintf("https://api.github.com/search/repositories?q=%s+language:go", url.QueryEscape(q))
+	var results GithubResults
+	get(u, &results)
+
+	hits := make(map[string]Hit)
+	for i, pkg := range results.Repositories {
+		path := strings.TrimPrefix(pkg.HtmlUrl, "https://")
+		hits[path] = Hit{i, path, pkg.Description}
+	}
+	return hits
+}
+
 func main() {
 
 	flag.Parse()
@@ -106,6 +127,7 @@ func main() {
 	go func() { ch <- getGddo(query) }()
 	go func() { ch <- getGcse(query) }()
 	go func() { ch <- getWalk(query) }()
+	go func() { ch <- getGithub(query) }()
 
 	var rmaps []map[string]Hit
 
