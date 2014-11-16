@@ -182,7 +182,7 @@ func main() {
 	}
 
 	for _, pkg := range rs[:end] {
-		fmt.Fprintf(w, "%s\t%s\n", pkg.Path, pkg.Synopsis)
+		fmt.Fprintf(w, "%s \t%s\n", pkg.Path, pkg.Synopsis)
 	}
 	w.Flush()
 }
