@@ -198,12 +198,4 @@ func merge(r, r1 map[string]Hit) {
 		}
 		r[p] = h
 	}
-
-	// Add low scores for all candidates not in r1
-	for p, h := range r {
-		if _, ok := r1[h.Path]; !ok {
-			h.Rank += len(r1)
-			r1[p] = h
-		}
-	}
 }
