@@ -124,14 +124,20 @@ func main() {
 
 	query := flag.Arg(0)
 
-	go func() { ch <- getGddo(query) }()
-	go func() { ch <- getGcse(query) }()
-	go func() { ch <- getWalk(query) }()
-	go func() { ch <- getGithub(query) }()
+	searchers := []func(string) map[string]Hit{
+		getGddo,
+		getGcse,
+		getWalk,
+		getGithub,
+	}
+
+	for _, s := range searchers {
+		go func(s func(string) map[string]Hit) { ch <- s(query) }(s)
+	}
 
 	var rmaps []map[string]Hit
 
-	for i := 0; i < 3; i++ {
+	for i := 0; i < len(searchers); i++ {
 		rmaps = append(rmaps, <-ch)
 	}
 
