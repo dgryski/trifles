@@ -65,3 +65,5 @@ This repo contains things not interesting or complete enough to have their own.
    * bluniq -- bloom-filter based unique filter
 
    * skvdist -- check distribution of shardedkv choosers
+
+   * gcwatch -- print out garbage collection stats from /debug/vars
