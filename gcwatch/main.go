@@ -30,7 +30,7 @@ func getMemStats(url string) (*runtime.MemStats, error) {
 
 func main() {
 
-	host := flag.String("h", "localhost:8080", "host to contact")
+	host := flag.String("h", "localhost:8080/debug/vars", "endpoint to read memstats from")
 	delay := flag.Duration("d", 10*time.Second, "time between fetches")
 
 	flag.Parse()
