@@ -40,6 +40,8 @@ func main() {
 
 	flag.Parse()
 
+	log.Printf("fetching %s every %s", *host, *delay)
+
 	m, err := getMemStats(*host)
 	if err != nil {
 		log.Fatal(err)
