@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -17,6 +18,10 @@ func getMemStats(url string) (*runtime.MemStats, error) {
 		return nil, err
 	}
 	defer r.Body.Close()
+
+	if r.StatusCode >= 400 {
+		return nil, errors.New(r.Status)
+	}
 
 	var expvars struct {
 		Memstats runtime.MemStats `json:"memstats"`
