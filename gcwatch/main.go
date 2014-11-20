@@ -50,7 +50,8 @@ func main() {
 	for _ = range time.Tick(*delay) {
 		m, err := getMemStats(*host)
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
+			continue
 		}
 
 		var times []uint64
