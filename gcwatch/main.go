@@ -35,14 +35,19 @@ func getMemStats(url string) (*runtime.MemStats, error) {
 
 func main() {
 
-	host := flag.String("h", "http://localhost:8080/debug/vars", "endpoint to read memstats from")
 	delay := flag.Duration("d", 10*time.Second, "time between fetches")
 
 	flag.Parse()
 
-	log.Printf("fetching %s every %s", *host, *delay)
+	host := "http://localhost:8080/debug/vars"
 
-	m, err := getMemStats(*host)
+	if flag.NArg() >= 1 {
+		host = flag.Arg(0)
+	}
+
+	log.Printf("fetching %s every %s", host, *delay)
+
+	m, err := getMemStats(host)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -50,7 +55,7 @@ func main() {
 	ngcs := m.NumGC
 
 	for _ = range time.Tick(*delay) {
-		m, err := getMemStats(*host)
+		m, err := getMemStats(host)
 		if err != nil {
 			log.Println(err)
 			continue
