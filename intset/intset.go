@@ -89,6 +89,120 @@ func deltaDecodeArray(enc []uint8) []int32 {
 	return numbers
 }
 
+func grvintEncodeArray(numbers []int32) []uint8 {
+
+	enc := make([]uint8, 0, SIZE)
+
+	var prev int32
+
+	for len(numbers) >= 4 {
+
+		idx := len(enc)
+		var bits, b uint8
+		enc, _ = appendInt(enc, 0)
+		enc, b = appendInt(enc, uint32(numbers[0]-prev))
+		bits |= b
+		enc, b = appendInt(enc, uint32(numbers[1]-numbers[0]))
+		bits |= b << 2
+		enc, b = appendInt(enc, uint32(numbers[2]-numbers[1]))
+		bits |= b << 4
+		enc, b = appendInt(enc, uint32(numbers[3]-numbers[2]))
+		bits |= b << 6
+		enc[idx] = bits
+
+		prev = numbers[3]
+		numbers = numbers[4:]
+	}
+
+	for _, n := range numbers {
+		enc = vint_encode(enc, uint32(n-prev))
+		prev = n
+	}
+
+	for i := 0; i < 4-len(numbers); i++ {
+		enc = append(enc, 0)
+	}
+
+	return enc
+}
+
+func appendInt(enc []byte, n uint32) ([]byte, uint8) {
+
+	switch {
+	case n < 1<<8:
+		return append(enc, byte(n)), 0
+	case n < 1<<16:
+		return append(enc, byte(n), byte(n>>8)), 1
+	case n < 1<<24:
+		return append(enc, byte(n), byte(n>>8), byte(n>>16)), 2
+	}
+
+	return append(enc, byte(n), byte(n>>8), byte(n>>16), byte(n>>24)), 3
+}
+
+var grvintMask = [4]uint32{0xff, 0xffff, 0xffffff, 0xffffffff}
+var grvintOffsets = [4]uint32{1, 2, 3, 4}
+
+func grvintDecodeArray(enc []uint8, size int) []int32 {
+
+	numbers := make([]int32, 0, SIZE)
+
+	var prev int32
+
+	s := uint(0)
+	var n int32
+
+	for size >= 4 {
+		b := enc[0]
+		enc = enc[1:]
+
+		n := binary.LittleEndian.Uint32(enc) & grvintMask[b&3]
+		enc = enc[1+(b&3):]
+		b >>= 2
+		n1 := prev + int32(n)
+
+		n = binary.LittleEndian.Uint32(enc) & grvintMask[b&3]
+		enc = enc[1+(b&3):]
+		b >>= 2
+		n2 := n1 + int32(n)
+
+		n = binary.LittleEndian.Uint32(enc) & grvintMask[b&3]
+		enc = enc[1+(b&3):]
+		b >>= 2
+		n3 := n2 + int32(n)
+
+		n = binary.LittleEndian.Uint32(enc) & grvintMask[b&3]
+		enc = enc[1+(b&3):]
+		n4 := n3 + int32(n)
+
+		numbers = append(numbers, n1, n2, n3, n4)
+		prev = n4
+
+		size -= 4
+	}
+
+	if size > 0 {
+
+		// varint decode
+		for _, b := range enc {
+			n |= int32(b&0x7f) << s
+			s += 7
+
+			if (b & 0x80) == 0 {
+				prev += n
+				numbers = append(numbers, prev)
+				s = 0
+				n = 0
+				size--
+				if size == 0 {
+					break
+				}
+			}
+		}
+	}
+	return numbers
+}
+
 const M = 1
 
 func riceEncodeArray(numbers []int32) []uint8 {
@@ -308,6 +422,17 @@ func main() {
 	compare(dec, numbers[:])
 
 	fmt.Println("delta")
+	fmt.Println("size of original    : ", 4*SIZE)
+	fmt.Println("size of encoded data: ", len(enc))
+	fmt.Println()
+
+	t0 = time.Now()
+	enc = grvintEncodeArray(numbers[:])
+	dec = grvintDecodeArray(enc[:], len(numbers))
+	fmt.Println("t = ", time.Since(t0))
+	compare(dec, numbers[:])
+
+	fmt.Println("grvint delta")
 	fmt.Println("size of original    : ", 4*SIZE)
 	fmt.Println("size of encoded data: ", len(enc))
 	fmt.Println()
