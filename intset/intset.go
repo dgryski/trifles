@@ -91,28 +91,51 @@ func deltaDecodeArray(enc []uint8) []int32 {
 
 func grvintEncodeArray(numbers []int32) []uint8 {
 
-	enc := make([]uint8, 0, SIZE)
+	enc := make([]uint8, len(numbers)*4+len(numbers)/4)
 
 	var prev int32
 
-	for len(numbers) >= 4 {
+	var offs uint32
 
-		idx := len(enc)
-		var bits, b uint8
-		enc, _ = appendInt(enc, 0)
-		enc, b = appendInt(enc, uint32(numbers[0]-prev))
-		bits |= b
-		enc, b = appendInt(enc, uint32(numbers[1]-numbers[0]))
-		bits |= b << 2
-		enc, b = appendInt(enc, uint32(numbers[2]-numbers[1]))
-		bits |= b << 4
-		enc, b = appendInt(enc, uint32(numbers[3]-numbers[2]))
-		bits |= b << 6
+	for len(numbers) >= 4 {
+		idx := offs
+
+		var bits uint8
+		var n, b uint32
+
+		offs++
+
+		n = uint32(numbers[0] - prev)
+		binary.LittleEndian.PutUint32(enc[offs:], n)
+		b = 3 - nlz(n|1)/8
+		bits |= byte(b)
+		offs += b + 1
+
+		n = uint32(numbers[1] - numbers[0])
+		binary.LittleEndian.PutUint32(enc[offs:], n)
+		b = 3 - nlz(n|1)/8
+		bits |= byte(b) << 2
+		offs += b + 1
+
+		n = uint32(numbers[2] - numbers[1])
+		binary.LittleEndian.PutUint32(enc[offs:], n)
+		b = 3 - nlz(n|1)/8
+		bits |= byte(b) << 4
+		offs += b + 1
+
+		n = uint32(numbers[3] - numbers[2])
+		binary.LittleEndian.PutUint32(enc[offs:], n)
+		b = 3 - nlz(n|1)/8
+		bits |= byte(b) << 6
+		offs += b + 1
+
 		enc[idx] = bits
 
 		prev = numbers[3]
 		numbers = numbers[4:]
 	}
+
+	enc = enc[:offs]
 
 	for _, n := range numbers {
 		enc = vint_encode(enc, uint32(n-prev))
@@ -126,22 +149,7 @@ func grvintEncodeArray(numbers []int32) []uint8 {
 	return enc
 }
 
-func appendInt(enc []byte, n uint32) ([]byte, uint8) {
-
-	switch {
-	case n < 1<<8:
-		return append(enc, byte(n)), 0
-	case n < 1<<16:
-		return append(enc, byte(n), byte(n>>8)), 1
-	case n < 1<<24:
-		return append(enc, byte(n), byte(n>>8), byte(n>>16)), 2
-	}
-
-	return append(enc, byte(n), byte(n>>8), byte(n>>16), byte(n>>24)), 3
-}
-
 var grvintMask = [4]uint32{0xff, 0xffff, 0xffffff, 0xffffffff}
-var grvintOffsets = [4]uint32{1, 2, 3, 4}
 
 func grvintDecodeArray(enc []uint8, size int) []int32 {
 
