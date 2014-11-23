@@ -16,7 +16,7 @@ import (
 
 // SimHash returns a simhash value for the document returned by the scanner
 func SimHash(scanner FeatureScanner) uint64 {
-	var signs [64]int
+	var signs [64]int64
 
 	for scanner.Scan() {
 		h := siphash.Hash(0, 0, scanner.Bytes())
@@ -25,7 +25,7 @@ func SimHash(scanner FeatureScanner) uint64 {
 			negate := int(h) & 1
 			// if negate is 1, we will negate '-1', below
 			r := (-1 ^ -negate) + negate
-			signs[i] += r
+			signs[i] += int64(r)
 			h >>= 1
 		}
 	}
