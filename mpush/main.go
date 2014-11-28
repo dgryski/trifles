@@ -312,7 +312,7 @@ func pushHandler(db *bolt.DB, params martini.Params, req *http.Request, r render
 
 func main() {
 
-	db, err := bolt.Open("mpush.db", 0666)
+	db, err := bolt.Open("mpush.db", 0666, nil)
 
 	if err != nil {
 		log.Fatal(err)
