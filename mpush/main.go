@@ -164,8 +164,8 @@ func removeList(db *bolt.DB, params martini.Params, req *http.Request, r render.
 }
 
 type PBUser struct {
-	APIKey  string `json:"apikey"`
-	Devices []int  `json:"devices"`
+	APIKey  string   `json:"apikey"`
+	Devices []string `json:"devices"`
 }
 
 type PBConfig struct {
