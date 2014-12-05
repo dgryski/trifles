@@ -67,3 +67,5 @@ This repo contains things not interesting or complete enough to have their own.
    * skvdist -- check distribution of shardedkv choosers
 
    * gcwatch -- print out garbage collection stats from /debug/vars
+
+   * toepoch -- convert time fields to epochs
