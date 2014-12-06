@@ -7,6 +7,9 @@ featured SimHash implementation, it will get moved to its own repository.
 http://www.cs.princeton.edu/courses/archive/spr04/cos598B/bib/CharikarEstim.pdf
 http://infolab.stanford.edu/~manku/papers/07www-duplicates.pdf
 http://irl.cse.tamu.edu/people/sadhan/papers/cikm2011.pdf
+
+Left here for legacy reasons, but you probably want
+http://github.com/dgryski/go-simstore now.
 */
 package simhash
 
