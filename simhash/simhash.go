@@ -34,8 +34,8 @@ func SimHash(scanner FeatureScanner) uint64 {
 
 	// TODO: can probably be done with SSE?
 	for i := 63; i >= 0; i-- {
-		shash |= uint64(signs[i]>>63) & 1
 		shash <<= 1
+		shash |= uint64(signs[i]>>63) & 1
 	}
 
 	return shash
