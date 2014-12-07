@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/flynn/go-shlex"
 	"github.com/peterh/liner"
 )
 
@@ -47,7 +48,7 @@ REPL:
 			continue
 		}
 
-		args := strings.Fields(command)
+		args, _ := shlex.Split(command)
 
 		if len(args) == 0 {
 			continue
