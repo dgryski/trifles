@@ -36,6 +36,7 @@ func getMemStats(url string) (*runtime.MemStats, error) {
 func main() {
 
 	delay := flag.Duration("d", 10*time.Second, "time between fetches")
+	units := flag.Duration("u", time.Millisecond, "gc time units")
 
 	flag.Parse()
 
@@ -63,7 +64,7 @@ func main() {
 
 		var times []uint64
 		for i := ngcs + 1; i <= m.NumGC; i++ {
-			times = append(times, m.PauseNs[(i+255)%256]/uint64(time.Millisecond))
+			times = append(times, m.PauseNs[(i+255)%256]/uint64(*units))
 		}
 
 		fmt.Println(time.Now().Format(time.Stamp), ": ", m.NumGC-ngcs, times)
