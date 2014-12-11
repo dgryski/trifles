@@ -2,12 +2,13 @@ package main
 
 import (
 	"bufio"
-	"code.google.com/p/go.net/websocket"
 	"flag"
 	"fmt"
 	"log"
 	"net/url"
 	"os"
+
+	"golang.org/x/net/websocket"
 )
 
 func main() {
