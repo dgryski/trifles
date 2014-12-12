@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -23,13 +24,20 @@ func main() {
 
 	for scanner.Scan() {
 		line := scanner.Text()
-		fields := strings.SplitN(line, "\t", 2)
+		fields := strings.SplitN(line, "\t", 3)
 		if currentSecond != fields[0] {
 			outputShuf(currentSecond, requests)
 			currentSecond = fields[0]
 			requests = requests[:0]
 		}
-		requests = append(requests, fields[1])
+
+		count := 1
+		if len(fields) == 3 {
+			count, _ = strconv.Atoi(fields[2])
+		}
+		for i := 0; i < count; i++ {
+			requests = append(requests, fields[1])
+		}
 	}
 
 	outputShuf(currentSecond, requests)
