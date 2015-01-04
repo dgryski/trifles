@@ -29,7 +29,7 @@ func Run(prompt string, commands map[string]Cmd) {
 		var completions []string
 		for _, k := range keys {
 			if strings.HasPrefix(k, line) {
-				completions = append(completions, k)
+				completions = append(completions, k+" ")
 			}
 		}
 		return completions
