@@ -71,3 +71,5 @@ This repo contains things not interesting or complete enough to have their own.
    * toepoch -- convert time fields to epochs
 
    * repl -- framework for making dumb repls for testing
+
+   * skvchk -- tool for checking shardedkv distributions
