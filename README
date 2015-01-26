@@ -73,3 +73,5 @@ This repo contains things not interesting or complete enough to have their own.
    * repl -- framework for making dumb repls for testing
 
    * skvchk -- tool for checking shardedkv distributions
+
+   * interp -- interpolation search
