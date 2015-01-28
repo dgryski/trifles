@@ -6,17 +6,26 @@ import (
 	"testing"
 )
 
+const maxLimit = 3e7
+
+var Ints []int
+
 func benchmarkSearch(b *testing.B, limit int, search func([]int, int) int) {
 
-	rand.Seed(0)
+	if Ints == nil {
 
-	ints := make([]int, limit)
+		rand.Seed(0)
 
-	for i := 0; i < limit; i++ {
-		ints[i] = int(int32(rand.Int()))
+		Ints = make([]int, maxLimit)
+
+		for i := 0; i < limit; i++ {
+			Ints[i] = int(int32(rand.Int()))
+		}
+
+		sort.Ints(Ints)
 	}
 
-	sort.Ints(ints)
+	ints := Ints[:limit]
 
 	b.ResetTimer()
 
@@ -32,6 +41,7 @@ func BenchmarkInterp10000(b *testing.B) { benchmarkSearch(b, 10000, Search) }
 func BenchmarkInterp1e5(b *testing.B)   { benchmarkSearch(b, 1e5, Search) }
 func BenchmarkInterp1e6(b *testing.B)   { benchmarkSearch(b, 1e6, Search) }
 func BenchmarkInterp1e7(b *testing.B)   { benchmarkSearch(b, 1e7, Search) }
+func BenchmarkInterp3e7(b *testing.B)   { benchmarkSearch(b, 3e7, Search) }
 
 func BenchmarkBin100(b *testing.B)   { benchmarkSearch(b, 100, binsearch) }
 func BenchmarkBin1000(b *testing.B)  { benchmarkSearch(b, 1000, binsearch) }
@@ -39,6 +49,7 @@ func BenchmarkBin10000(b *testing.B) { benchmarkSearch(b, 10000, binsearch) }
 func BenchmarkBin1e5(b *testing.B)   { benchmarkSearch(b, 1e5, binsearch) }
 func BenchmarkBin1e6(b *testing.B)   { benchmarkSearch(b, 1e6, binsearch) }
 func BenchmarkBin1e7(b *testing.B)   { benchmarkSearch(b, 1e7, binsearch) }
+func BenchmarkBin3e7(b *testing.B)   { benchmarkSearch(b, 3e7, binsearch) }
 
 func TestSearchSmall(t *testing.T) {
 
