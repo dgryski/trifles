@@ -79,3 +79,5 @@ This repo contains things not interesting or complete enough to have their own.
    * oma -- simulation of the Dutch children's board game "Met de bus naar Oma"
 
    * rndsample - uniform random sample from stdin
+
+   * pphrase -- simple passphrase generator
