@@ -9,8 +9,8 @@ func Search(sortedArray []int, toFind int) int {
 	high := len(sortedArray) - 1
 	var mid int
 
-	for sortedArray[low] <= toFind && sortedArray[high] >= toFind {
-		mid = low + ((toFind-sortedArray[low])*(high-low))/(sortedArray[high]-sortedArray[low]) //out of range is possible  here
+	for sortedArray[low] <= toFind && toFind <= sortedArray[high] {
+		mid = low + int((float64(toFind-sortedArray[low])*float64(high-low))/float64(sortedArray[high]-sortedArray[low])) //out of range is possible  here
 		if sortedArray[mid] < toFind {
 			low = mid + 1
 		} else if sortedArray[mid] > toFind {
