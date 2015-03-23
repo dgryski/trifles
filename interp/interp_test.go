@@ -51,6 +51,14 @@ func BenchmarkBin1e6(b *testing.B)   { benchmarkSearch(b, 1e6, binsearch) }
 func BenchmarkBin1e7(b *testing.B)   { benchmarkSearch(b, 1e7, binsearch) }
 func BenchmarkBin3e7(b *testing.B)   { benchmarkSearch(b, 3e7, binsearch) }
 
+func BenchmarkStd100(b *testing.B)   { benchmarkSearch(b, 100, sort.SearchInts) }
+func BenchmarkStd1000(b *testing.B)  { benchmarkSearch(b, 1000, sort.SearchInts) }
+func BenchmarkStd10000(b *testing.B) { benchmarkSearch(b, 10000, sort.SearchInts) }
+func BenchmarkStd1e5(b *testing.B)   { benchmarkSearch(b, 1e5, sort.SearchInts) }
+func BenchmarkStd1e6(b *testing.B)   { benchmarkSearch(b, 1e6, sort.SearchInts) }
+func BenchmarkStd1e7(b *testing.B)   { benchmarkSearch(b, 1e7, sort.SearchInts) }
+func BenchmarkStd3e7(b *testing.B)   { benchmarkSearch(b, 3e7, sort.SearchInts) }
+
 func TestSearchSmall(t *testing.T) {
 
 	const limit = 100
