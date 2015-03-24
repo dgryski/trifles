@@ -32,3 +32,20 @@ func BenchmarkGo(b *testing.B) {
 		nlz2(uint32(i))
 	}
 }
+
+func BenchmarkPopcount(b *testing.B) {
+
+	N := uint64(b.N)
+	for i := uint64(0); i < N; i++ {
+		popcount(uint64(i))
+	}
+
+}
+
+func BenchmarkPopcountGo(b *testing.B) {
+
+	N := uint64(b.N)
+	for i := uint64(0); i < N; i++ {
+		popcountGo(uint64(i))
+	}
+}
