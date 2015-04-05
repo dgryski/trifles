@@ -81,3 +81,5 @@ This repo contains things not interesting or complete enough to have their own.
    * rndsample - uniform random sample from stdin
 
    * pphrase -- simple passphrase generator
+
+   * fastrand -- fast xorshift rng with bias-free [0..n)
