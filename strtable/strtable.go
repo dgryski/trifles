@@ -115,6 +115,133 @@ func leveldbHash(b []byte) uint32 {
 	return h
 }
 
+const bucketSize = 8
+
+type bucket struct {
+	hash [bucketSize]uint32
+	keys [bucketSize][]byte
+	vals [bucketSize]uint32
+	next int
+}
+
+type BTable struct {
+	b        []bucket
+	overflow []bucket
+	keys     int
+}
+
+func NewBucket(keys int) *BTable {
+	t := BTable{b: make([]bucket, keys/2)}
+	return &t
+}
+
+func (t *BTable) Insert(k []byte, val uint32) (uint32, bool) {
+
+	mask := uint32(len(t.b) - 1)
+
+	h := leveldbHash(k)
+	slot := h & mask
+
+	if h == 0 {
+		h++
+	}
+
+	var prevb *bucket
+	b := &t.b[slot]
+
+	// Search the chain of buckets for this slot.
+	for {
+		for i, bh := range b.hash {
+			if bh == h && bytes.Equal(b.keys[i], k) {
+				return b.vals[i], true
+			}
+		}
+
+		prevb = b
+		if b.next == 0 {
+			break
+		}
+		b = &t.overflow[b.next]
+	}
+
+	// Got to the end of the chain without finding a match.
+	// Find the first free bucket in the last bucket
+	b = prevb
+	for {
+		for i, bh := range b.hash {
+			if bh == 0 {
+				b.keys[i] = k
+				b.hash[i] = h
+				b.vals[i] = val
+
+				t.keys++
+				if t.keys > 6*len(t.b) {
+					t.double()
+				}
+
+				return val, false
+			}
+		}
+
+		b.next = len(t.overflow)
+		t.overflow = append(t.overflow, bucket{})
+		b = &t.overflow[b.next]
+	}
+}
+
+func (t *BTable) double() {
+
+	newTable := make([]bucket, 2*len(t.b))
+	var overflow []bucket
+	mask := uint32(len(newTable) - 1)
+
+	for i := range t.b {
+		slot := uint32(i)
+
+		b := &t.b[slot]
+
+		var lb = &newTable[slot]
+		var lidx int
+
+		var hb = &newTable[i+len(t.b)]
+		var hidx int
+
+		for b == nil {
+
+			for i, bh := range b.hash {
+				if bh&mask == slot {
+					if lidx == bucketSize {
+						lidx = 0
+						lb.next = len(overflow)
+						overflow = append(overflow, bucket{})
+						lb = &overflow[b.next]
+					}
+
+					lb.hash[lidx] = bh
+					lb.keys[lidx] = b.keys[i]
+					lb.vals[lidx] = b.vals[i]
+					lidx++
+				} else {
+					if hidx == bucketSize {
+						hidx = 0
+						hb.next = len(overflow)
+						overflow = append(overflow, bucket{})
+						hb = &overflow[b.next]
+					}
+
+					hb.hash[hidx] = bh
+					hb.keys[hidx] = b.keys[i]
+					hb.vals[hidx] = b.vals[i]
+					hidx++
+				}
+			}
+			b = &t.overflow[b.next]
+		}
+	}
+
+	t.b = newTable
+}
+
 type Native map[string]uint32
 
 func NewNative(size int) Native {

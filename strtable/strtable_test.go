@@ -70,36 +70,49 @@ func benchmarkInsertAll(b *testing.B, size uint32, creator func(int) Inserter) {
 
 func nativeInserter(size int) Inserter { return NewNative(size) }
 func tableInserter(size int) Inserter  { return New(size) }
+func btableInserter(size int) Inserter { return NewBucket(size) }
 
 func BenchmarkNative1024(b *testing.B) { benchmarkInsertAll(b, 1024, nativeInserter) }
 func BenchmarkTable1024(b *testing.B)  { benchmarkInsertAll(b, 1024, tableInserter) }
+func BenchmarkBTable1024(b *testing.B) { benchmarkInsertAll(b, 1024, btableInserter) }
 
 func BenchmarkNative64k(b *testing.B) { benchmarkInsertAll(b, 1<<16, nativeInserter) }
 func BenchmarkTable64k(b *testing.B)  { benchmarkInsertAll(b, 1<<16, tableInserter) }
+func BenchmarkBTable64k(b *testing.B) { benchmarkInsertAll(b, 1<<16, btableInserter) }
 
 func BenchmarkNative256k(b *testing.B) { benchmarkInsertAll(b, 1<<18, nativeInserter) }
 func BenchmarkTable256k(b *testing.B)  { benchmarkInsertAll(b, 1<<18, tableInserter) }
+func BenchmarkBTable256k(b *testing.B) { benchmarkInsertAll(b, 1<<18, btableInserter) }
 
 func BenchmarkNative1M(b *testing.B) { benchmarkInsertAll(b, 1<<20, nativeInserter) }
 func BenchmarkTable1M(b *testing.B)  { benchmarkInsertAll(b, 1<<20, tableInserter) }
+func BenchmarkBTable1M(b *testing.B) { benchmarkInsertAll(b, 1<<20, btableInserter) }
 
 func BenchmarkNative2M(b *testing.B) { benchmarkInsertAll(b, 1<<21, nativeInserter) }
 func BenchmarkTable2M(b *testing.B)  { benchmarkInsertAll(b, 1<<21, tableInserter) }
+func BenchmarkBTable2M(b *testing.B) { benchmarkInsertAll(b, 1<<21, btableInserter) }
 
 func BenchmarkSomeNative1024(b *testing.B) { benchmarkInsertSome(b, 1024, nativeInserter) }
 func BenchmarkSomeTable1024(b *testing.B)  { benchmarkInsertSome(b, 1024, tableInserter) }
+func BenchmarkSomeBTable1024(b *testing.B) { benchmarkInsertSome(b, 1024, btableInserter) }
 
 func BenchmarkSomeNative64k(b *testing.B) { benchmarkInsertSome(b, 1<<16, nativeInserter) }
 func BenchmarkSomeTable64k(b *testing.B)  { benchmarkInsertSome(b, 1<<16, tableInserter) }
+func BenchmarkSomeBTable64k(b *testing.B) { benchmarkInsertSome(b, 1<<16, btableInserter) }
 
 func BenchmarkSomeNative256k(b *testing.B) { benchmarkInsertSome(b, 1<<18, nativeInserter) }
 func BenchmarkSomeTable256k(b *testing.B)  { benchmarkInsertSome(b, 1<<18, tableInserter) }
+func BenchmarkSomeBTable256k(b *testing.B) { benchmarkInsertSome(b, 1<<18, btableInserter) }
 
 func BenchmarkSomeNative1M(b *testing.B) { benchmarkInsertSome(b, 1<<20, nativeInserter) }
 func BenchmarkSomeTable1M(b *testing.B)  { benchmarkInsertSome(b, 1<<20, tableInserter) }
+func BenchmarkSomeBTable1M(b *testing.B) { benchmarkInsertSome(b, 1<<20, btableInserter) }
 
+/*
 func BenchmarkSomeNative2M(b *testing.B) { benchmarkInsertSome(b, 1<<21, nativeInserter) }
 func BenchmarkSomeTable2M(b *testing.B)  { benchmarkInsertSome(b, 1<<21, tableInserter) }
+func BenchmarkSomeBTable2M(b *testing.B) { benchmarkInsertSome(b, 1<<21, btableInserter) }
+*/
 
 func loadStringData(path string) {
 
