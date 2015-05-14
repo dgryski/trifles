@@ -24,10 +24,10 @@ func (t *Table) Insert(k []byte, val uint32) (uint32, bool) {
 
 	mask := uint32(len(t.t) - 1)
 
-	h := leveldbHash(k) & mask
+	h := leveldbHash(k)
 	//  you can hack your runtime to expose this..
 	// h := uint32(runtime.BytesHash(k, 0)) & mask
-	slot := h
+	slot := h & mask
 
 	for {
 		if (t.t)[slot].key == nil {
