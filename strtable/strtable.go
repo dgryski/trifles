@@ -146,29 +146,12 @@ func (t *BTable) Insert(k []byte, val uint32) (uint32, bool) {
 		h++
 	}
 
-	var prevb *bucket
 	b := &t.b[slot]
 
 	// Search the chain of buckets for this slot.
 	for {
-		for i, bh := range b.hash {
-			if bh == h && bytes.Equal(b.keys[i], k) {
-				return b.vals[i], true
-			}
-		}
-
-		prevb = b
-		if b.next == 0 {
-			break
-		}
-		b = &t.overflow[b.next]
-	}
-
-	// Got to the end of the chain without finding a match.
-	// Find the first free bucket in the last bucket
-	b = prevb
-	for {
-		for i, bh := range b.hash {
+		for i := range b.hash {
+			bh := b.hash[i]
 			if bh == 0 {
 				b.keys[i] = k
 				b.hash[i] = h
@@ -180,6 +163,9 @@ func (t *BTable) Insert(k []byte, val uint32) (uint32, bool) {
 				}
 
 				return val, false
+			}
+			if bh == h && bytes.Equal(b.keys[i], k) {
+				return b.vals[i], true
 			}
 		}
 
