@@ -192,9 +192,14 @@ func (t *BTable) double() {
 		var hb = &newTable[i+len(t.b)]
 		var hidx int
 
-		for b == nil {
+	split:
+		for b != nil {
 
-			for i, bh := range b.hash {
+			for i := range b.hash {
+				bh := b.hash[i]
+				if bh == 0 {
+					break split
+				}
 				if bh&mask == slot {
 					if lidx == bucketSize {
 						lidx = 0
@@ -226,6 +231,7 @@ func (t *BTable) double() {
 	}
 
 	t.b = newTable
+	t.overflow = overflow
 }
 
 type Native map[string]uint32
