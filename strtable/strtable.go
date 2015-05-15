@@ -169,9 +169,11 @@ func (t *BTable) Insert(k []byte, val uint32) (uint32, bool) {
 			}
 		}
 
-		b.next = len(t.overflow)
-		t.overflow = append(t.overflow, bucket{})
-		b = &t.overflow[b.next]
+		if b.next == 0 {
+			b.next = len(t.overflow) + 1
+			t.overflow = append(t.overflow, bucket{})
+		}
+		b = &t.overflow[b.next-1]
 	}
 }
 
@@ -203,9 +205,9 @@ func (t *BTable) double() {
 				if bh&mask == slot {
 					if lidx == bucketSize {
 						lidx = 0
-						lb.next = len(overflow)
+						lb.next = len(overflow) + 1
 						overflow = append(overflow, bucket{})
-						lb = &overflow[b.next]
+						lb = &overflow[lb.next-1]
 					}
 
 					lb.hash[lidx] = bh
@@ -215,9 +217,9 @@ func (t *BTable) double() {
 				} else {
 					if hidx == bucketSize {
 						hidx = 0
-						hb.next = len(overflow)
+						hb.next = len(overflow) + 1
 						overflow = append(overflow, bucket{})
-						hb = &overflow[b.next]
+						hb = &overflow[hb.next-1]
 					}
 
 					hb.hash[hidx] = bh
@@ -226,7 +228,10 @@ func (t *BTable) double() {
 					hidx++
 				}
 			}
-			b = &t.overflow[b.next]
+			if b.next == 0 {
+				break
+			}
+			b = &t.overflow[b.next-1]
 		}
 	}
 
