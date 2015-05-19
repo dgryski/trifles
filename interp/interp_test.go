@@ -85,6 +85,25 @@ func TestSearchSmall(t *testing.T) {
 	}
 }
 
+func TestSearchBig(t *testing.T) {
+
+	if Ints == nil {
+		fillInts()
+	}
+
+	ints := Ints
+
+	for i := 0; i < 1000000; i++ {
+		elt := int(uint32(rand.Int()))
+		vidx := Search(ints, elt)
+		idx := sort.SearchInts(ints, elt)
+		if vidx != idx {
+			t.Errorf("Search failed for elt=%d: got %d want %d\n", elt, vidx, idx)
+		}
+	}
+
+}
+
 func binsearch(sortedArray []int, toFind int) int {
 
 	low, high := 0, len(sortedArray)
