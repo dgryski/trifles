@@ -61,28 +61,23 @@ func BenchmarkStd3e7(b *testing.B)   { benchmarkSearch(b, 3e7, sort.SearchInts) 
 
 func TestSearchSmall(t *testing.T) {
 
-	const limit = 100
+	rand.Seed(0)
 
-	t.Log("generating")
+	const limit = 10000
 
 	var ints []int
 
 	for i := 0; i < limit; i++ {
-		ints = append(ints, i*2)
+		ints = append(ints, int(uint32(rand.Int())))
 	}
 
-	t.Log("searching")
+	sort.Ints(ints)
 
-	queries := []int{0, 300, 51, 50, 18, 19, 20, 21, 22, 23, 24, 198, 199, 200, 201, 202}
+	for i := 0; i < 1000; i++ {
 
-	for _, q := range queries {
+		q := int(uint32(rand.Int()))
 
-		var want int
-		if q >= 200 || q&1 == 1 {
-			want = -1
-		} else {
-			want = q / 2
-		}
+		want := sort.SearchInts(ints, q)
 
 		if idx := Search(ints, q); idx != want {
 			t.Errorf("Search(ints, %v)=%v, want %v", q, idx, want)

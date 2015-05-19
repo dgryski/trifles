@@ -1,29 +1,56 @@
 // Package interp is an interpolation search
-// Code from https://en.wikipedia.org/wiki/Interpolation_search
 package interp
 
-func Search(sortedArray []int, toFind int) int {
+// modified from http://data.linkedin.com/blog/2010/06/beating-binary-search
+func Search(array []int, key int) int {
 
-	// Returns index of toFind in sortedArray, or -1 if not found
-	low := 0
-	high := len(sortedArray) - 1
-	var mid int
+	min, max := array[0], array[len(array)-1]
 
-	for sortedArray[low] <= toFind && toFind <= sortedArray[high] {
-		mid = low + int((float64(toFind-sortedArray[low])*float64(high-low))/float64(sortedArray[high]-sortedArray[low])) //out of range is possible  here
-		if sortedArray[mid] < toFind {
-			low = mid + 1
-		} else if sortedArray[mid] > toFind {
-			// Repetition of the comparison code is forced by syntax limitations.
-			high = mid - 1
-		} else {
-			return mid
+	low, high := 0, len(array)-1
+
+	for {
+		if key < min {
+			return low
 		}
-	}
 
-	if sortedArray[low] == toFind {
-		return low
-	} else {
-		return -1 // Not found
+		if key > max {
+			return high + 1
+		}
+
+		// make a guess of the location
+		var guess int
+		if high == low {
+			guess = high
+		} else {
+			size := high - low
+			offset := int(float64(size-1) * float64(key-min) / float64(max-min))
+			guess = low + offset
+		}
+
+		if guess < 0 {
+			return 0
+		}
+
+		if guess >= len(array) {
+			return len(array)
+		}
+
+		// maybe we found it?
+		if array[guess] == key {
+			// scan backwards for start of value range
+			for guess > 0 && array[guess-1] == key {
+				guess--
+			}
+			return guess
+		}
+
+		// if we guessed to high, guess lower or vice versa
+		if array[guess] > key {
+			high = guess - 1
+			max = array[high]
+		} else {
+			low = guess + 1
+			min = array[low]
+		}
 	}
 }
