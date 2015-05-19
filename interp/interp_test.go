@@ -10,19 +10,22 @@ const maxLimit = 3e7
 
 var Ints []int
 
+func fillInts() {
+	rand.Seed(0)
+
+	Ints = make([]int, maxLimit)
+
+	for i := 0; i < maxLimit; i++ {
+		Ints[i] = int(uint32(rand.Int()))
+	}
+
+	sort.Ints(Ints)
+}
+
 func benchmarkSearch(b *testing.B, limit int, search func([]int, int) int) {
 
 	if Ints == nil {
-
-		rand.Seed(0)
-
-		Ints = make([]int, maxLimit)
-
-		for i := 0; i < limit; i++ {
-			Ints[i] = int(int32(rand.Int()))
-		}
-
-		sort.Ints(Ints)
+		fillInts()
 	}
 
 	ints := Ints[:limit]
