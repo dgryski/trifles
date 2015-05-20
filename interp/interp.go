@@ -23,16 +23,8 @@ func Search(array []int, key int) int {
 			guess = high
 		} else {
 			size := high - low
-			offset := int(float64(size-1) * float64(key-min) / float64(max-min))
+			offset := int(float64(size-1) * (float64(key-min) / float64(max-min)))
 			guess = low + offset
-		}
-
-		if guess < 0 {
-			return 0
-		}
-
-		if guess >= len(array) {
-			return len(array)
 		}
 
 		// maybe we found it?
