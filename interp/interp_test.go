@@ -16,7 +16,7 @@ func fillInts() {
 	Ints = make([]int, maxLimit)
 
 	for i := 0; i < maxLimit; i++ {
-		Ints[i] = int(uint32(rand.Int()))
+		Ints[i] = rand.Int()
 	}
 
 	sort.Ints(Ints)
@@ -71,14 +71,20 @@ func TestSearchSmall(t *testing.T) {
 	var ints []int
 
 	for i := 0; i < limit; i++ {
-		ints = append(ints, int(uint32(rand.Int())))
+		ints = append(ints, rand.Int())
 	}
 
 	sort.Ints(ints)
 
-	for i := 0; i < 1000; i++ {
+	for want, q := range ints {
+		if idx := Search(ints, q); idx != want {
+			t.Errorf("Search(ints, %v)=%v, want %v", q, idx, want)
+		}
+	}
 
-		q := int(uint32(rand.Int()))
+	for i := 0; i < 10000; i++ {
+
+		q := rand.Int()
 
 		want := sort.SearchInts(ints, q)
 
@@ -90,21 +96,30 @@ func TestSearchSmall(t *testing.T) {
 
 func TestSearchBig(t *testing.T) {
 
-	if Ints == nil {
-		fillInts()
+	if testing.Short() {
+		t.Skip("Skipping big test search")
 	}
 
-	ints := Ints
+	rand.Seed(0)
 
-	for i := 0; i < 1000000; i++ {
-		elt := int(uint32(rand.Int()))
+	const maxLimit = 100e6
+
+	ints := make([]int, maxLimit)
+
+	for i := 0; i < maxLimit; i++ {
+		ints[i] = rand.Int()
+	}
+
+	sort.Ints(ints)
+
+	for i := 0; i < 100000000; i++ {
+		elt := rand.Int()
 		vidx := Search(ints, elt)
 		idx := sort.SearchInts(ints, elt)
 		if vidx != idx {
-			t.Errorf("Search failed for elt=%d: got %d want %d\n", elt, vidx, idx)
+			t.Fatalf("Search failed for elt=%d: got %d want %d\n", elt, vidx, idx)
 		}
 	}
-
 }
 
 func binsearch(sortedArray []int, toFind int) int {
