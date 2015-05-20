@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-const maxLimit = 3e7
+const maxLimit = 4e7
 
 var Ints []int
 
@@ -44,7 +44,7 @@ func BenchmarkInterp10000(b *testing.B) { benchmarkSearch(b, 10000, Search) }
 func BenchmarkInterp1e5(b *testing.B)   { benchmarkSearch(b, 1e5, Search) }
 func BenchmarkInterp1e6(b *testing.B)   { benchmarkSearch(b, 1e6, Search) }
 func BenchmarkInterp1e7(b *testing.B)   { benchmarkSearch(b, 1e7, Search) }
-func BenchmarkInterp3e7(b *testing.B)   { benchmarkSearch(b, 3e7, Search) }
+func BenchmarkInterp4e7(b *testing.B)   { benchmarkSearch(b, 4e7, Search) }
 
 func BenchmarkBin100(b *testing.B)   { benchmarkSearch(b, 100, binsearch) }
 func BenchmarkBin1000(b *testing.B)  { benchmarkSearch(b, 1000, binsearch) }
@@ -52,7 +52,7 @@ func BenchmarkBin10000(b *testing.B) { benchmarkSearch(b, 10000, binsearch) }
 func BenchmarkBin1e5(b *testing.B)   { benchmarkSearch(b, 1e5, binsearch) }
 func BenchmarkBin1e6(b *testing.B)   { benchmarkSearch(b, 1e6, binsearch) }
 func BenchmarkBin1e7(b *testing.B)   { benchmarkSearch(b, 1e7, binsearch) }
-func BenchmarkBin3e7(b *testing.B)   { benchmarkSearch(b, 3e7, binsearch) }
+func BenchmarkBin4e7(b *testing.B)   { benchmarkSearch(b, 4e7, binsearch) }
 
 func BenchmarkStd100(b *testing.B)   { benchmarkSearch(b, 100, sort.SearchInts) }
 func BenchmarkStd1000(b *testing.B)  { benchmarkSearch(b, 1000, sort.SearchInts) }
@@ -60,7 +60,7 @@ func BenchmarkStd10000(b *testing.B) { benchmarkSearch(b, 10000, sort.SearchInts
 func BenchmarkStd1e5(b *testing.B)   { benchmarkSearch(b, 1e5, sort.SearchInts) }
 func BenchmarkStd1e6(b *testing.B)   { benchmarkSearch(b, 1e6, sort.SearchInts) }
 func BenchmarkStd1e7(b *testing.B)   { benchmarkSearch(b, 1e7, sort.SearchInts) }
-func BenchmarkStd3e7(b *testing.B)   { benchmarkSearch(b, 3e7, sort.SearchInts) }
+func BenchmarkStd4e7(b *testing.B)   { benchmarkSearch(b, 4e7, sort.SearchInts) }
 
 func TestSearchSmall(t *testing.T) {
 
