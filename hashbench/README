@@ -1,0 +1,44 @@
+PASS
+BenchmarkSpooky8	30000000	        58.4 ns/op	 136.98 MB/s
+BenchmarkSpooky16	20000000	        95.9 ns/op	 166.81 MB/s
+BenchmarkSpooky40	10000000	       122 ns/op	 326.43 MB/s
+BenchmarkSpooky64	10000000	       180 ns/op	 354.48 MB/s
+BenchmarkSpooky1K	 1000000	      1783 ns/op	 574.00 MB/s
+BenchmarkSpooky8K	  100000	     13163 ns/op	 622.34 MB/s
+BenchmarkSiphash8	50000000	        27.3 ns/op	 292.97 MB/s
+BenchmarkSiphash16	50000000	        32.4 ns/op	 493.36 MB/s
+BenchmarkSiphash40	30000000	        48.1 ns/op	 832.44 MB/s
+BenchmarkSiphash64	20000000	        65.0 ns/op	 984.52 MB/s
+BenchmarkSiphash1K	 2000000	       721 ns/op	1419.86 MB/s
+BenchmarkSiphash8K	  300000	      5297 ns/op	1546.52 MB/s
+BenchmarkFarm8	50000000	        47.8 ns/op	 167.38 MB/s
+BenchmarkFarm16	50000000	        47.2 ns/op	 338.81 MB/s
+BenchmarkFarm40	20000000	       106 ns/op	 375.19 MB/s
+BenchmarkFarm64	10000000	       152 ns/op	 420.06 MB/s
+BenchmarkFarm1K	  500000	      2393 ns/op	 427.75 MB/s
+BenchmarkFarm8K	  100000	     18818 ns/op	 435.31 MB/s
+BenchmarkCity8	30000000	        42.3 ns/op	 188.94 MB/s
+BenchmarkCity16	30000000	        42.1 ns/op	 380.00 MB/s
+BenchmarkCity40	10000000	       148 ns/op	 268.80 MB/s
+BenchmarkCity64	10000000	       148 ns/op	 431.09 MB/s
+BenchmarkCity1K	  500000	      3107 ns/op	 329.55 MB/s
+BenchmarkCity8K	   50000	     24352 ns/op	 336.39 MB/s
+BenchmarkMetro8	50000000	        27.1 ns/op	 295.57 MB/s
+BenchmarkMetro16	30000000	        45.9 ns/op	 348.31 MB/s
+BenchmarkMetro40	20000000	        94.5 ns/op	 423.11 MB/s
+BenchmarkMetro64	10000000	       130 ns/op	 488.98 MB/s
+BenchmarkMetro1K	 1000000	      1524 ns/op	 671.72 MB/s
+BenchmarkMetro8K	  100000	     11958 ns/op	 685.03 MB/s
+ok  	github.com/dgryski/trifles/hashbench	50.406s
+
+Siphash's optimized amd64 assembly core gives it an unfair advantage.  When
+using the pure-Go implementation (-tags appengine), the numbers are a little
+saner:
+
+BenchmarkSiphash8       50000000                33.8 ns/op       236.98 MB/s
+BenchmarkSiphash16      30000000                43.7 ns/op       365.98 MB/s
+BenchmarkSiphash40      20000000                75.0 ns/op       533.20 MB/s
+BenchmarkSiphash64      20000000               104 ns/op         612.21 MB/s
+BenchmarkSiphash1K       1000000              1340 ns/op         763.78 MB/s
+BenchmarkSiphash8K        200000             10337 ns/op         792.45 MB/s
+
