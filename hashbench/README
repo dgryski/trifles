@@ -1,4 +1,3 @@
-PASS
 BenchmarkSpooky8	30000000	        58.4 ns/op	 136.98 MB/s
 BenchmarkSpooky16	20000000	        95.9 ns/op	 166.81 MB/s
 BenchmarkSpooky40	10000000	       122 ns/op	 326.43 MB/s
@@ -29,7 +28,12 @@ BenchmarkMetro40	20000000	        94.5 ns/op	 423.11 MB/s
 BenchmarkMetro64	10000000	       130 ns/op	 488.98 MB/s
 BenchmarkMetro1K	 1000000	      1524 ns/op	 671.72 MB/s
 BenchmarkMetro8K	  100000	     11958 ns/op	 685.03 MB/s
-ok  	github.com/dgryski/trifles/hashbench	50.406s
+BenchmarkXXHash8        50000000                34.8 ns/op       229.56 MB/s
+BenchmarkXXHash16       30000000                41.3 ns/op       387.86 MB/s
+BenchmarkXXHash40       20000000                74.2 ns/op       539.41 MB/s
+BenchmarkXXHash64       20000000                88.0 ns/op       726.89 MB/s
+BenchmarkXXHash1K        3000000               487 ns/op        2101.76 MB/s
+BenchmarkXXHash8K         500000              3467 ns/op        2362.42 MB/s
 
 Siphash's optimized amd64 assembly core gives it an unfair advantage.  When
 using the pure-Go implementation (-tags appengine), the numbers are a little

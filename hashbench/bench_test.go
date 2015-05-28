@@ -3,6 +3,7 @@ package main
 import (
 	"testing"
 
+	xxhash "github.com/OneOfOne/xxhash/native"
 	"github.com/dchest/siphash"
 	"github.com/dgryski/go-farm"
 	"github.com/dgryski/go-metro"
@@ -67,6 +68,15 @@ func BenchmarkMetro40(b *testing.B) { benchmarkHash40(b, hmetro) }
 func BenchmarkMetro64(b *testing.B) { benchmarkHash64(b, hmetro) }
 func BenchmarkMetro1K(b *testing.B) { benchmarkHash1K(b, hmetro) }
 func BenchmarkMetro8K(b *testing.B) { benchmarkHash8K(b, hmetro) }
+
+var hxxhash = func(k []byte) uint64 { return xxhash.Checksum64(k) }
+
+func BenchmarkXXHash8(b *testing.B)  { benchmarkHash8(b, hxxhash) }
+func BenchmarkXXHash16(b *testing.B) { benchmarkHash16(b, hxxhash) }
+func BenchmarkXXHash40(b *testing.B) { benchmarkHash40(b, hxxhash) }
+func BenchmarkXXHash64(b *testing.B) { benchmarkHash64(b, hxxhash) }
+func BenchmarkXXHash1K(b *testing.B) { benchmarkHash1K(b, hxxhash) }
+func BenchmarkXXHash8K(b *testing.B) { benchmarkHash8K(b, hxxhash) }
 
 func benchmarkHash8(b *testing.B, h func([]byte) uint64) {
 	b.SetBytes(8)
