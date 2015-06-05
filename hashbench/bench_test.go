@@ -6,6 +6,7 @@ import (
 	xxhash "github.com/OneOfOne/xxhash/native"
 	"github.com/dchest/siphash"
 	"github.com/dgryski/go-farm"
+	cfarmhash "github.com/dgryski/go-farmhash"
 	"github.com/dgryski/go-metro"
 	"github.com/dgryski/go-spooky"
 	"github.com/surge/cityhash"
@@ -50,6 +51,15 @@ func BenchmarkFarm40(b *testing.B) { benchmarkHash40(b, hfarm) }
 func BenchmarkFarm64(b *testing.B) { benchmarkHash64(b, hfarm) }
 func BenchmarkFarm1K(b *testing.B) { benchmarkHash1K(b, hfarm) }
 func BenchmarkFarm8K(b *testing.B) { benchmarkHash8K(b, hfarm) }
+
+var hcfarmhash = func(k []byte) uint64 { return cfarmhash.Hash64(k) }
+
+func BenchmarkCFarmhash8(b *testing.B)  { benchmarkHash8(b, hcfarmhash) }
+func BenchmarkCFarmhash16(b *testing.B) { benchmarkHash16(b, hcfarmhash) }
+func BenchmarkCFarmhash40(b *testing.B) { benchmarkHash40(b, hcfarmhash) }
+func BenchmarkCFarmhash64(b *testing.B) { benchmarkHash64(b, hcfarmhash) }
+func BenchmarkCFarmhash1K(b *testing.B) { benchmarkHash1K(b, hcfarmhash) }
+func BenchmarkCFarmhash8K(b *testing.B) { benchmarkHash8K(b, hcfarmhash) }
 
 var hcity = func(k []byte) uint64 { return cityhash.CityHash64(k, uint32(len(k))) }
 
