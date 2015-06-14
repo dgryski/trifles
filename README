@@ -83,3 +83,5 @@ This repo contains things not interesting or complete enough to have their own.
    * pphrase -- simple passphrase generator
 
    * fastrand -- fast xorshift rng with bias-free [0..n)
+   
+   * range2cird -- turn IP ranges into CIDR
