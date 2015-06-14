@@ -10,7 +10,11 @@ import (
 
 type network struct {
 	ip   uint32
-	mask uint32
+	bits uint32
+}
+
+func (n network) String() string {
+	return fmt.Sprintf("%d.%d.%d.%d/%d", byte(n.ip>>24), byte(n.ip>>16), byte(n.ip>>8), byte(n.ip), n.bits)
 }
 
 func range2cidr(ipStart uint32, ipEnd uint32) []network {
@@ -28,7 +32,7 @@ func range2cidr(ipStart uint32, ipEnd uint32) []network {
 			bits++
 			mask = (mask << 1) + 1
 		}
-		nets = append(nets, network{ipStart, (1 << bits) - 1})
+		nets = append(nets, network{ipStart, 32 - bits})
 		ipStart = (ipStart | mask) + 1
 		newip = ipStart
 	}
