@@ -1,4 +1,5 @@
 // Package interp is an interpolation search
+// Moved to https://github.com/dgryski/go-interp
 package interp
 
 // modified from http://data.linkedin.com/blog/2010/06/beating-binary-search
