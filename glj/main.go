@@ -1,8 +1,7 @@
 package main
 
 /*
-#cgo CFLAGS: -I/usr/local/include/luajit-2.0
-#cgo LDFLAGS: -L/usr/local/lib/ -lluajit-5.1 -lm
+#cgo pkg-config: luajit
 
 #include <lua.h>
 #include <lualib.h>
@@ -22,7 +21,7 @@ import (
 	"fmt"
 	"unsafe"
 
-	"github.com/vmihailenco/msgpack"
+	"gopkg.in/vmihailenco/msgpack.v2"
 )
 
 var sum = `
