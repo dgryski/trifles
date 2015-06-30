@@ -1,9 +1,7 @@
 // func nlz(x uint32) uint32
 TEXT ·nlz(SB),4,$0-12
-        MOVL  x+0(FP), AX
-        TESTL AX, AX
+        BSRL  x+0(FP), AX
         JZ zero
-        BSRL  AX, AX
         SUBL  $31, AX
         NEGL AX
         MOVL AX, ret+8(FP)
