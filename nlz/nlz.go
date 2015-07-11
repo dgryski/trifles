@@ -1,3 +1,3 @@
 package main
 
-func nlz(x uint32) uint32
+func nlz(x uint64) uint64

@@ -6,30 +6,30 @@ import (
 
 func BenchmarkBSR(b *testing.B) {
 
-	//	var x uint32 = 0xFFFFFFFF
+	//	var x uint64 = 0xFFFFFFFF
 
-	N := uint32(b.N)
-	for i := uint32(0); i < N; i++ {
+	N := uint64(b.N)
+	for i := uint64(0); i < N; i++ {
 		/* x += x
 		if int(x) < 0 {
 			x ^= 0x88888EEF
 		} */
-		nlz(uint32(i))
+		nlz(uint64(i))
 	}
 
 }
 
 func BenchmarkGo(b *testing.B) {
 
-	//	var x uint32 = 0xFFFFFFFF
+	//	var x uint64 = 0xFFFFFFFF
 
-	N := uint32(b.N)
-	for i := uint32(0); i < N; i++ {
+	N := uint64(b.N)
+	for i := uint64(0); i < N; i++ {
 		/* x += x
 		if int(x) < 0 {
 			x ^= 0x88888EEF
 		} */
-		nlz2(uint32(i))
+		nlz2(uint64(i))
 	}
 }
 
