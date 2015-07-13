@@ -85,3 +85,5 @@ This repo contains things not interesting or complete enough to have their own.
    * fastrand -- fast xorshift rng with bias-free [0..n)
    
    * range2cird -- turn IP ranges into CIDR
+
+   * gfmt -- trivial filter wrapping go-linebreak
