@@ -11,12 +11,14 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/dgryski/go-linlog"
 	"github.com/dgryski/go-onlinestats"
 )
 
 func main() {
 
 	width := flag.Int("w", 100, "display width")
+	llog := flag.Bool("l", false, "linear-log bucketing")
 	percentiles := flag.String("p", "0.5,0.75,0.95,0.99,0.999", "percentile values to print")
 	flag.Parse()
 
@@ -34,6 +36,11 @@ func main() {
 		v, err := strconv.Atoi(sc.Text())
 		if err != nil {
 			log.Fatal(err)
+		}
+
+		if *llog {
+			r, _ := linlog.BinOf(uint64(v), 4, 2)
+			v = int(r)
 		}
 
 		if v < min {
