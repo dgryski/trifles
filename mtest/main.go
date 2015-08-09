@@ -12,12 +12,12 @@ func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 
 	var z big.Int
-	var a, b big.Int
+	var a, b, c big.Int
 	var r big.Int
 
 	two := big.NewInt(2)
 
-	var n_add, n_sub, n_mul2, n_div2, n_gcd, n_sqr, n_invmod int
+	var n_add, n_sub, n_mul2, n_div2, n_gcd, n_sqr, n_invmod, n_exptmod int
 
 	for scanner.Scan() {
 		cmd := scanner.Text()
@@ -95,6 +95,18 @@ func main() {
 			next(scanner, &r)
 
 			z.ModInverse(&a, &b)
+			if z.Cmp(&r) != 0 {
+				fmt.Println(a, b, r, z)
+			}
+
+		case "exptmod":
+			n_exptmod++
+			next(scanner, &a)
+			next(scanner, &b)
+			next(scanner, &c)
+			next(scanner, &r)
+
+			z.Exp(&a, &b, &c)
 			if z.Cmp(&r) != 0 {
 				fmt.Println(a, b, r, z)
 			}
