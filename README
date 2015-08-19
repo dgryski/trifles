@@ -83,9 +83,11 @@ This repo contains things not interesting or complete enough to have their own.
    * pphrase -- simple passphrase generator
 
    * fastrand -- fast xorshift rng with bias-free [0..n)
-   
+
    * range2cird -- turn IP ranges into CIDR
 
    * gfmt -- trivial filter wrapping go-linebreak
 
    * mtest -- port of libtommath test program
+
+   * leven -- fastest levenshtein distance algorithm I could find
