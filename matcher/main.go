@@ -32,6 +32,8 @@ func main() {
 		arr = append(arr, b)
 	}
 
+	log.Printf("using matcher=%+v\n", *w)
+
 	switch *w {
 
 	case "map":
