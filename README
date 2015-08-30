@@ -91,3 +91,5 @@ This repo contains things not interesting or complete enough to have their own.
    * mtest -- port of libtommath test program
 
    * leven -- fastest levenshtein distance algorithm I could find
+
+   * matcher -- test different methods of testing string set membership
