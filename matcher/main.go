@@ -1,6 +1,6 @@
 package main
 
-//go:generate ragel -Z lexer.rl
+//go:generate ragel -Z -G2 lexer.rl
 
 import (
 	"bufio"

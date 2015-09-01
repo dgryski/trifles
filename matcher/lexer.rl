@@ -1,9 +1,10 @@
 package main
 
-%% machine scanner;
-%% write data;
 
 func MatchRagel(data []byte) bool {
+
+%% machine scanner;
+%% write data;
 
 	cs, p, pe, eof := 0, 0, len(data), len(data)
 	ts, te, act := 0, 0, 0
