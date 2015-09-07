@@ -19,6 +19,7 @@ func main() {
 	iter := flag.Int("i", 10, "iterations")
 	cpuprofile := flag.String("cpuprofile", "", "write cpu profile to file")
 	memprofile := flag.String("memprofile", "", "write memory profile to this file")
+	bloom := flag.Bool("bloom", false, "use bloom filter")
 
 	flag.Parse()
 
@@ -57,6 +58,10 @@ func main() {
 		defer pprof.WriteHeapProfile(f)
 	}
 
+	if *bloom {
+		initBloom()
+	}
+
 	switch *w {
 
 	case "bsearch":
@@ -66,7 +71,7 @@ func main() {
 		var found int
 		for i := 0; i < *iter; i++ {
 			for _, a := range arr[:*n] {
-				if MatchBsearch(a) {
+				if MatchBloom(a) && MatchBsearch(a) {
 					found++
 				}
 
@@ -82,7 +87,7 @@ func main() {
 		var found int
 		for i := 0; i < *iter; i++ {
 			for _, a := range arr[:*n] {
-				if MatchMap(a) {
+				if MatchBloom(a) && MatchMap(a) {
 					found++
 				}
 
@@ -98,7 +103,7 @@ func main() {
 		var found int
 		for i := 0; i < *iter; i++ {
 			for _, a := range arr[:*n] {
-				if MatchRadix(string(a)) {
+				if MatchBloom(a) && MatchRadix(string(a)) {
 					found++
 				}
 
@@ -112,7 +117,7 @@ func main() {
 		var found int
 		for i := 0; i < *iter; i++ {
 			for _, a := range arr[:*n] {
-				if MatchRagel(a) {
+				if MatchBloom(a) && MatchRagel(a) {
 					found++
 				}
 			}
@@ -127,7 +132,7 @@ func main() {
 		var found int
 		for i := 0; i < *iter; i++ {
 			for _, a := range arr[:*n] {
-				if MatchAho(a) {
+				if MatchBloom(a) && MatchAho(a) {
 					found++
 				}
 			}
@@ -136,5 +141,9 @@ func main() {
 		log.Printf("found=%+v\n", found)
 	default:
 		log.Fatalf("unknown matcher %s", *w)
+	}
+
+	if *bloom {
+		log.Printf("filtered=%+v\n", filtered)
 	}
 }
