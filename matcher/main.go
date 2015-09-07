@@ -33,6 +33,9 @@ func main() {
 	for scanner.Scan() {
 		b := append([]byte(nil), scanner.Bytes()...)
 		arr = append(arr, b)
+		if len(arr) > *n {
+			break
+		}
 	}
 
 	log.Printf("using matcher=%+v\n", *w)
