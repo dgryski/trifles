@@ -12,6 +12,16 @@ var lookupBloom bitvector
 const bloomK = 2
 const bloomM = 1 << 14
 
+func bkeys(b []byte) (uint32, uint32) {
+	h1 := binary.LittleEndian.Uint32(b)
+	i := 4
+	if i > len(b)-4 {
+		i = len(b) - 4
+	}
+	h2 := binary.LittleEndian.Uint32(b[i:])
+	return Xorshift32(h1), Xorshift32(h2)
+}
+
 func initBloom() {
 
 	lookupBloom = newbv(bloomM)
@@ -25,8 +35,7 @@ func initBloom() {
 	for scanner.Scan() {
 		b := scanner.Bytes()
 
-		h1 := binary.LittleEndian.Uint32(b)
-		h2 := Xorshift32(h1)
+		h1, h2 := bkeys(b)
 
 		for i := uint32(0); i < bloomK; i++ {
 			lookupBloom.set((h1 + (i * h2)) & (bloomM - 1))
@@ -47,8 +56,7 @@ func MatchBloom(b []byte) bool {
 		return true
 	}
 
-	h1 := binary.LittleEndian.Uint32(b)
-	h2 := Xorshift32(h1)
+	h1, h2 := bkeys(b)
 
 	for i := uint32(0); i < bloomK; i++ {
 		if lookupBloom.get((h1+(i*h2))&(bloomM-1)) == 0 {
