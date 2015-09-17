@@ -109,8 +109,26 @@ func main() {
 		seen[i].count++
 	}
 
+	var maxcount uint64
+	for i := range seen {
+		if seen[i].count > maxcount {
+			maxcount = seen[i].count
+		}
+	}
+
+	const starcols = 70
+	stars := dupRune('*', starcols)
 	for i := range seen {
 		d := time.Duration(seen[i].epoch) * time.Second
-		fmt.Println(d.String(), seen[i].count)
+		s := stars[:int(float64(float64(starcols)*(float64(seen[i].count)/float64(maxcount))))]
+		fmt.Printf("%12s %8d %s\n", d.String(), seen[i].count, s)
 	}
+}
+
+func dupRune(r rune, n int) string {
+	s := make([]rune, n)
+	for i := range s {
+		s[i] = r
+	}
+	return string(s)
 }
