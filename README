@@ -93,3 +93,5 @@ This repo contains things not interesting or complete enough to have their own.
    * leven -- fastest levenshtein distance algorithm I could find
 
    * matcher -- test different methods of testing string set membership
+
+   * cstbucket -- crunch carbonserver logs for time-ranges of queries
