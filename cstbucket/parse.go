@@ -7,7 +7,7 @@ import (
     "strconv"
 )
 
-func parseLine(data []byte) ([]byte, int64, int64, error) {
+func parseLine(data []byte) ([]byte, []byte, int64, int64, error) {
 
 
 //line parse.rl:11
@@ -27,6 +27,7 @@ const scanner_en_main int = 1
         var n int
 
         var t0 []byte
+        var m []byte
         var e1 int64
         var e2 int64
 
@@ -35,12 +36,12 @@ const scanner_en_main int = 1
 	// 2015/09/15 16:49:17 fetch: served "metric.name.with.lots.__of_dots__.and.underscores" from 1442324820 to 1442328420
 
 	
-//line parse.go:39
+//line parse.go:40
 	{
 	cs = scanner_start
 	}
 
-//line parse.go:44
+//line parse.go:45
 	{
 	if p == pe {
 		goto _test_eof
@@ -196,7 +197,7 @@ st_case_0:
 		cs = 0
 		goto _out
 tr0:
-//line parse.rl:30
+//line parse.rl:31
  n = p 
 	goto st2
 	st2:
@@ -204,7 +205,7 @@ tr0:
 			goto _test_eof2
 		}
 	st_case_2:
-//line parse.go:208
+//line parse.go:209
 		if 48 <= data[p] && data[p] <= 57 {
 			goto st3
 		}
@@ -372,7 +373,7 @@ tr0:
 		}
 		goto st0
 tr20:
-//line parse.rl:31
+//line parse.rl:32
  t0 = data[n:p] 
 	goto st21
 	st21:
@@ -380,7 +381,7 @@ tr20:
 			goto _test_eof21
 		}
 	st_case_21:
-//line parse.go:384
+//line parse.go:385
 		if data[p] == 102 {
 			goto st22
 		}
@@ -508,14 +509,19 @@ tr20:
 		}
 	st_case_35:
 		if data[p] == 34 {
-			goto st36
+			goto tr35
 		}
 		goto st0
+tr35:
+//line parse.rl:31
+ n = p 
+	goto st36
 	st36:
 		if p++; p == pe {
 			goto _test_eof36
 		}
 	st_case_36:
+//line parse.go:525
 		if data[p] == 34 {
 			goto st0
 		}
@@ -535,14 +541,19 @@ tr20:
 		}
 	st_case_38:
 		if data[p] == 32 {
-			goto st39
+			goto tr38
 		}
 		goto st0
+tr38:
+//line parse.rl:33
+ m = data[n:p] 
+	goto st39
 	st39:
 		if p++; p == pe {
 			goto _test_eof39
 		}
 	st_case_39:
+//line parse.go:557
 		if data[p] == 102 {
 			goto st40
 		}
@@ -593,7 +604,7 @@ tr20:
 		}
 		goto st0
 tr44:
-//line parse.rl:30
+//line parse.rl:31
  n = p 
 	goto st45
 	st45:
@@ -601,7 +612,7 @@ tr44:
 			goto _test_eof45
 		}
 	st_case_45:
-//line parse.go:605
+//line parse.go:616
 		if 48 <= data[p] && data[p] <= 57 {
 			goto st46
 		}
@@ -688,7 +699,7 @@ tr44:
 		}
 		goto st0
 tr54:
-//line parse.rl:32
+//line parse.rl:34
  e1, _ = strconv.ParseInt(string(data[n:p]), 10, 64) 
 	goto st55
 	st55:
@@ -696,7 +707,7 @@ tr54:
 			goto _test_eof55
 		}
 	st_case_55:
-//line parse.go:700
+//line parse.go:711
 		if data[p] == 116 {
 			goto st56
 		}
@@ -729,7 +740,7 @@ tr54:
 		}
 		goto st0
 tr58:
-//line parse.rl:30
+//line parse.rl:31
  n = p 
 	goto st59
 	st59:
@@ -737,7 +748,7 @@ tr58:
 			goto _test_eof59
 		}
 	st_case_59:
-//line parse.go:741
+//line parse.go:752
 		if 48 <= data[p] && data[p] <= 57 {
 			goto st60
 		}
@@ -815,7 +826,7 @@ tr58:
 		}
 		goto st0
 tr67:
-//line parse.rl:35
+//line parse.rl:37
  parsed = true 
 	goto st68
 	st68:
@@ -823,7 +834,7 @@ tr67:
 			goto _test_eof68
 		}
 	st_case_68:
-//line parse.go:827
+//line parse.go:838
 		goto st0
 	st_out:
 	_test_eof2: cs = 2; goto _test_eof
@@ -898,22 +909,21 @@ tr67:
 	if p == eof {
 		switch cs {
 		case 68:
-//line parse.rl:33
+//line parse.rl:35
  e2, _ = strconv.ParseInt(string(data[n:p]), 10, 64) 
-//line parse.go:904
+//line parse.go:915
 		}
 	}
 
 	_out: {}
 	}
 
-//line parse.rl:39
+//line parse.rl:41
 
 
 	if !parsed {
-	    return nil, 0, 0, errors.New("parse error")
+	    return nil, nil, 0, 0, errors.New("parse error")
 	}
 
-	return t0, e1, e2, nil
-
+	return t0, m, e1, e2, nil
 }

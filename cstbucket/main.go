@@ -11,6 +11,9 @@ import (
 	"os"
 	"runtime/pprof"
 	"time"
+
+	"github.com/dchest/siphash"
+	"github.com/lytics/hll"
 )
 
 const (
@@ -83,14 +86,18 @@ func main() {
 
 	scanner := bufio.NewScanner(os.Stdin)
 
+	h := hll.NewHll(14, 20)
+
 	var t0 int64
 	var prevt []byte
 
 	for scanner.Scan() {
-		t, e1, _, err := parseLine(scanner.Bytes())
+		t, m, e1, _, err := parseLine(scanner.Bytes())
 		if err != nil {
 			continue
 		}
+
+		h.Add(siphash.Hash(0, 0, m))
 
 		if !bytes.Equal(prevt, t) {
 			prevt = append(prevt[:0], t...)
@@ -108,6 +115,8 @@ func main() {
 		}
 		seen[i].count++
 	}
+
+	fmt.Printf("uniq metrics %8d\n", h.Cardinality())
 
 	var maxcount uint64
 	for i := range seen {

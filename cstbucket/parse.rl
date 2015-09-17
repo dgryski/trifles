@@ -5,7 +5,7 @@ import (
     "strconv"
 )
 
-func parseLine(data []byte) ([]byte, int64, int64, error) {
+func parseLine(data []byte) ([]byte, []byte, int64, int64, error) {
 
 %% machine scanner;
 %% write data;
@@ -15,6 +15,7 @@ func parseLine(data []byte) ([]byte, int64, int64, error) {
         var n int
 
         var t0 []byte
+        var m []byte
         var e1 int64
         var e2 int64
 
@@ -29,19 +30,19 @@ func parseLine(data []byte) ([]byte, int64, int64, error) {
 
             action start { n = fpc }
             action save_datetime { t0 = data[n:fpc] }
+            action save_metric { m = data[n:fpc] }
             action save_epoch1 { e1, _ = strconv.ParseInt(string(data[n:fpc]), 10, 64) }
             action save_epoch2 { e2, _ = strconv.ParseInt(string(data[n:fpc]), 10, 64) }
 
-	    main := (datetime >start %save_datetime) ' fetch: served '  quoted ' from ' ( epoch >start %save_epoch1 ) ' to ' ( epoch >start %save_epoch2 ) @{ parsed = true };
+	    main := (datetime >start %save_datetime) ' fetch: served '  ( quoted >start %save_metric ) ' from ' ( epoch >start %save_epoch1 ) ' to ' ( epoch >start %save_epoch2 ) @{ parsed = true };
 
 	    write init;
 	    write exec;
 	}%%
 
 	if !parsed {
-	    return nil, 0, 0, errors.New("parse error")
+	    return nil, nil, 0, 0, errors.New("parse error")
 	}
 
-	return t0, e1, e2, nil
-
+	return t0, m, e1, e2, nil
 }
