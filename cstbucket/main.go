@@ -116,21 +116,25 @@ func main() {
 		seen[i].count++
 	}
 
-	fmt.Printf("uniq metrics %8d\n", h.Cardinality())
+	fmt.Printf("unique metrics %8d\n", h.Cardinality())
 
 	var maxcount uint64
+	var total uint64
 	for i := range seen {
 		if seen[i].count > maxcount {
 			maxcount = seen[i].count
 		}
+		total += seen[i].count
 	}
 
 	const starcols = 70
 	stars := dupRune('*', starcols)
+	var cumulative uint64
 	for i := range seen {
 		d := time.Duration(seen[i].epoch) * time.Second
 		s := stars[:int(float64(float64(starcols)*(float64(seen[i].count)/float64(maxcount))))]
-		fmt.Printf("%12s %8d %s\n", d.String(), seen[i].count, s)
+		cumulative += seen[i].count
+		fmt.Printf("%12s %10d (%0.2f, cum %0.2f) %s\n", d.String(), seen[i].count, float64(seen[i].count)/float64(total), float64(cumulative)/float64(total), s)
 	}
 }
 
