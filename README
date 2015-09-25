@@ -95,3 +95,5 @@ This repo contains things not interesting or complete enough to have their own.
    * matcher -- test different methods of testing string set membership
 
    * cstbucket -- crunch carbonserver logs for time-ranges of queries
+
+   * stablepart -- stable partition a sort.Interface on a boolean predicate
