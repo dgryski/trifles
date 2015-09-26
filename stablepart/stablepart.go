@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"math/rand"
 	"sort"
 )
 
@@ -39,9 +41,53 @@ func Reverse(d sort.Interface, f, l int) {
 	}
 }
 
+type element struct {
+	val int
+	idx int
+}
+
+type elements []element
+
+func (e elements) Len() int           { return len(e) }
+func (e elements) Swap(i, j int)      { e[i], e[j] = e[j], e[i] }
+func (e elements) Less(i, j int) bool { return e[i].val < e[j].val }
+
+func verify(pre, elts elements, f, l int, which string) {
+	for i := f + 1; i < l; i++ {
+		if elts[i-1].idx > elts[i].idx {
+			fmt.Printf("%s partition mismatch: %v %v\n", which, elts[i-1], elts[i])
+			fmt.Printf("pre =%+v\n", pre)
+			fmt.Printf("elts=%+v\n", elts)
+			log.Fatalln("verify failed")
+		}
+	}
+}
+
 func main() {
-	d := []int{1, 4, 2, 5, 6, 3, 4, 1, 7, 5, 4, 1}
-	fmt.Println(d)
-	o := StablePartition(sort.IntSlice(d), 0, len(d), func(i int) bool { return d[i]&1 == 0 })
-	fmt.Println(d, o)
+
+	const numTests = 100000
+
+	for j := 0; j < numTests; j++ {
+
+		// generate random slice
+		sz := rand.Intn(100)
+		elts := make(elements, sz)
+		for i := range elts {
+			elts[i].val = rand.Intn(1000)
+			elts[i].idx = i
+		}
+
+		// save a copy
+		pre := make(elements, sz)
+		copy(pre, elts)
+
+		// partition
+		p := StablePartition(elts, 0, elts.Len(), func(i int) bool { return elts[i].val&1 == 0 })
+
+		// verify it's correct
+		verify(pre, elts, 0, p, "pre")
+		verify(pre, elts, p, sz, "post")
+	}
+
+	fmt.Printf("%d tests succeeded\n", numTests)
 }
