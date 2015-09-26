@@ -15,11 +15,11 @@ func StablePartition(d sort.Interface, f, l int, p func(i int) bool) int {
 	}
 
 	if n == 1 {
+		r := f
 		if p(f) {
-			return f + 1
-		} else {
-			return f
+			r++
 		}
+		return r
 	}
 
 	m := f + n/2
