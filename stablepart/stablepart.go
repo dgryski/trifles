@@ -52,7 +52,20 @@ func (e elements) Len() int           { return len(e) }
 func (e elements) Swap(i, j int)      { e[i], e[j] = e[j], e[i] }
 func (e elements) Less(i, j int) bool { return e[i].val < e[j].val }
 
-func verify(pre, elts elements, f, l int, which string) {
+func verify(pre, elts elements, f, l int, which string, p func(i int) bool) {
+
+	// check the predicate
+	for i := f; i < l; i++ {
+		if !p(f) {
+			fmt.Printf("%s predicate failed %v\n", which, elts[0])
+			fmt.Printf("pre =%+v\n", pre)
+			fmt.Printf("elts=%+v\n", elts)
+			log.Fatalln("verify failed")
+		}
+
+	}
+
+	// check the order
 	for i := f + 1; i < l; i++ {
 		if elts[i-1].idx > elts[i].idx {
 			fmt.Printf("%s partition mismatch: %v %v\n", which, elts[i-1], elts[i])
@@ -81,12 +94,14 @@ func main() {
 		pre := make(elements, sz)
 		copy(pre, elts)
 
+		predicate := func(i int) bool { return elts[i].val&1 == 0 }
+
 		// partition
-		p := StablePartition(elts, 0, elts.Len(), func(i int) bool { return elts[i].val&1 == 0 })
+		p := StablePartition(elts, 0, elts.Len(), predicate)
 
 		// verify it's correct
-		verify(pre, elts, 0, p, "pre")
-		verify(pre, elts, p, sz, "post")
+		verify(pre, elts, 0, p, "pre", predicate)
+		verify(pre, elts, p, sz, "post", func(i int) bool { return !predicate(i) })
 	}
 
 	fmt.Printf("%d tests succeeded\n", numTests)
