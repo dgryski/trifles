@@ -9,6 +9,7 @@ import (
 	cfarmhash "github.com/dgryski/go-farmhash"
 	"github.com/dgryski/go-metro"
 	"github.com/dgryski/go-spooky"
+	"github.com/opennota/fasthash"
 	"github.com/surge/cityhash"
 )
 
@@ -87,6 +88,15 @@ func BenchmarkXXHash40(b *testing.B) { benchmarkHash40(b, hxxhash) }
 func BenchmarkXXHash64(b *testing.B) { benchmarkHash64(b, hxxhash) }
 func BenchmarkXXHash1K(b *testing.B) { benchmarkHash1K(b, hxxhash) }
 func BenchmarkXXHash8K(b *testing.B) { benchmarkHash8K(b, hxxhash) }
+
+var fsthash = func(k []byte) uint64 { return fasthash.Hash64(0, k) }
+
+func BenchmarkFasthash8(b *testing.B)  { benchmarkHash8(b, fsthash) }
+func BenchmarkFasthash16(b *testing.B) { benchmarkHash16(b, fsthash) }
+func BenchmarkFasthash40(b *testing.B) { benchmarkHash40(b, fsthash) }
+func BenchmarkFasthash64(b *testing.B) { benchmarkHash64(b, fsthash) }
+func BenchmarkFasthash1K(b *testing.B) { benchmarkHash1K(b, fsthash) }
+func BenchmarkFasthash8K(b *testing.B) { benchmarkHash8K(b, fsthash) }
 
 func benchmarkHash8(b *testing.B, h func([]byte) uint64) {
 	b.SetBytes(8)
