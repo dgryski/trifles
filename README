@@ -97,3 +97,5 @@ This repo contains things not interesting or complete enough to have their own.
    * cstbucket -- crunch carbonserver logs for time-ranges of queries
 
    * stablepart -- stable partition a sort.Interface on a boolean predicate
+
+   * jumpreplica -- tool for playing with replica choices for jump-hash
