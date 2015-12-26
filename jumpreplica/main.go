@@ -11,11 +11,20 @@ import (
 	"time"
 
 	"github.com/dgryski/go-onlinestats"
+	"github.com/dgryski/go-shardedkv"
+	"github.com/dgryski/go-shardedkv/choosers/chash"
 	"github.com/dgryski/go-shardedkv/choosers/jump"
+	"github.com/dgryski/go-shardedkv/choosers/ketama"
 )
+
+type replichooser interface {
+	shardedkv.Chooser
+	ChooseReplicas(key string, n int) []string
+}
 
 func main() {
 
+	chooser := flag.String("chooser", "jump", "chooser to use")
 	numBuckets := flag.Int("b", 8, "buckets")
 	replicas := flag.Int("r", 1, "replicas")
 	cpuprofile := flag.String("cpuprofile", "", "cpu profile")
@@ -41,7 +50,19 @@ func main() {
 
 	hasher := func(b []byte) uint64 { h := fnv.New64a(); h.Write(b); return h.Sum64() }
 
-	j := jump.New(hasher)
+	var j replichooser
+
+	switch *chooser {
+	case "ketama":
+		j = ketama.New()
+	case "chash":
+		j = chash.New()
+	case "jump":
+		j = jump.New(hasher)
+	default:
+		log.Fatal("unknown chooser", *chooser)
+	}
+
 	j.SetBuckets(buckets)
 
 	var totalMetrics int
