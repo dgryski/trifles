@@ -8,10 +8,15 @@ type Cache struct {
 }
 
 func New(oncecap, twicecap int) *Cache {
-	return &Cache{
+	c := &Cache{
 		once:  lru.New(oncecap),
 		twice: lru.New(twicecap),
 	}
+	// make sure keys evicted from two make it to the head of one
+	c.twice.OnEvicted = func(k lru.Key, v interface{}) {
+		c.once.Add(k, v)
+	}
+	return c
 }
 
 func (c *Cache) Get(key string) interface{} {
