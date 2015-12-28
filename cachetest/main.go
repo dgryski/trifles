@@ -43,6 +43,7 @@ func main() {
 	n := flag.Int("n", 1000, "cache size")
 	alg := flag.String("alg", "", "algorithm")
 	file := flag.String("f", "", "input file")
+	door := flag.Bool("door", false, "use doorkeeper")
 	cpuprofile := flag.Bool("cpuprofile", false, "cpuprofile")
 	memprofile := flag.Bool("memprofile", false, "memprofile")
 
@@ -62,6 +63,12 @@ func main() {
 	t0 := time.Now()
 
 	var f func(string) bool
+
+	var bouncer *doorkeeper
+
+	if *door {
+		bouncer = newDoorkeeper(*n)
+	}
 
 	switch *alg {
 
@@ -87,7 +94,9 @@ func main() {
 
 		f = func(s string) bool {
 			if i := cache.Get(s); i == nil {
-				cache.Set(s, s)
+				if bouncer.allow(s) {
+					cache.Set(s, s)
+				}
 				return true
 			}
 			return false
@@ -111,7 +120,9 @@ func main() {
 
 		f = func(s string) bool {
 			if _, ok := cache.Get(s); !ok {
-				cache.Add(s, s)
+				if bouncer.allow(s) {
+					cache.Add(s, s)
+				}
 				return true
 			}
 			return false
@@ -123,7 +134,9 @@ func main() {
 
 		f = func(s string) bool {
 			if _, ok := cache.Access(s); !ok {
-				cache.Insert(s, s)
+				if bouncer.allow(s) {
+					cache.Insert(s, s)
+				}
 				return true
 			}
 			return false
@@ -136,7 +149,9 @@ func main() {
 
 		f = func(s string) bool {
 			if i := cache.Get(s); i == nil {
-				cache.Set(s, s)
+				if bouncer.allow(s) {
+					cache.Set(s, s)
+				}
 				return true
 			}
 			return false
@@ -148,7 +163,9 @@ func main() {
 
 		f = func(s string) bool {
 			if i := cache.Get(s); i == nil {
-				cache.Set(s, s)
+				if bouncer.allow(s) {
+					cache.Set(s, s)
+				}
 				return true
 			}
 			return false
@@ -160,7 +177,9 @@ func main() {
 
 		f = func(s string) bool {
 			if i := cache.Get(s); i == nil {
-				cache.Set(s, s)
+				if bouncer.allow(s) {
+					cache.Set(s, s)
+				}
 				return true
 			}
 			return false
@@ -172,7 +191,9 @@ func main() {
 
 		f = func(s string) bool {
 			if _, ok := cache.Get(s); !ok {
-				cache.Set(s, s)
+				if bouncer.allow(s) {
+					cache.Set(s, s)
+				}
 				return true
 			}
 			return false
