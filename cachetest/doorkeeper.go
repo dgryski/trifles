@@ -20,9 +20,9 @@ func (d *doorkeeper) allow(s string) bool {
 		return true
 	}
 
-	ok := d.bf.InsertLookup([]byte(s))
+	alreadyPresent := d.bf.Insert([]byte(s))
 	if d.bf.Len() > d.bf.Cap() {
 		d.bf.Reset()
 	}
-	return ok
+	return alreadyPresent
 }
