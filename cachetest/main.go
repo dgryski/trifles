@@ -4,6 +4,7 @@ package main
 
 sorted by misses
 
+tinylfu: 4.075395207s 10000000 total 2205147 misses
 clockpro: 3.133172079s 10000000 total 2212461 misses
 arc: 5.136880077s 10000000 total 2220016 misses
 slru2080: 6.36564715s 10000000 total 2254569 misses
@@ -31,6 +32,7 @@ import (
 	"github.com/dgryski/go-arc"
 	"github.com/dgryski/go-clockpro"
 	"github.com/dgryski/go-s4lru"
+	"github.com/dgryski/go-tinylfu"
 	"github.com/dgryski/trifles/cachetest/clock"
 	"github.com/dgryski/trifles/cachetest/random"
 	"github.com/dgryski/trifles/cachetest/slru"
@@ -136,6 +138,21 @@ func main() {
 			if _, ok := cache.Access(s); !ok {
 				if bouncer.allow(s) {
 					cache.Insert(s, s)
+				}
+				return true
+			}
+			return false
+
+		}
+
+	case "tinylfu":
+
+		cache := tinylfu.New(*n, *n*10)
+
+		f = func(s string) bool {
+			if _, ok := cache.Get(s); !ok {
+				if bouncer.allow(s) {
+					cache.Add(s, s)
 				}
 				return true
 			}
