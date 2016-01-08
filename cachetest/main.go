@@ -19,16 +19,13 @@ random: 2.523026752s 10000000 total 2900727 misses
 
 import (
 	"bufio"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
 	"os"
-	"runtime"
 	"time"
 
 	"github.com/calmh/lfucache"
-	"github.com/davecheney/profile"
 	"github.com/dgryski/go-arc"
 	"github.com/dgryski/go-clockpro"
 	"github.com/dgryski/go-s4lru"
@@ -38,6 +35,7 @@ import (
 	"github.com/dgryski/trifles/cachetest/slru"
 	"github.com/dgryski/trifles/cachetest/tworand"
 	"github.com/golang/groupcache/lru"
+	"github.com/pkg/profile"
 )
 
 func main() {
@@ -57,6 +55,10 @@ func main() {
 
 	if *cpuprofile {
 		defer profile.Start(profile.CPUProfile).Stop()
+	}
+
+	if *memprofile {
+		defer profile.Start(profile.MemProfile).Stop()
 	}
 
 	count := 0
@@ -237,13 +239,6 @@ func main() {
 			miss++
 		}
 		count++
-	}
-
-	if *memprofile {
-		var m runtime.MemStats
-		runtime.ReadMemStats(&m)
-		e := json.NewEncoder(os.Stdout)
-		e.Encode(m)
 	}
 
 	fmt.Printf("%s: %s %d total %d misses (hit rate %d %%)\n", *alg, time.Since(t0), count, miss, int(100*(float64(count-miss)/float64(count))))
