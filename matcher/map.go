@@ -21,7 +21,7 @@ func initMap() {
 	}
 }
 
-func MatchMap(k []byte) bool {
-	_, ok := lookupMap[string(k)]
+func MatchMap(s string) bool {
+	_, ok := lookupMap[s]
 	return ok
 }

@@ -29,10 +29,12 @@ func main() {
 	}
 
 	var arr [][]byte
+	var strarr []string
 
 	scanner := bufio.NewScanner(inf)
 	for scanner.Scan() {
 		b := append([]byte(nil), scanner.Bytes()...)
+		strarr = append(strarr, scanner.Text())
 		arr = append(arr, b)
 		if len(arr) > *n {
 			break
@@ -70,8 +72,8 @@ func main() {
 		t0 := time.Now()
 		var found int
 		for i := 0; i < *iter; i++ {
-			for _, a := range arr[:*n] {
-				if MatchBloom(a) && MatchBsearch(a) {
+			for j, a := range arr[:*n] {
+				if MatchBloom(a) && MatchBsearch(strarr[j]) {
 					found++
 				}
 
@@ -86,8 +88,8 @@ func main() {
 		t0 := time.Now()
 		var found int
 		for i := 0; i < *iter; i++ {
-			for _, a := range arr[:*n] {
-				if MatchBloom(a) && MatchMap(a) {
+			for j, a := range arr[:*n] {
+				if MatchBloom(a) && MatchMap(strarr[j]) {
 					found++
 				}
 
@@ -102,11 +104,10 @@ func main() {
 		t0 := time.Now()
 		var found int
 		for i := 0; i < *iter; i++ {
-			for _, a := range arr[:*n] {
-				if MatchBloom(a) && MatchRadix(string(a)) {
+			for j, a := range arr[:*n] {
+				if MatchBloom(a) && MatchRadix(strarr[j]) {
 					found++
 				}
-
 			}
 		}
 		log.Printf("time.Since(t0)=%+v\n", time.Since(t0))

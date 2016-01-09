@@ -23,13 +23,9 @@ func initBsearch() {
 	sort.Strings(lookupBsearch)
 }
 
-func MatchBsearch(k []byte) bool {
-	in := string(k)
-	i := sort.SearchStrings(lookupBsearch, in)
+func MatchBsearch(s string) bool {
+	i := sort.SearchStrings(lookupBsearch, s)
 	// the search fn gives the pos where it should be (if it's not there, where to insert it)
 	// so we still need to verify
-	if i < len(lookupBsearch) && lookupBsearch[i] == in {
-		return true
-	}
-	return false
+	return i < len(lookupBsearch) && lookupBsearch[i] == s
 }
