@@ -102,7 +102,12 @@ func main() {
 					cache.Set(s, s)
 				}
 				return true
+			} else {
+				if i.(string) != s {
+					panic("key != value")
+				}
 			}
+
 			return false
 		}
 
@@ -114,7 +119,12 @@ func main() {
 			if i := cache.Get(s); i == nil {
 				cache.Set(s, s)
 				return true
+			} else {
+				if i.(string) != s {
+					panic("key != value")
+				}
 			}
+
 			return false
 		}
 
@@ -123,12 +133,17 @@ func main() {
 		cache := lru.New(*n)
 
 		f = func(s string) bool {
-			if _, ok := cache.Get(s); !ok {
+			if v, ok := cache.Get(s); !ok {
 				if bouncer.allow(s) {
 					cache.Add(s, s)
 				}
 				return true
+			} else {
+				if v.(string) != s {
+					panic("key != value")
+				}
 			}
+
 			return false
 		}
 
@@ -137,12 +152,17 @@ func main() {
 		cache := lfucache.New(*n)
 
 		f = func(s string) bool {
-			if _, ok := cache.Access(s); !ok {
+			if v, ok := cache.Access(s); !ok {
 				if bouncer.allow(s) {
 					cache.Insert(s, s)
 				}
 				return true
+			} else {
+				if v.(string) != s {
+					panic("key != value")
+				}
 			}
+
 			return false
 
 		}
@@ -152,12 +172,17 @@ func main() {
 		cache := tinylfu.New(*n, *n*10)
 
 		f = func(s string) bool {
-			if _, ok := cache.Get(s); !ok {
+			if v, ok := cache.Get(s); !ok {
 				if bouncer.allow(s) {
 					cache.Add(s, s)
 				}
 				return true
+			} else {
+				if v.(string) != s {
+					panic("key != value")
+				}
 			}
+
 			return false
 
 		}
@@ -172,7 +197,12 @@ func main() {
 					cache.Set(s, s)
 				}
 				return true
+			} else {
+				if i.(string) != s {
+					panic("key != value")
+				}
 			}
+
 			return false
 		}
 
@@ -186,7 +216,12 @@ func main() {
 					cache.Set(s, s)
 				}
 				return true
+			} else {
+				if i.(string) != s {
+					panic("key != value")
+				}
 			}
+
 			return false
 		}
 
@@ -200,7 +235,12 @@ func main() {
 					cache.Set(s, s)
 				}
 				return true
+			} else {
+				if i.(string) != s {
+					panic("key != value")
+				}
 			}
+
 			return false
 		}
 
@@ -209,12 +249,17 @@ func main() {
 		cache := s4lru.New(*n)
 
 		f = func(s string) bool {
-			if _, ok := cache.Get(s); !ok {
+			if v, ok := cache.Get(s); !ok {
 				if bouncer.allow(s) {
 					cache.Set(s, s)
 				}
 				return true
+			} else {
+				if v.(string) != s {
+					panic("key != value")
+				}
 			}
+
 			return false
 
 		}
