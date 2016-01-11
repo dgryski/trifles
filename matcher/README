@@ -16,19 +16,22 @@ John Graham-Cumming's talk https://www.youtube.com/watch?v=_41bkNr7eik
 
 Anyways, searching 200000 inputs for the thousand keys 10 times; we see the ranking
 
-<dgryski@kaepora[matcher] \ʕ◔ϖ◔ʔ/ > for i in aho radix bsearch ragel map; do ./matcher -f ./alldomains.txt -which $i; done
-2015/09/01 10:16:43 using matcher=aho
-2015/09/01 10:16:51 time.Since(t0)=8.176484155s
-2015/09/01 10:16:51 found=16274730
-2015/09/01 10:17:01 using matcher=radix
-2015/09/01 10:17:07 time.Since(t0)=6.394209304s
-2015/09/01 10:17:07 found=15965200
-2015/09/01 10:17:16 using matcher=bsearch
-2015/09/01 10:17:21 time.Since(t0)=4.688366242s
-2015/09/01 10:17:21 found=15965200
-2015/09/01 10:17:34 using matcher=ragel
-2015/09/01 10:17:36 time.Since(t0)=2.177903598s
-2015/09/01 10:17:36 found=15965200
-2015/09/01 10:17:47 using matcher=map
-2015/09/01 10:17:48 time.Since(t0)=829.90869ms
-2015/09/01 10:17:48 found=15965200
+<dgryski@kaepora[matcher] ʕ╯◔ϖ◔ʔ╯ > for i in aho radix bsearch ragel mph map; do ./matcher -f ./alldomains.txt -which $i; done
+2016/01/11 10:02:36 using matcher=aho
+2016/01/11 10:02:43 time.Since(t0)=7.250292046s
+2016/01/11 10:02:43 found=16274730
+2016/01/11 10:02:45 using matcher=radix
+2016/01/11 10:02:51 time.Since(t0)=6.090676211s
+2016/01/11 10:02:51 found=15965200
+2016/01/11 10:02:53 using matcher=bsearch
+2016/01/11 10:02:57 time.Since(t0)=4.08383532s
+2016/01/11 10:02:57 found=15965200
+2016/01/11 10:02:59 using matcher=ragel
+2016/01/11 10:03:01 time.Since(t0)=1.817035142s
+2016/01/11 10:03:01 found=15965200
+2016/01/11 10:03:02 using matcher=mph
+2016/01/11 10:03:03 time.Since(t0)=1.093626101s
+2016/01/11 10:03:03 found=15965200
+2016/01/11 10:03:05 using matcher=map
+2016/01/11 10:03:06 time.Since(t0)=781.337107ms
+2016/01/11 10:03:06 found=15965200
