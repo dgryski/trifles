@@ -44,7 +44,7 @@ REPL:
 			break
 		}
 		if err != nil {
-			fmt.Println("error reading line: ", err)
+			fmt.Println("error reading line:", err)
 			continue
 		}
 
@@ -61,7 +61,7 @@ REPL:
 		case "h", "help":
 			fmt.Println("h[elp] -- this help")
 			fmt.Println("q[uit] -- quit")
-			fmt.Println("known commands:\n", strings.Join(keys, "\n"))
+			fmt.Print("known commands:\n", strings.Join(keys, "\n"), "\n")
 
 		case "q", "quit":
 			break REPL
@@ -71,7 +71,7 @@ REPL:
 			if f, ok := commands[args[0]]; ok {
 				err := f(args[1:])
 				if err != nil {
-					fmt.Println("error: ", err)
+					fmt.Println("error:", err)
 				}
 			} else {
 				fmt.Println("unknown command, try `help`")
