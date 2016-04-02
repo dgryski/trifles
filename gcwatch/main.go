@@ -55,7 +55,7 @@ func main() {
 
 	ngcs := m.NumGC
 
-	for _ = range time.Tick(*delay) {
+	for range time.Tick(*delay) {
 		m, err := getMemStats(host)
 		if err != nil {
 			log.Println(err)
