@@ -7,6 +7,7 @@ import (
 	"github.com/dchest/siphash"
 	"github.com/dgryski/go-farm"
 	cfarmhash "github.com/dgryski/go-farmhash"
+	"github.com/dgryski/go-highway"
 	"github.com/dgryski/go-metro"
 	"github.com/dgryski/go-spooky"
 	"github.com/opennota/fasthash"
@@ -97,6 +98,15 @@ func BenchmarkFasthash40(b *testing.B) { benchmarkHash40(b, fsthash) }
 func BenchmarkFasthash64(b *testing.B) { benchmarkHash64(b, fsthash) }
 func BenchmarkFasthash1K(b *testing.B) { benchmarkHash1K(b, fsthash) }
 func BenchmarkFasthash8K(b *testing.B) { benchmarkHash8K(b, fsthash) }
+
+var high = func(k []byte) uint64 { return highway.Hash(highway.Lanes{}, k) }
+
+func BenchmarkHighway8(b *testing.B)  { benchmarkHash8(b, high) }
+func BenchmarkHighway16(b *testing.B) { benchmarkHash16(b, high) }
+func BenchmarkHighway40(b *testing.B) { benchmarkHash40(b, high) }
+func BenchmarkHighway64(b *testing.B) { benchmarkHash64(b, high) }
+func BenchmarkHighway1K(b *testing.B) { benchmarkHash1K(b, high) }
+func BenchmarkHighway8K(b *testing.B) { benchmarkHash8K(b, high) }
 
 func benchmarkHash8(b *testing.B, h func([]byte) uint64) {
 	b.SetBytes(8)
