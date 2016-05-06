@@ -15,6 +15,7 @@ import (
 
 	"github.com/VividCortex/gohistogram"
 	bquantile "github.com/bmizerany/perks/quantile"
+	"github.com/caio/go-tdigest"
 	"github.com/dgryski/go-fastquantiles"
 	gogk "github.com/dgryski/go-gk"
 	squantile "github.com/streadway/quantile"
@@ -54,6 +55,7 @@ func main() {
 	vvh := gohistogram.NewHistogram(80)
 	zeps := 1 / math.Exp(math.Log(float64(*zwn))-1)
 	zw, _ := fastquantiles.New(zeps, *zwn)
+	td := tdigest.New(100)
 
 	for v := range ch {
 		stream = append(stream, v)
@@ -62,6 +64,7 @@ func main() {
 		sq.Add(float64(v))
 		vvh.Add(float64(v))
 		zw.Update(float64(v))
+		td.Add(float64(v), 1)
 	}
 
 	qq := []float64{0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99, 0.999, 0.9999, 0.99999}
@@ -94,6 +97,12 @@ func main() {
 	zw.Finish()
 	for _, q := range qq {
 		fmt.Printf(" % 4g", zw.Query(q))
+	}
+	fmt.Println()
+
+	fmt.Println("td: ")
+	for _, q := range qq {
+		fmt.Printf(" % 4d", int(td.Quantile(q)))
 	}
 	fmt.Println()
 
