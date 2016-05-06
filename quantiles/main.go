@@ -64,41 +64,43 @@ func main() {
 		zw.Update(float64(v))
 	}
 
+	qq := []float64{0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99, 0.999, 0.9999, 0.99999}
+
 	fmt.Println("bq:")
-	for i := 1; i <= 10; i++ {
-		fmt.Printf(" % 4g", bmq.Query(float64(i)*0.1))
+	for _, q := range qq {
+		fmt.Printf(" % 4g", bmq.Query(q))
 	}
 	fmt.Println()
 
 	fmt.Println("sq:")
-	for i := 1; i <= 10; i++ {
-		fmt.Printf(" % 4g", sq.Get(float64(i)*0.1))
+	for _, q := range qq {
+		fmt.Printf(" % 4g", sq.Get(q))
 	}
 	fmt.Println()
 
 	fmt.Println("gk:")
-	for i := 1; i <= 10; i++ {
-		fmt.Printf(" % 4g", gk.Query(float64(i)*0.1))
+	for _, q := range qq {
+		fmt.Printf(" % 4g", gk.Query(q))
 	}
 	fmt.Println()
 
 	fmt.Println("vv:")
-	for i := 1; i <= 10; i++ {
-		fmt.Printf(" % 4d", int(vvh.Quantile(float64(i)*0.1)))
+	for _, q := range qq {
+		fmt.Printf(" % 4d", int(vvh.Quantile(q)))
 	}
 	fmt.Println()
 
 	fmt.Println("zw: ")
 	zw.Finish()
-	for i := 1; i <= 10; i++ {
-		fmt.Printf(" % 4g", zw.Query(float64(i)*0.1))
+	for _, q := range qq {
+		fmt.Printf(" % 4g", zw.Query(q))
 	}
 	fmt.Println()
 
 	sort.Ints(stream)
 	fmt.Println("ex: ")
-	for i := 1; i <= 10; i++ {
-		fmt.Printf(" % 4d", stream[int(float64(len(stream))*float64(i)*0.1)-1])
+	for _, q := range qq {
+		fmt.Printf(" % 4d", stream[int(float64(len(stream))*q)])
 	}
 	fmt.Println()
 }
