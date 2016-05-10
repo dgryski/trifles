@@ -239,6 +239,97 @@ func (t *BTable) double() {
 	t.overflow = overflow
 }
 
+// leapfrog: preshing.com/20160314/leapfrog-probing/
+
+type leapfrog struct {
+	hash  uint32
+	key   []byte
+	val   uint32
+	delta [2]byte
+}
+
+type FrogTable struct {
+	t []leapfrog
+}
+
+func NewFrog(keys int) *FrogTable {
+	t := make([]leapfrog, 2*keys)
+	return &FrogTable{t: t}
+}
+
+func (t *FrogTable) Insert(k []byte, val uint32) (uint32, bool) {
+	h := leveldbHash(k)
+	if h == 0 {
+		h++
+	}
+
+	for {
+		if v, b, ok := insertWithHash(t.t, k, val, h); ok {
+			return v, b
+		}
+
+		t.double()
+	}
+}
+
+func insertWithHash(t []leapfrog, k []byte, val uint32, h uint32) (uint32, bool, bool) {
+	mask := uint32(len(t) - 1)
+	slot := h & mask
+
+	if (t)[slot].hash == h && bytes.Equal((t)[slot].key, k) {
+		return (t)[slot].val, true, true
+	}
+
+	didx := 0
+	delta := uint32((t)[slot].delta[didx])
+
+	for delta != 0 {
+		slot = (slot + delta) & mask
+		if (t)[slot].hash == h && bytes.Equal((t)[slot].key, k) {
+			return (t)[slot].val, true, true
+		}
+		didx = 1
+		delta = uint32((t)[slot].delta[didx])
+	}
+
+	// reached the end of chain for this bucket; key not found
+	// linear scan to find the next slot
+	old := slot
+	for i := uint32(0); i < 256; i++ {
+		if (t)[slot].key == nil {
+			(t)[slot].delta[didx] = byte(slot - old)
+			(t)[slot].key = k
+			(t)[slot].hash = h
+			(t)[slot].val = val
+			return val, false, true
+		}
+		slot = (old + i) & mask
+	}
+
+	return 0, false, false
+}
+
+func (t *FrogTable) double() {
+
+	newSize := 2 * len(t.t)
+
+retry:
+	for {
+		newTable := make([]leapfrog, newSize)
+		for i := range t.t {
+			if t.t[i].key != nil {
+				_, _, ok := insertWithHash(newTable, t.t[i].key, t.t[i].val, t.t[i].hash)
+				if !ok {
+					newSize *= 2
+					continue retry
+				}
+			}
+		}
+		t.t = newTable
+		break
+	}
+}
+
 type Native map[string]uint32
 
 func NewNative(size int) Native {
