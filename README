@@ -99,3 +99,19 @@ This repo contains things not interesting or complete enough to have their own.
    * stablepart -- stable partition a sort.Interface on a boolean predicate
 
    * jumpreplica -- tool for playing with replica choices for jump-hash
+
+   * sshdregex -- demo using ragel for optimized regexp matching
+
+   * hllbench -- benchmark different hyperloglog implementations
+
+   * shlines, sipsum -- tools for siphashing things
+
+   * urlq -- extract query parameters from a list of URLs
+
+   * median -- compute the median of 5 numbers with a sorting network
+
+   * hashbench -- benchmark different hashing functions
+
+   * fastpprof -- how to use pprof with fasthttp
+
+   * ewmaest -- progress logging with ewma-based ETA estimation
