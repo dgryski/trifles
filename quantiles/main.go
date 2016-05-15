@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"math"
 	"math/rand"
 	"os"
 	"sort"
@@ -16,7 +15,6 @@ import (
 	"github.com/VividCortex/gohistogram"
 	bquantile "github.com/bmizerany/perks/quantile"
 	"github.com/caio/go-tdigest"
-	"github.com/dgryski/go-fastquantiles"
 	gogk "github.com/dgryski/go-gk"
 	squantile "github.com/streadway/quantile"
 )
@@ -24,7 +22,6 @@ import (
 func main() {
 
 	f := flag.String("f", "", "file to read")
-	zwn := flag.Int("zwn", 0, "number of entries")
 
 	rand.Seed(time.Now().UnixNano())
 
@@ -50,11 +47,9 @@ func main() {
 	var stream []int
 
 	bmq := bquantile.NewBiased()
-	gk := gogk.New(0.01)
-	sq := squantile.New(squantile.Unknown(0.01))
+	gk := gogk.New(0.0001)
+	sq := squantile.New(squantile.Unknown(0.0001))
 	vvh := gohistogram.NewHistogram(80)
-	zeps := 1 / math.Exp(math.Log(float64(*zwn))-1)
-	zw, _ := fastquantiles.New(zeps, *zwn)
 	td := tdigest.New(100)
 
 	for v := range ch {
@@ -63,7 +58,6 @@ func main() {
 		gk.Insert(float64(v))
 		sq.Add(float64(v))
 		vvh.Add(float64(v))
-		zw.Update(float64(v))
 		td.Add(float64(v), 1)
 	}
 
@@ -90,13 +84,6 @@ func main() {
 	fmt.Println("vv:")
 	for _, q := range qq {
 		fmt.Printf(" % 4d", int(vvh.Quantile(q)))
-	}
-	fmt.Println()
-
-	fmt.Println("zw: ")
-	zw.Finish()
-	for _, q := range qq {
-		fmt.Printf(" % 4g", zw.Query(q))
 	}
 	fmt.Println()
 
