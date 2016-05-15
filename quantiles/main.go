@@ -16,6 +16,7 @@ import (
 	bquantile "github.com/bmizerany/perks/quantile"
 	"github.com/caio/go-tdigest"
 	gogk "github.com/dgryski/go-gk"
+	"github.com/dgryski/go-kll"
 	squantile "github.com/streadway/quantile"
 )
 
@@ -51,6 +52,7 @@ func main() {
 	sq := squantile.New(squantile.Unknown(0.0001))
 	vvh := gohistogram.NewHistogram(80)
 	td := tdigest.New(100)
+	kl := kll.New(1024)
 
 	for v := range ch {
 		stream = append(stream, v)
@@ -59,6 +61,7 @@ func main() {
 		sq.Add(float64(v))
 		vvh.Add(float64(v))
 		td.Add(float64(v), 1)
+		kl.Update(float64(v))
 	}
 
 	qq := []float64{0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99, 0.999, 0.9999, 0.99999}
@@ -90,6 +93,13 @@ func main() {
 	fmt.Println("td: ")
 	for _, q := range qq {
 		fmt.Printf(" % 4d", int(td.Quantile(q)))
+	}
+	fmt.Println()
+
+	klcdf := kl.CDF()
+	fmt.Println("kl: ")
+	for _, q := range qq {
+		fmt.Printf(" % 4d", int(klcdf.Query(q)))
 	}
 	fmt.Println()
 
