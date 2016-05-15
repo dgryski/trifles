@@ -8,6 +8,7 @@ import (
 	"log"
 	"math/rand"
 	"os"
+	"runtime/pprof"
 	"sort"
 	"strconv"
 	"time"
@@ -22,11 +23,22 @@ import (
 
 func main() {
 
+	cpuprofile := flag.String("cpuprofile", "", "write cpu profile to file")
+
 	f := flag.String("f", "", "file to read")
 
 	rand.Seed(time.Now().UnixNano())
 
 	flag.Parse()
+
+	if *cpuprofile != "" {
+		f, err := os.Create(*cpuprofile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
+	}
 
 	ch := make(chan int)
 
