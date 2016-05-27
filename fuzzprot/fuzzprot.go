@@ -1,6 +1,9 @@
 package fuzzprot
 
-import "strconv"
+import (
+	"errors"
+	"strconv"
+)
 
 type user struct {
 	Type string
@@ -33,6 +36,8 @@ func Unpack(data []byte) ([]user, error) {
 				return nil, err
 			}
 			data = data[2:]
+		default:
+			return nil, errors.New("unknown field type")
 		}
 	}
 
