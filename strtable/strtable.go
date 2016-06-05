@@ -330,6 +330,105 @@ retry:
 	}
 }
 
+type rhelement struct {
+	hash uint32
+	val  uint32
+	dist uint32
+	key  []byte
+}
+
+type RHTable struct {
+	t    []rhelement
+	keys int
+}
+
+func NewRH(keys int) *RHTable {
+	t := RHTable{t: make([]rhelement, 2*keys)}
+	return &t
+}
+
+func (t *RHTable) Insert(k []byte, val uint32) (uint32, bool) {
+
+	mask := uint32(len(t.t) - 1)
+
+	h := leveldbHash(k)
+	//  you can hack your runtime to expose this..
+	// h := uint32(runtime.BytesHash(k, 0)) & mask
+	slot := h & mask
+
+	var dist uint32
+	var originalKey = true
+	var retval uint32 = val
+
+	for {
+		if (t.t)[slot].key == nil {
+			// doesn't exist -- add it
+			(t.t)[slot].key = k
+			(t.t)[slot].hash = h
+			(t.t)[slot].val = val
+			(t.t)[slot].dist = dist
+
+			t.keys++
+			if t.keys > 3*len(t.t)/4 {
+				t.double()
+			}
+
+			return retval, false
+		}
+
+		// slot key is not nil
+		if originalKey && (t.t)[slot].hash == h && bytes.Equal((t.t)[slot].key, k) {
+			return (t.t)[slot].val, true
+		}
+
+		if (t.t)[slot].dist < dist {
+			originalKey = false
+			dist, (t.t)[slot].dist = (t.t)[slot].dist, dist
+			k, (t.t)[slot].key = (t.t)[slot].key, k
+			h, (t.t)[slot].hash = (t.t)[slot].hash, h
+			val, (t.t)[slot].val = (t.t)[slot].val, val
+		}
+
+		slot = (slot + 1) & mask
+		dist++
+	}
+}
+
+func (t *RHTable) double() {
+	newTable := make([]rhelement, 2*len(t.t))
+	mask := uint32(len(newTable) - 1)
+
+	for _, elt := range t.t {
+
+		if elt.key == nil {
+			continue
+		}
+
+		slot := elt.hash & mask
+
+		var dist uint32
+		for {
+			if newTable[slot].key == nil {
+				// doesn't exist -- add it
+				newTable[slot] = elt
+				newTable[slot].dist = dist
+				break
+			}
+
+			if newTable[slot].dist < dist {
+				elt, newTable[slot] = newTable[slot], elt
+				newTable[slot].dist = dist
+				dist = elt.dist
+			}
+
+			slot = (slot + 1) & mask
+			dist++
+		}
+
+	}
+	t.t = newTable
+}
+
 type Native map[string]uint32
 
 func NewNative(size int) Native {

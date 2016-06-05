@@ -65,13 +65,14 @@ func benchmarkInsertAll(b *testing.B, size uint32, creator func(int) Inserter) {
 
 	b.StopTimer()
 
-	b.Log("N=", b.N, "size=", size, "total=", total, "hits=", hits)
+	// b.Log("N=", b.N, "size=", size, "total=", total, "hits=", hits)
 }
 
 func nativeInserter(size int) Inserter { return NewNative(size) }
 func tableInserter(size int) Inserter  { return New(size) }
 func btableInserter(size int) Inserter { return NewBucket(size) }
 func frogInserter(size int) Inserter   { return NewFrog(size) }
+func rhInserter(size int) Inserter     { return NewRH(size) }
 
 func BenchmarkNative1024(b *testing.B) { benchmarkInsertAll(b, 1024, nativeInserter) }
 func BenchmarkTable1024(b *testing.B)  { benchmarkInsertAll(b, 1024, tableInserter) }
@@ -97,21 +98,25 @@ func BenchmarkSomeNative1024(b *testing.B) { benchmarkInsertSome(b, 1024, native
 func BenchmarkSomeTable1024(b *testing.B)  { benchmarkInsertSome(b, 1024, tableInserter) }
 func BenchmarkSomeBTable1024(b *testing.B) { benchmarkInsertSome(b, 1024, btableInserter) }
 func BenchmarkSomeFrog1024(b *testing.B)   { benchmarkInsertSome(b, 1024, frogInserter) }
+func BenchmarkSomeRH1024(b *testing.B)     { benchmarkInsertSome(b, 1024, rhInserter) }
 
 func BenchmarkSomeNative64k(b *testing.B) { benchmarkInsertSome(b, 1<<16, nativeInserter) }
 func BenchmarkSomeTable64k(b *testing.B)  { benchmarkInsertSome(b, 1<<16, tableInserter) }
 func BenchmarkSomeBTable64k(b *testing.B) { benchmarkInsertSome(b, 1<<16, btableInserter) }
 func BenchmarkSomeFrog64k(b *testing.B)   { benchmarkInsertSome(b, 1<<16, frogInserter) }
+func BenchmarkSomeRH64k(b *testing.B)     { benchmarkInsertSome(b, 1<<16, rhInserter) }
 
 func BenchmarkSomeNative256k(b *testing.B) { benchmarkInsertSome(b, 1<<18, nativeInserter) }
 func BenchmarkSomeTable256k(b *testing.B)  { benchmarkInsertSome(b, 1<<18, tableInserter) }
 func BenchmarkSomeBTable256k(b *testing.B) { benchmarkInsertSome(b, 1<<18, btableInserter) }
 func BenchmarkSomeFrog256k(b *testing.B)   { benchmarkInsertSome(b, 1<<18, frogInserter) }
+func BenchmarkSomeRH256k(b *testing.B)     { benchmarkInsertSome(b, 1<<18, rhInserter) }
 
 func BenchmarkSomeNative1M(b *testing.B) { benchmarkInsertSome(b, 1<<20, nativeInserter) }
 func BenchmarkSomeTable1M(b *testing.B)  { benchmarkInsertSome(b, 1<<20, tableInserter) }
 func BenchmarkSomeBTable1M(b *testing.B) { benchmarkInsertSome(b, 1<<20, btableInserter) }
 func BenchmarkSomeFrog1M(b *testing.B)   { benchmarkInsertSome(b, 1<<20, frogInserter) }
+func BenchmarkSomeRH1M(b *testing.B)     { benchmarkInsertSome(b, 1<<20, rhInserter) }
 
 /*
 func BenchmarkSomeNative2M(b *testing.B) { benchmarkInsertSome(b, 1<<21, nativeInserter) }
