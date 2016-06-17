@@ -1,6 +1,7 @@
 package main
 
 import (
+	"hash/fnv"
 	"testing"
 
 	xxhash "github.com/OneOfOne/xxhash/native"
@@ -108,9 +109,24 @@ func BenchmarkHighway64(b *testing.B) { benchmarkHashn(b, 64, high) }
 func BenchmarkHighway1K(b *testing.B) { benchmarkHashn(b, 1024, high) }
 func BenchmarkHighway8K(b *testing.B) { benchmarkHashn(b, 8192, high) }
 
+var fnv64 = func(k []byte) uint64 {
+	h := fnv.New64a()
+	h.Write(k)
+	return h.Sum64()
+}
+
+func BenchmarkFNV8(b *testing.B)  { benchmarkHashn(b, 8, fnv64) }
+func BenchmarkFNV16(b *testing.B) { benchmarkHashn(b, 16, fnv64) }
+func BenchmarkFNV40(b *testing.B) { benchmarkHashn(b, 40, fnv64) }
+func BenchmarkFNV64(b *testing.B) { benchmarkHashn(b, 64, fnv64) }
+func BenchmarkFNV1K(b *testing.B) { benchmarkHashn(b, 1024, fnv64) }
+func BenchmarkFNV8K(b *testing.B) { benchmarkHashn(b, 8192, fnv64) }
+
+var total uint64
+
 func benchmarkHashn(b *testing.B, size int64, h func([]byte) uint64) {
 	b.SetBytes(size)
 	for i := 0; i < b.N; i++ {
-		h(buf[:size])
+		total += h(buf[:size])
 	}
 }
