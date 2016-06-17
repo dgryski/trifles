@@ -72,7 +72,7 @@ func BenchmarkCity64(b *testing.B) { benchmarkHashn(b, 64, hcity) }
 func BenchmarkCity1K(b *testing.B) { benchmarkHashn(b, 1024, hcity) }
 func BenchmarkCity8K(b *testing.B) { benchmarkHashn(b, 8192, hcity) }
 
-var hmetro = func(k []byte) uint64 { return metro.Hash64_1(k, 0) }
+var hmetro = func(k []byte) uint64 { return metro.Hash64(k, 0) }
 
 func BenchmarkMetro8(b *testing.B)  { benchmarkHashn(b, 8, hmetro) }
 func BenchmarkMetro16(b *testing.B) { benchmarkHashn(b, 16, hmetro) }
