@@ -2,6 +2,7 @@ package strtable
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"testing"
 )
@@ -11,6 +12,40 @@ var strData [][]byte
 type Inserter interface {
 	Insert([]byte, uint32) (uint32, bool)
 }
+
+func Xorshift32(y uint32) uint32 {
+	y ^= (y << 13)
+	y ^= (y >> 17)
+	y ^= (y << 5)
+	return y
+}
+
+func testInsert(t *testing.T, which string, creator func(int) Inserter) {
+
+	n := NewNative(1024)
+	m := creator(1024)
+
+	x := uint32(0xdeadbeef)
+
+	for i := 0; i < 1e6; i++ {
+
+		k := []byte(fmt.Sprintf("%d", Xorshift32(uint32(i))%8192))
+		x := Xorshift32(x)
+
+		vn, okn := n.Insert(k, x)
+		vm, okm := m.Insert(k, x)
+
+		if vn != vm || okn != okm {
+			t.Fatalf("%v: Insert(%q,%x)=%v,%t, want %v,%t\n", which, k, x, vm, okm, vn, okn)
+		}
+	}
+}
+
+func TestNative(t *testing.T) { testInsert(t, "native", nativeInserter) }
+func TestTable(t *testing.T)  { testInsert(t, "table", tableInserter) }
+func TestBTable(t *testing.T) { testInsert(t, "btable", btableInserter) }
+func TestFrog(t *testing.T)   { testInsert(t, "frog", frogInserter) }
+func TestRH(t *testing.T)     { testInsert(t, "rh", rhInserter) }
 
 func benchmarkInsertSome(b *testing.B, size uint32, creator func(int) Inserter) {
 
