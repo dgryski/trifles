@@ -25,3 +25,29 @@ func (r *Rng) Intn(bound uint64) uint64 {
 	}
 	return n % bound
 }
+
+func (r *Rng) Int32n(n uint32) uint32 {
+
+	bits := r.Next()
+
+	random32bit := uint32(bits)
+	bits >>= 32
+	full := false
+
+	multiresult := uint64(random32bit) * uint64(n)
+	leftover := uint32(multiresult)
+	if leftover < n {
+		threshold := uint32(-n) % n
+		for leftover < threshold {
+			random32bit = uint32(bits)
+			bits >>= 32
+			if !full {
+				bits = r.Next()
+			}
+			full = !full
+			multiresult = uint64(random32bit) * uint64(n)
+			leftover = uint32(multiresult)
+		}
+	}
+	return uint32(multiresult >> 32) // [0, n)
+}
