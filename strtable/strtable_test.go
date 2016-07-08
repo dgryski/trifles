@@ -89,7 +89,7 @@ func benchmarkInsertAll(b *testing.B, size uint32, creator func(int) Inserter) {
 
 		ht := creator(int(size))
 
-		for j, s := range strData {
+		for j, s := range strData[:size*2] {
 			v, ok := ht.Insert(s, uint32(j))
 			total += v
 			if ok {
