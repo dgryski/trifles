@@ -296,14 +296,14 @@ func insertWithHash(t []leapfrog, k []byte, val uint32, h uint32) (uint32, bool,
 	// linear scan to find the next slot
 	old := slot
 	for i := uint32(0); i < 256; i++ {
+		slot = (old + i) & mask
 		if (t)[slot].key == nil {
-			(t)[slot].delta[didx] = byte(slot - old)
+			(t)[old].delta[didx] = byte(i)
 			(t)[slot].key = k
 			(t)[slot].hash = h
 			(t)[slot].val = val
 			return val, false, true
 		}
-		slot = (old + i) & mask
 	}
 
 	return 0, false, false
