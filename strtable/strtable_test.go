@@ -22,8 +22,8 @@ func Xorshift32(y uint32) uint32 {
 
 func testInsert(t *testing.T, which string, creator func(int) Inserter) {
 
-	n := NewNative(1024)
-	m := creator(1024)
+	n := NewNative(8)
+	m := creator(8)
 
 	x := uint32(0xdeadbeef)
 
