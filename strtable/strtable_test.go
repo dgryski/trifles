@@ -81,6 +81,12 @@ func benchmarkInsertAll(b *testing.B, size uint32, creator func(int) Inserter) {
 		loadStringData("/home/dgryski/strings.out")
 	}
 
+	size *= 2
+
+	if size > uint32(len(strData)) {
+		size = uint32(len(strData))
+	}
+
 	b.ResetTimer()
 
 	var total uint32
@@ -89,7 +95,7 @@ func benchmarkInsertAll(b *testing.B, size uint32, creator func(int) Inserter) {
 
 		ht := creator(int(size))
 
-		for j, s := range strData[:size*2] {
+		for j, s := range strData[:size] {
 			v, ok := ht.Insert(s, uint32(j))
 			total += v
 			if ok {
