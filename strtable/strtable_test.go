@@ -36,7 +36,7 @@ func testInsert(t *testing.T, which string, creator func(int) Inserter) {
 		vm, okm := m.Insert(k, x)
 
 		if vn != vm || okn != okm {
-			t.Fatalf("%v: Insert(%q,%x)=%v,%t, want %v,%t\n", which, k, x, vm, okm, vn, okn)
+			t.Fatalf("%v.%d: Insert(%q,%x)=%v,%t, want %v,%t\n", which, i, k, x, vm, okm, vn, okn)
 		}
 	}
 }
