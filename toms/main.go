@@ -13,6 +13,7 @@ import (
 func main() {
 
 	field := flag.Int("f", 0, "field to transform")
+	dur := flag.Duration("d", 1*time.Millisecond, "output duration")
 
 	flag.Parse()
 
@@ -27,7 +28,7 @@ func main() {
 				continue
 			}
 
-			fmt.Println(int(float64(d.Nanoseconds())/float64(time.Millisecond) + 0.5))
+			fmt.Println(int(float64(d.Nanoseconds())/float64(*dur) + 0.5))
 		}
 
 		return
@@ -47,7 +48,7 @@ func main() {
 			continue
 		}
 
-		fields[*field] = fmt.Sprint(int(float64(d.Nanoseconds())/float64(time.Millisecond) + 0.5))
+		fields[*field] = fmt.Sprint(int(float64(d.Nanoseconds())/float64(*dur) + 0.5))
 		fmt.Printf("%s\n", strings.Join(fields, " "))
 	}
 }
