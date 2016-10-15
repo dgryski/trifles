@@ -167,3 +167,12 @@ func XorshiftMult64(x uint64) uint64 {
 	x ^= x >> 27 // c
 	return x * 2685821657736338717
 }
+
+func Murmur3_64_Finalizer(key uint64) uint64 {
+	key ^= key >> 33
+	key *= 0xff51afd7ed558ccd
+	key ^= key >> 33
+	key *= 0xc4ceb9fe1a85ec53
+	key ^= key >> 33
+	return key
+}
