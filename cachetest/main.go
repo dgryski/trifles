@@ -9,7 +9,6 @@ clockpro: 3.133172079s 10000000 total 2212461 misses
 arc: 5.136880077s 10000000 total 2220016 misses
 slru2080: 6.36564715s 10000000 total 2254569 misses
 s4lru: 2.571416442s 10000000 total 2259629 misses
-lfu: 5.194561433s 10000000 total 2326371 misses
 slru5050: 6.266535668s 10000000 total 2360416 misses
 clock: 2.497958238s 10000000 total 2587380 misses
 lru: 5.020239605s 10000000 total 2643644 misses
@@ -25,7 +24,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/calmh/lfucache"
 	"github.com/dgryski/go-arc"
 	"github.com/dgryski/go-clockpro"
 	"github.com/dgryski/go-s4lru"
@@ -145,26 +143,6 @@ func main() {
 			}
 
 			return false
-		}
-
-	case "lfu":
-
-		cache := lfucache.New(*n)
-
-		f = func(s string) bool {
-			if v, ok := cache.Access(s); !ok {
-				if bouncer.allow(s) {
-					cache.Insert(s, s)
-				}
-				return true
-			} else {
-				if v.(string) != s {
-					panic("key != value")
-				}
-			}
-
-			return false
-
 		}
 
 	case "tinylfu":
