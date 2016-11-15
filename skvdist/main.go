@@ -2,14 +2,10 @@ package main
 
 import (
 	"bufio"
-	"compress/gzip"
 	"flag"
 	"fmt"
-	"io"
 	"log"
 	"os"
-	"path/filepath"
-	"strings"
 
 	"github.com/dchest/siphash"
 	"github.com/dgryski/go-onlinestats"
@@ -17,53 +13,23 @@ import (
 	"github.com/dgryski/go-shardedkv/choosers/chash"
 	"github.com/dgryski/go-shardedkv/choosers/jump"
 	"github.com/dgryski/go-shardedkv/choosers/ketama"
+	"github.com/dgryski/go-shardedkv/choosers/mpc"
 )
-
-func worker(skv shardedkv.Chooser, filech chan string, donech chan map[string]int, verbose bool) {
-
-	results := make(map[string]int)
-
-	for file := range filech {
-
-		var f io.Reader
-
-		f, err := os.Open(file)
-		if err != nil {
-			log.Fatal("error loading input file", file, ":", err)
-		}
-
-		if strings.HasSuffix(file, ".gz") {
-			f, _ = gzip.NewReader(f)
-		}
-
-		scan := bufio.NewScanner(f)
-		for scan.Scan() {
-			key := scan.Text()
-			shard := skv.Choose(key)
-			if verbose {
-				fmt.Printf("%s %s\n", shard, key)
-			}
-			results[shard]++
-		}
-	}
-
-	donech <- results
-}
 
 func main() {
 
-	workers := flag.Int("w", 4, "workers")
+	numBuckets := flag.Int("b", 8, "buckets")
 	chooserType := flag.String("chooser", "jump", "shardedkv chooser")
 	verbose := flag.Bool("v", false, "verbose")
+	replicas := flag.Int("r", 0, "replicas")
 
 	flag.Parse()
 
-	filech := make(chan string)
-	donech := make(chan map[string]int)
-
 	var buckets []string
-	for i := 1; i <= 32; i++ {
-		buckets = append(buckets, fmt.Sprintf("shard%d", i))
+	for i := 0; i < *numBuckets; i++ {
+		//  	buckets = append(buckets, fmt.Sprintf("%016x", siphash.Hash(0x0ddc0ffeebadf00d, 0xcafebabedeadbeef, []byte(fmt.Sprintf("192.168.0.%d", 10+i)))))
+		// buckets = append(buckets, fmt.Sprintf("%016x", siphash.Hash(0, 0, []byte(fmt.Sprintf("192.168.0.%d", 10+i)))))
+		buckets = append(buckets, fmt.Sprintf("192.168.0.%d", 10+i))
 	}
 
 	var chooser shardedkv.Chooser
@@ -73,45 +39,48 @@ func main() {
 		chooser = jump.New(func(b []byte) uint64 { return siphash.Hash(0, 0, b) })
 	case "ketama":
 		chooser = ketama.New()
+	case "mpc":
+		chooser = mpc.New(func(b []byte, seed uint64) uint64 { return siphash.Hash(seed, 0, b) }, [2]uint64{0x0ddc0ffeebadf00d, 0xcafebabedeadbeef}, 21)
 	case "chash":
 		// 5120*8 + 5120*(8+16)*2 bytes
 		chooser = chash.New()
 	default:
-		log.Fatalf("unknown chooser: %s; known jump,ketama,chash", *chooserType)
+		log.Fatalf("unknown chooser: %s; known jump,ketama,chash,mpc", *chooserType)
 	}
 
 	chooser.SetBuckets(buckets)
 
-	for i := 0; i < *workers; i++ {
-		go worker(chooser, filech, donech, *verbose)
-	}
-
-	files, _ := filepath.Glob("data/*")
-
-	for _, f := range files {
-		filech <- f
-	}
-
-	close(filech)
-
 	results := make(map[string]int)
 
-	for i := 0; i < *workers; i++ {
-		shards := <-donech
-		for k, v := range shards {
-			results[k] += v
+	scan := bufio.NewScanner(os.Stdin)
+	for scan.Scan() {
+		key := scan.Text()
+		shard := chooser.Choose(key)
+		if *verbose {
+			fmt.Printf("%s %s\n", shard, key)
 		}
+		results[shard]++
 	}
 
 	stats := onlinestats.NewRunning()
 
+	min := int(^uint(0) / 2)
+	max := 0
 	fmt.Println("chooser", *chooserType)
 	for _, b := range buckets {
 		v := results[b]
+		if v < min {
+			min = v
+		}
+		if v > max {
+			max = v
+		}
 		fmt.Printf("%-10s %d\n", b, v)
 		stats.Push(float64(v))
 	}
 
-	fmt.Println("mean", stats.Mean())
-	fmt.Println("stdev", stats.Stddev(), stats.Stddev()/stats.Mean())
+	fmt.Printf("min=%d max=%d\n", min, max)
+	fmt.Printf("mean %.2f\n", stats.Mean())
+	fmt.Printf("stdev %.2f %.2f%%\n", stats.Stddev(), 100*stats.Stddev()/stats.Mean())
+	fmt.Printf("peak/mean %.2f\n", float64(max)/stats.Mean())
 }
