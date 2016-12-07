@@ -31,8 +31,6 @@ uint64_t tsip(unsigned char *seed, const unsigned char *m, size_t len) {
     v1 = rotl64(v1, 13) ^ v0;                                                  \
     v0 = rotl64(v0, 32) + v1;                                                  \
     v1 = rotl64(v1, 17) ^ v0;                                                  \
-    v0 = rotl64(v0, 21) + v1;                                                  \
-    v1 = rotl64(v1, 32);                                                       \
   } while (0)
 
   for (i = 0, blocks = (len & ~7); i < blocks; i += 8) {
@@ -60,9 +58,15 @@ uint64_t tsip(unsigned char *seed, const unsigned char *m, size_t len) {
   case 0:
   default:;
   };
+
   v1 ^= last7;
-  v0 ^= 0xff;
+  sipcompress();
+  v0 ^= last7;
+
+  // finalization
+  v1 ^= 0xff;
   sipcompress();
   sipcompress();
+
   return v0 ^ v1;
 }
