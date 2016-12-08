@@ -15,7 +15,6 @@ uint64_t tsip(unsigned char *seed, const unsigned char *m, size_t len) {
   uint64_t v0, v1;
   uint64_t mi, k0, k1;
   uint64_t last7;
-  size_t i, blocks;
 
   k0 = U8TO64_LE(seed);
   k1 = U8TO64_LE(seed + 8);
@@ -35,28 +34,31 @@ uint64_t tsip(unsigned char *seed, const unsigned char *m, size_t len) {
     v1 += v0;                                                                  \
   } while (0)
 
-  for (i = 0, blocks = (len & ~7); i < blocks; i += 8) {
-    mi = U8TO64_LE(m + i);
+  const unsigned char *end = m + (len & ~7);
+
+  while (m < end) {
+    mi = U8TO64_LE(m);
     v1 ^= mi;
     sipcompress();
     v0 ^= mi;
+    m += 8;
   }
 
-  switch (len - blocks) {
+  switch (len & 7) {
   case 7:
-    last7 |= (uint64_t)m[i + 6] << 48;
+    last7 |= (uint64_t)m[6] << 48;
   case 6:
-    last7 |= (uint64_t)m[i + 5] << 40;
+    last7 |= (uint64_t)m[5] << 40;
   case 5:
-    last7 |= (uint64_t)m[i + 4] << 32;
+    last7 |= (uint64_t)m[4] << 32;
   case 4:
-    last7 |= (uint64_t)m[i + 3] << 24;
+    last7 |= (uint64_t)m[3] << 24;
   case 3:
-    last7 |= (uint64_t)m[i + 2] << 16;
+    last7 |= (uint64_t)m[2] << 16;
   case 2:
-    last7 |= (uint64_t)m[i + 1] << 8;
+    last7 |= (uint64_t)m[1] << 8;
   case 1:
-    last7 |= (uint64_t)m[i + 0];
+    last7 |= (uint64_t)m[0];
   case 0:
   default:;
   };
