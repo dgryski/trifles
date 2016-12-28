@@ -1,6 +1,7 @@
 package main
 
 //go:generate ragel -Z -G2 lexer.rl
+//go:generate go run gen-mafsa.go
 
 import (
 	"bufio"
@@ -14,7 +15,7 @@ import (
 func main() {
 
 	f := flag.String("f", "/dev/stdin", "input file")
-	w := flag.String("which", "ragel", "which matcher (one of: bsearch, map, radix, ragel, aho. defaults to ragel.)")
+	w := flag.String("which", "ragel", "which matcher (one of: bsearch, map, radix, ragel, aho, mafsa. defaults to ragel.)")
 	n := flag.Int("n", 2000000, "size")
 	iter := flag.Int("i", 10, "iterations")
 	cpuprofile := flag.String("cpuprofile", "", "write cpu profile to file")
@@ -90,6 +91,22 @@ func main() {
 		for i := 0; i < *iter; i++ {
 			for j, a := range arr[:*n] {
 				if MatchBloom(a) && MatchMap(strarr[j]) {
+					found++
+				}
+
+			}
+		}
+		log.Printf("time.Since(t0)=%+v\n", time.Since(t0))
+		log.Printf("found=%+v\n", found)
+
+	case "mafsa":
+		initMAFSA()
+
+		t0 := time.Now()
+		var found int
+		for i := 0; i < *iter; i++ {
+			for j, a := range arr[:*n] {
+				if MatchBloom(a) && MatchMAFSA(strarr[j]) {
 					found++
 				}
 
