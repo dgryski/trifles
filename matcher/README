@@ -18,22 +18,26 @@ Anyways, searching 200000 inputs for the thousand keys 10 times; we see the rank
 
 (This version built with 1.8beta2)
 
-<dgryski@kamek[matcher] \ʕ◔ϖ◔ʔ/ > for i in aho radix bsearch mph ragel map; do ./matcher -f ./alldomains.txt -which $i; done
-2016/12/26 20:29:44 using matcher=aho
-2016/12/26 20:29:57 time.Since(t0)=13.376110916s
-2016/12/26 20:29:57 found=16274730
-2016/12/26 20:30:00 using matcher=radix
-2016/12/26 20:30:11 time.Since(t0)=11.507339672s
-2016/12/26 20:30:11 found=15965200
-2016/12/26 20:30:13 using matcher=bsearch
-2016/12/26 20:30:24 time.Since(t0)=10.192506526s
-2016/12/26 20:30:24 found=15965200
-2016/12/26 20:30:27 using matcher=mph
-2016/12/26 20:30:30 time.Since(t0)=3.321507662s
-2016/12/26 20:30:30 found=15965200
-2016/12/26 20:30:33 using matcher=ragel
-2016/12/26 20:30:35 time.Since(t0)=2.306642565s
-2016/12/26 20:30:35 found=15965200
-2016/12/26 20:30:38 using matcher=map
-2016/12/26 20:30:40 time.Since(t0)=1.741882892s
-2016/12/26 20:30:40 found=15965200
+<dgryski@kamek[matcher] ʕ╯◔ϖ◔ʔ╯ > for i in radix aho bsearch mafsa mph ragel map; do ./matcher  -f ./alldomains.txt -which $i; done
+2016/12/28 11:37:25 using matcher=radix
+2016/12/28 11:37:30 time.Since(t0)=4.863440361s
+2016/12/28 11:37:30 found=15965200
+2016/12/28 11:37:32 using matcher=aho
+2016/12/28 11:37:36 time.Since(t0)=4.603819772s
+2016/12/28 11:37:36 found=16274730
+2016/12/28 11:37:38 using matcher=bsearch
+2016/12/28 11:37:41 time.Since(t0)=3.437610561s
+2016/12/28 11:37:41 found=15965200
+2016/12/28 11:37:42 using matcher=mafsa
+2016/12/28 11:37:46 time.Since(t0)=3.183283031s
+2016/12/28 11:37:46 found=15965200
+2016/12/28 11:37:47 using matcher=mph
+2016/12/28 11:37:48 time.Since(t0)=1.060979543s
+2016/12/28 11:37:48 found=15965200
+2016/12/28 11:37:50 using matcher=ragel
+2016/12/28 11:37:51 time.Since(t0)=959.092265ms
+2016/12/28 11:37:51 found=15965200
+2016/12/28 11:37:52 using matcher=map
+2016/12/28 11:37:53 time.Since(t0)=698.283411ms
+2016/12/28 11:37:53 found=15965200
+

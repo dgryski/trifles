@@ -31,12 +31,14 @@ func main() {
 
 	var arr [][]byte
 	var strarr []string
+	var rarr [][]rune
 
 	scanner := bufio.NewScanner(inf)
 	for scanner.Scan() {
 		b := append([]byte(nil), scanner.Bytes()...)
 		strarr = append(strarr, scanner.Text())
 		arr = append(arr, b)
+		rarr = append(rarr, []rune(scanner.Text()))
 		if len(arr) > *n {
 			break
 		}
@@ -106,7 +108,7 @@ func main() {
 		var found int
 		for i := 0; i < *iter; i++ {
 			for j, a := range arr[:*n] {
-				if MatchBloom(a) && MatchMAFSA(strarr[j]) {
+				if MatchBloom(a) && MatchMAFSA(rarr[j]) {
 					found++
 				}
 

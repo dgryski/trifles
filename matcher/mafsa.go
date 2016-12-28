@@ -19,6 +19,7 @@ func initMAFSA() {
 
 }
 
-func MatchMAFSA(s string) bool {
-	return lookupMAFSA.Contains(s)
+func MatchMAFSA(r []rune) bool {
+	result := lookupMAFSA.Traverse(r)
+	return result != nil && result.Final
 }
