@@ -2,15 +2,20 @@ package main
 
 import (
 	"hash/fnv"
+	"strconv"
 	"testing"
 
 	xxhash "github.com/OneOfOne/xxhash/native"
-	"github.com/dchest/siphash"
+	xxhashfast "github.com/cespare/xxhash"
+	dchestsip "github.com/dchest/siphash"
 	"github.com/dgryski/go-farm"
 	cfarmhash "github.com/dgryski/go-farmhash"
 	"github.com/dgryski/go-highway"
+	"github.com/dgryski/go-marvin32"
 	"github.com/dgryski/go-metro"
+	"github.com/dgryski/go-sip13"
 	"github.com/dgryski/go-spooky"
+	"github.com/dgryski/go-t1ha"
 	"github.com/opennota/fasthash"
 	"github.com/surge/cityhash"
 )
@@ -30,84 +35,51 @@ var (
 
 var hspooky = func(k []byte) uint64 { return spooky.Hash64(k) }
 
-func BenchmarkSpooky8(b *testing.B)  { benchmarkHashn(b, 8, hspooky) }
-func BenchmarkSpooky16(b *testing.B) { benchmarkHashn(b, 16, hspooky) }
-func BenchmarkSpooky40(b *testing.B) { benchmarkHashn(b, 40, hspooky) }
-func BenchmarkSpooky64(b *testing.B) { benchmarkHashn(b, 64, hspooky) }
-func BenchmarkSpooky1K(b *testing.B) { benchmarkHashn(b, 1024, hspooky) }
-func BenchmarkSpooky8K(b *testing.B) { benchmarkHashn(b, 8192, hspooky) }
+func BenchmarkSpooky(b *testing.B) { benchmarkHash(b, "Spooky", hspooky) }
 
-var hsiphash = func(k []byte) uint64 { return siphash.Hash(0, 0, k) }
+var hsiphash = func(k []byte) uint64 { return dchestsip.Hash(0, 0, k) }
 
-func BenchmarkSiphash8(b *testing.B)  { benchmarkHashn(b, 8, hsiphash) }
-func BenchmarkSiphash16(b *testing.B) { benchmarkHashn(b, 16, hsiphash) }
-func BenchmarkSiphash40(b *testing.B) { benchmarkHashn(b, 40, hsiphash) }
-func BenchmarkSiphash64(b *testing.B) { benchmarkHashn(b, 64, hsiphash) }
-func BenchmarkSiphash1K(b *testing.B) { benchmarkHashn(b, 1024, hsiphash) }
-func BenchmarkSiphash8K(b *testing.B) { benchmarkHashn(b, 8192, hsiphash) }
+func BenchmarkSipHash(b *testing.B) { benchmarkHash(b, "SipHash", hsiphash) }
 
 var hfarm = func(k []byte) uint64 { return farm.Hash64(k) }
 
-func BenchmarkFarm8(b *testing.B)  { benchmarkHashn(b, 8, hfarm) }
-func BenchmarkFarm16(b *testing.B) { benchmarkHashn(b, 16, hfarm) }
-func BenchmarkFarm40(b *testing.B) { benchmarkHashn(b, 40, hfarm) }
-func BenchmarkFarm64(b *testing.B) { benchmarkHashn(b, 64, hfarm) }
-func BenchmarkFarm1K(b *testing.B) { benchmarkHashn(b, 1024, hfarm) }
-func BenchmarkFarm8K(b *testing.B) { benchmarkHashn(b, 8192, hfarm) }
+func BenchmarkFarm(b *testing.B) { benchmarkHash(b, "Farm", hfarm) }
 
 var hcfarmhash = func(k []byte) uint64 { return cfarmhash.Hash64(k) }
 
-func BenchmarkCFarmhash8(b *testing.B)  { benchmarkHashn(b, 8, hcfarmhash) }
-func BenchmarkCFarmhash16(b *testing.B) { benchmarkHashn(b, 16, hcfarmhash) }
-func BenchmarkCFarmhash40(b *testing.B) { benchmarkHashn(b, 40, hcfarmhash) }
-func BenchmarkCFarmhash64(b *testing.B) { benchmarkHashn(b, 64, hcfarmhash) }
-func BenchmarkCFarmhash1K(b *testing.B) { benchmarkHashn(b, 1024, hcfarmhash) }
-func BenchmarkCFarmhash8K(b *testing.B) { benchmarkHashn(b, 8192, hcfarmhash) }
+func BenchmarkCFarm(b *testing.B) { benchmarkHash(b, "CFarm", hcfarmhash) }
 
 var hcity = func(k []byte) uint64 { return cityhash.CityHash64(k, uint32(len(k))) }
 
-func BenchmarkCity8(b *testing.B)  { benchmarkHashn(b, 8, hcity) }
-func BenchmarkCity16(b *testing.B) { benchmarkHashn(b, 16, hcity) }
-func BenchmarkCity40(b *testing.B) { benchmarkHashn(b, 40, hcity) }
-func BenchmarkCity64(b *testing.B) { benchmarkHashn(b, 64, hcity) }
-func BenchmarkCity1K(b *testing.B) { benchmarkHashn(b, 1024, hcity) }
-func BenchmarkCity8K(b *testing.B) { benchmarkHashn(b, 8192, hcity) }
+func BenchmarkCity(b *testing.B) { benchmarkHash(b, "City", hcity) }
 
-var hmetro = func(k []byte) uint64 { return metro.Hash64(k, 0) }
+var hmetro = func(k []byte) uint64 { return metro.Hash64ASM(k, 0) }
 
-func BenchmarkMetro8(b *testing.B)  { benchmarkHashn(b, 8, hmetro) }
-func BenchmarkMetro16(b *testing.B) { benchmarkHashn(b, 16, hmetro) }
-func BenchmarkMetro40(b *testing.B) { benchmarkHashn(b, 40, hmetro) }
-func BenchmarkMetro64(b *testing.B) { benchmarkHashn(b, 64, hmetro) }
-func BenchmarkMetro1K(b *testing.B) { benchmarkHashn(b, 1024, hmetro) }
-func BenchmarkMetro8K(b *testing.B) { benchmarkHashn(b, 8192, hmetro) }
+func BenchmarkMetro(b *testing.B) { benchmarkHash(b, "Metro", hmetro) }
 
 var hxxhash = func(k []byte) uint64 { return xxhash.Checksum64(k) }
 
-func BenchmarkXXHash8(b *testing.B)  { benchmarkHashn(b, 8, hxxhash) }
-func BenchmarkXXHash16(b *testing.B) { benchmarkHashn(b, 16, hxxhash) }
-func BenchmarkXXHash40(b *testing.B) { benchmarkHashn(b, 40, hxxhash) }
-func BenchmarkXXHash64(b *testing.B) { benchmarkHashn(b, 64, hxxhash) }
-func BenchmarkXXHash1K(b *testing.B) { benchmarkHashn(b, 1024, hxxhash) }
-func BenchmarkXXHash8K(b *testing.B) { benchmarkHashn(b, 8192, hxxhash) }
+func BenchmarkXXHash(b *testing.B) { benchmarkHash(b, "XXHash", hxxhash) }
+
+var hxxhashfast = func(k []byte) uint64 { return xxhashfast.Sum64(k) }
+
+func BenchmarkXXFast(b *testing.B) { benchmarkHash(b, "XXFast", hxxhashfast) }
 
 var fsthash = func(k []byte) uint64 { return fasthash.Hash64(0, k) }
 
-func BenchmarkFasthash8(b *testing.B)  { benchmarkHashn(b, 8, fsthash) }
-func BenchmarkFasthash16(b *testing.B) { benchmarkHashn(b, 16, fsthash) }
-func BenchmarkFasthash40(b *testing.B) { benchmarkHashn(b, 40, fsthash) }
-func BenchmarkFasthash64(b *testing.B) { benchmarkHashn(b, 64, fsthash) }
-func BenchmarkFasthash1K(b *testing.B) { benchmarkHashn(b, 1024, fsthash) }
-func BenchmarkFasthash8K(b *testing.B) { benchmarkHashn(b, 8192, fsthash) }
+func BenchmarkFasthash(b *testing.B) { benchmarkHash(b, "Fasthash", fsthash) }
 
 var high = func(k []byte) uint64 { return highway.Hash(highway.Lanes{}, k) }
 
-func BenchmarkHighway8(b *testing.B)  { benchmarkHashn(b, 8, high) }
-func BenchmarkHighway16(b *testing.B) { benchmarkHashn(b, 16, high) }
-func BenchmarkHighway40(b *testing.B) { benchmarkHashn(b, 40, high) }
-func BenchmarkHighway64(b *testing.B) { benchmarkHashn(b, 64, high) }
-func BenchmarkHighway1K(b *testing.B) { benchmarkHashn(b, 1024, high) }
-func BenchmarkHighway8K(b *testing.B) { benchmarkHashn(b, 8192, high) }
+func BenchmarkHighway(b *testing.B) { benchmarkHash(b, "Highway", high) }
+
+var marvin = func(k []byte) uint64 { return uint64(marvin32.Sum32(0, k)) }
+
+func BenchmarkMarvin32(b *testing.B) { benchmarkHash(b, "Marvin32", marvin) }
+
+var sip13hash = func(k []byte) uint64 { return sip13.Sum64(0, 0, k) }
+
+func BenchmarkSip13Hash(b *testing.B) { benchmarkHash(b, "Sip13", sip13hash) }
 
 var fnv64 = func(k []byte) uint64 {
 	h := fnv.New64a()
@@ -115,12 +87,18 @@ var fnv64 = func(k []byte) uint64 {
 	return h.Sum64()
 }
 
-func BenchmarkFNV8(b *testing.B)  { benchmarkHashn(b, 8, fnv64) }
-func BenchmarkFNV16(b *testing.B) { benchmarkHashn(b, 16, fnv64) }
-func BenchmarkFNV40(b *testing.B) { benchmarkHashn(b, 40, fnv64) }
-func BenchmarkFNV64(b *testing.B) { benchmarkHashn(b, 64, fnv64) }
-func BenchmarkFNV1K(b *testing.B) { benchmarkHashn(b, 1024, fnv64) }
-func BenchmarkFNV8K(b *testing.B) { benchmarkHashn(b, 8192, fnv64) }
+func BenchmarkFNV1(b *testing.B) { benchmarkHash(b, "fnv1a", fnv64) }
+
+var ht1ha = func(k []byte) uint64 { return t1ha.Sum64(k, 0) }
+
+func BenchmarkT1ha(b *testing.B) { benchmarkHash(b, "T1ha", ht1ha) }
+
+func benchmarkHash(b *testing.B, str string, h func([]byte) uint64) {
+	var sizes = []int{1, 2, 3, 4, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 1024, 8192}
+	for _, n := range sizes {
+		b.Run(strconv.Itoa(n), func(b *testing.B) { benchmarkHashn(b, int64(n), h) })
+	}
+}
 
 var total uint64
 
