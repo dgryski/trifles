@@ -13,7 +13,7 @@ func (s *sip) round() {
 	s.v1 = rotl64(s.v1, 13) ^ s.v0
 	s.v0 = rotl64(s.v0, 35) + s.v1
 	s.v1 = rotl64(s.v1, 17) ^ s.v0
-	s.v0 = rotl64(s.v1, 21) + s.v1
+	s.v0 = rotl64(s.v0, 21) + s.v1
 	s.v1 += s.v0
 }
 
