@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-uint32_t oaathu(unsigned char *seed, const unsigned char *str, size_t len) {
+uint32_t oaathu(const unsigned char *seed, const unsigned char *str, size_t len) {
   uint32_t hash = *((uint32_t *)seed) + len;
 
   switch (len) {

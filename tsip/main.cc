@@ -3,9 +3,9 @@
 
 unsigned char buffer[8192];
 
-uint32_t one_at_a_time_hard(unsigned char *seed, const unsigned char *str, size_t len);
-uint64_t oaathu(unsigned char *seed, const unsigned char *message, size_t len);
-uint64_t tsip(unsigned char *seed, const unsigned char *message, size_t len);
+uint32_t one_at_a_time_hard(const unsigned char *seed, const unsigned char *str, size_t len);
+uint64_t oaathu(const unsigned char *seed, const unsigned char *message, size_t len);
+uint64_t tsip(const unsigned char *seed, const unsigned char *message, size_t len);
 
 void Hash_oaath(benchmark::State& state) {
     unsigned char seed[16];
@@ -48,8 +48,8 @@ static void Custom0To16(benchmark::internal::Benchmark *b) {
     }
 }
 
-BENCHMARK(Hash_tsip)->Apply(Custom0To16);
-BENCHMARK(Hash_oaath)->Apply(Custom0To16);
+BENCHMARK(Hash_tsip)->Apply(CustomArguments);
+BENCHMARK(Hash_oaath)->Apply(CustomArguments);
 BENCHMARK(Hash_oaathu)->Apply(Custom0To16);
 
 BENCHMARK_MAIN()

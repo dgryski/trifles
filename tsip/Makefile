@@ -1,7 +1,8 @@
 
+CFLAGS=-O2
 
 .c.o:
-	g++ -c -O3 $< -o $@
+	g++ -c $(CFLAGS) $< -o $@
 
 bench: main.cc tsip.o oaath.o oaathu.o
-	g++ -O3 $^ -o $@ -lbenchmark -lpthread
+	g++ $(CFLAGS) $^ -o $@ -lbenchmark -lpthread

@@ -10,7 +10,7 @@ static uint64_t rotl64(uint64_t x, int k) {
   return (((x) << (k)) | ((x) >> (64 - k)));
 }
 
-uint64_t tsip(unsigned char *seed, const unsigned char *m, size_t len) {
+uint64_t tsip(const unsigned char *seed, const unsigned char *m, size_t len) {
 
   uint64_t v0, v1;
   uint64_t mi, k0, k1;
