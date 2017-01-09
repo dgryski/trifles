@@ -14,7 +14,7 @@ func (s *sip) round() {
 	s.v0 = rotl64(s.v0, 35) + s.v1
 	s.v1 = rotl64(s.v1, 17) ^ s.v0
 	s.v0 = rotl64(s.v0, 21) + s.v1
-	s.v1 += s.v0
+
 }
 
 func tsip(k0, k1 uint64, p []byte) uint64 {
@@ -64,7 +64,9 @@ func tsip(k0, k1 uint64, p []byte) uint64 {
 	// finalization
 	s.v1 ^= 0xff
 	s.round()
+	s.v1 = rotl64(s.v1, 32)
 	s.round()
+	s.v1 = rotl64(s.v1, 32)
 
 	return s.v0 ^ s.v1
 }

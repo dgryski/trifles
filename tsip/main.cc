@@ -3,9 +3,11 @@
 
 unsigned char buffer[8192];
 
+#include "tsip.h"
+
 uint32_t one_at_a_time_hard(const unsigned char *seed, const unsigned char *str, size_t len);
 uint64_t oaathu(const unsigned char *seed, const unsigned char *message, size_t len);
-uint64_t tsip(const unsigned char *seed, const unsigned char *message, size_t len);
+
 
 void Hash_oaath(benchmark::State& state) {
     unsigned char seed[16];
