@@ -6,3 +6,6 @@ CFLAGS=-O2
 
 bench: main.cc tsip.o oaath.o oaathu.o
 	g++ $(CFLAGS) $^ -o $@ -lbenchmark -lpthread
+
+tsiptest: tsip.o tsip_test.o
+	g++ $(CFLAGS) $^ -o $@
