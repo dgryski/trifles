@@ -30,7 +30,7 @@ uint64_t tsip(const unsigned char *seed, const unsigned char *m, size_t len) {
     v1 = rotl64(v1, 13) ^ v0;                                                  \
     v0 = rotl64(v0, 35) + v1;                                                  \
     v1 = rotl64(v1, 17) ^ v0;                                                  \
-    v0 = rotl64(v0, 21) + v1;                                                  \
+    v0 = rotl64(v0, 21);                                                       \
   } while (0)
 
   const unsigned char *end = m + (len & ~7);
