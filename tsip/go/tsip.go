@@ -1,4 +1,4 @@
-package main
+package tsip
 
 type sip struct {
 	v0, v1 uint64
@@ -16,7 +16,7 @@ func (s *sip) round() {
 	s.v0 = rotl64(s.v0, 21)
 }
 
-func tsip(k0, k1 uint64, p []byte) uint64 {
+func Hash(k0, k1 uint64, p []byte) uint64 {
 
 	s := sip{
 		v0: k0 ^ 0x736f6d6570736575,

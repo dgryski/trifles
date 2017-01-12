@@ -9,6 +9,7 @@ import (
 	"github.com/dchest/siphash"
 	"github.com/dgryski/go-marvin32"
 	"github.com/dgryski/go-sip13"
+	tsip "github.com/dgryski/trifles/tsip/go"
 )
 
 func main() {
@@ -22,7 +23,7 @@ func main() {
 
 	switch *f {
 	case "tsip":
-		h = tsip
+		h = tsip.Hash
 	case "siphash":
 		h = siphash.Hash
 	case "sip13":
