@@ -38,6 +38,12 @@ func TestTSIP(t *testing.T) {
 			t.Errorf("failed: %d: got=%v, want=%v\n", i, got, want)
 		}
 
+		got = HashASM(k0, k1, buf)
+
+		if got != want {
+			t.Errorf("failed asm: %d: got=%v, want=%v\n", i, got, want)
+		}
+
 		buf = append(buf, byte(i))
 		i++
 	}
