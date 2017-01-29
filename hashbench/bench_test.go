@@ -18,6 +18,8 @@ import (
 	"github.com/dgryski/go-t1ha"
 	"github.com/opennota/fasthash"
 	"github.com/surge/cityhash"
+
+	tsip "github.com/dgryski/trifles/tsip/go"
 )
 
 // Written in 2012 by Dmitry Chestnykh.
@@ -53,7 +55,7 @@ var hcity = func(k []byte) uint64 { return cityhash.CityHash64(k, uint32(len(k))
 
 func BenchmarkCity(b *testing.B) { benchmarkHash(b, "City", hcity) }
 
-var hmetro = func(k []byte) uint64 { return metro.Hash64ASM(k, 0) }
+var hmetro = func(k []byte) uint64 { return metro.Hash64(k, 0) }
 
 func BenchmarkMetro(b *testing.B) { benchmarkHash(b, "Metro", hmetro) }
 
@@ -92,6 +94,10 @@ func BenchmarkFNV1(b *testing.B) { benchmarkHash(b, "fnv1a", fnv64) }
 var ht1ha = func(k []byte) uint64 { return t1ha.Sum64(k, 0) }
 
 func BenchmarkT1ha(b *testing.B) { benchmarkHash(b, "T1ha", ht1ha) }
+
+var htsip = func(k []byte) uint64 { return tsip.HashASM(0, 0, k) }
+
+func BenchmarkTsip(b *testing.B) { benchmarkHash(b, "Tsip", htsip) }
 
 func benchmarkHash(b *testing.B, str string, h func([]byte) uint64) {
 	var sizes = []int{1, 2, 3, 4, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 1024, 8192}
