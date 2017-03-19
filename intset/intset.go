@@ -412,56 +412,57 @@ func main() {
 
 	t0 := time.Now()
 
+	fmt.Println("vint")
 	t0 = time.Now()
 	enc = vintEncodeArray(numbers[:])
 	dec = vintDecodeArray(enc)
 	fmt.Println("t = ", time.Since(t0))
 	compare(dec, numbers[:])
 
-	fmt.Println("vint")
 	fmt.Println("size of original    : ", 4*SIZE)
 	fmt.Println("size of encoded data: ", len(enc))
 	fmt.Println()
 
+	fmt.Println("delta")
 	t0 = time.Now()
 	enc = deltaEncodeArray(numbers[:])
 	dec = deltaDecodeArray(enc)
 	fmt.Println("t = ", time.Since(t0))
 	compare(dec, numbers[:])
 
-	fmt.Println("delta")
 	fmt.Println("size of original    : ", 4*SIZE)
 	fmt.Println("size of encoded data: ", len(enc))
 	fmt.Println()
 
+	fmt.Println("grvint delta")
 	t0 = time.Now()
 	enc = grvintEncodeArray(numbers[:])
 	dec = grvintDecodeArray(enc[:], len(numbers))
 	fmt.Println("t = ", time.Since(t0))
 	compare(dec, numbers[:])
 
-	fmt.Println("grvint delta")
 	fmt.Println("size of original    : ", 4*SIZE)
 	fmt.Println("size of encoded data: ", len(enc))
 	fmt.Println()
 
+	fmt.Println("rice")
 	t0 = time.Now()
 	enc = riceEncodeArray(numbers[:])
 	dec = riceDecodeArray(SIZE, enc)
 	fmt.Println("t = ", time.Since(t0))
 	compare(dec, numbers[:])
 
-	fmt.Println("rice")
 	fmt.Println("size of original    : ", 4*SIZE)
 	fmt.Println("size of encoded data: ", len(enc))
+	fmt.Println()
 
+	fmt.Println("frame-of-reference")
 	t0 = time.Now()
 	enc = FoREncode(numbers[:])
 	dec = FoRDecode(enc[:])
 	fmt.Println("t = ", time.Since(t0))
 	compare(dec, numbers[:])
 
-	fmt.Println("frame-of-reference")
 	fmt.Println("size of original    : ", 4*SIZE)
 	fmt.Println("size of encoded data: ", len(enc))
 
