@@ -15,9 +15,10 @@ import (
 	"github.com/dgryski/go-metro"
 	"github.com/dgryski/go-sip13"
 	"github.com/dgryski/go-spooky"
+	"github.com/dgryski/go-stadtx"
 	"github.com/dgryski/go-t1ha"
 	"github.com/opennota/fasthash"
-	"github.com/rbastic/go-zaphod32"
+	"github.com/rbastic/go-zaphod64"
 	"github.com/surge/cityhash"
 
 	tsip "github.com/dgryski/trifles/tsip/go"
@@ -96,11 +97,17 @@ var ht1ha = func(k []byte) uint64 { return t1ha.Sum64(k, 0) }
 
 func BenchmarkT1ha(b *testing.B) { benchmarkHash(b, "T1ha", ht1ha) }
 
-var zaphodSeed = []uint32{0, 0, 0}
+var zaphodSeed zaphod64.State
 
-var hzaphod32 = func(k []byte) uint64 { return uint64(zaphod32.Hash(zaphodSeed, k, uint32(len(k)))) }
+var hzaphod64 = func(k []byte) uint64 { return uint64(zaphod64.HashWithState(&zaphodSeed, k, uint64(len(k)))) }
 
-func BenchmarkZaphod32(b *testing.B) { benchmarkHash(b, "Zaphod32", hzaphod32) }
+func BenchmarkZaphod64(b *testing.B) { benchmarkHash(b, "Zaphod64", hzaphod64) }
+
+var stadtxState stadtx.State
+
+var hstadtx = func(k []byte) uint64 { return stadtx.Hash(&stadtxState, k) }
+
+func BenchmarkStadtx(b *testing.B) { benchmarkHash(b, "Stadtx", hstadtx) }
 
 var htsip = func(k []byte) uint64 { return tsip.HashASM(0, 0, k) }
 
