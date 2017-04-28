@@ -4,27 +4,27 @@ package numerical
 
 import "math"
 
-func trapezoid(start float64, end float64, steps int, fp func(float64) float64) float64 {
+func Trapezoid(start float64, end float64, steps int, fp func(float64) float64) float64 {
 
 	h := (end - start) / float64(steps)
 
 	total := 0.0
-	fp_x := fp(start)
+	fpX := fp(start)
 
 	for i := 0; i < steps; i++ {
 		x := start + h*float64(i)
-		square_height := fp_x
-		fp_x1 := fp(x + h)
-		triangle_height := fp_x1 - square_height
-		area := square_height*h + 0.5*(triangle_height*h)
+		squareHeight := fpX
+		fpX1 := fp(x + h)
+		triangleHeight := fpX1 - squareHeight
+		area := squareHeight*h + 0.5*(triangleHeight*h)
 		total += area
-		fp_x = fp_x1
+		fpX = fpX1
 	}
 
 	return total
 }
 
-func trapezoid_fast(start float64, end float64, steps int, fp func(float64) float64) float64 {
+func TrapezoidFast(start float64, end float64, steps int, fp func(float64) float64) float64 {
 
 	h := (end - start) / float64(steps)
 
@@ -37,24 +37,25 @@ func trapezoid_fast(start float64, end float64, steps int, fp func(float64) floa
 	return total * h
 }
 
-func trapezoid_iterative(start float64, end float64, steps int, fp func(float64) float64) float64 {
+func TrapezoidIterative(start float64, end float64, steps int, fp func(float64) float64) float64 {
 
 	// adaptive method -- ignore provided 'steps'
+	_ = steps
 	steps = 1
 
-	old_estimate := 0.0
-	new_estimate := trapezoid_iterative_helper(start, end, steps, fp, old_estimate)
+	oldEstimate := 0.0
+	newEstimate := trapezoidIterativeHelper(start, end, steps, fp, oldEstimate)
 
-	for (old_estimate-new_estimate)*(old_estimate-new_estimate) > 1e-18 {
+	for (oldEstimate-newEstimate)*(oldEstimate-newEstimate) > 1e-18 {
 		steps++
-		old_estimate = new_estimate
-		new_estimate = trapezoid_iterative_helper(start, end, steps, fp, old_estimate)
+		oldEstimate = newEstimate
+		newEstimate = trapezoidIterativeHelper(start, end, steps, fp, oldEstimate)
 	}
 
-	return new_estimate
+	return newEstimate
 }
 
-func trapezoid_iterative_helper(start float64, end float64, steps int, fp func(float64) float64, old_estimate float64) float64 {
+func trapezoidIterativeHelper(start float64, end float64, steps int, fp func(float64) float64, oldEstimate float64) float64 {
 
 	if steps == 1 {
 		return (fp(start) + fp(end)) * (end - start) / 2.0
@@ -69,10 +70,10 @@ func trapezoid_iterative_helper(start float64, end float64, steps int, fp func(f
 		total += fp(x + float64(i)*h)
 	}
 
-	return (old_estimate + h*total) / 2.0
+	return (oldEstimate + h*total) / 2.0
 }
 
-func romberg(start float64, end float64, steps int, fp func(float64) float64) (area float64) {
+func Romberg(start float64, end float64, steps int, fp func(float64) float64) (area float64) {
 
 	MAX := 21 // iterations
 
@@ -81,7 +82,7 @@ func romberg(start float64, end float64, steps int, fp func(float64) float64) (a
 	for k := 1; k < MAX; k++ {
 
 		oldval := s[1]
-		s[1] = trapezoid_iterative_helper(start, end, k, fp, oldval)
+		s[1] = trapezoidIterativeHelper(start, end, k, fp, oldval)
 
 		for i := 2; i <= k; i++ {
 			p := float64(uint(1) << (2 * uint(i-1))) // = 4 **(i-1)
@@ -101,17 +102,17 @@ func romberg(start float64, end float64, steps int, fp func(float64) float64) (a
 	return s[MAX-1]
 }
 
-func simpsons(start float64, end float64, steps int, fp func(float64) float64) float64 {
+func Simpsons(start float64, end float64, steps int, fp func(float64) float64) float64 {
 	total := fp(start) + 4.0*fp((start+end)/2) + fp(end)
 	return (end - start) / 6.0 * total
 }
 
-func simpsons38(start float64, end float64, steps int, fp func(float64) float64) float64 {
+func Simpsons38(start float64, end float64, steps int, fp func(float64) float64) float64 {
 	total := fp(start) + 3.0*fp((2.0*start+end)/3) + 3.0*fp((2.0*end+start)/3) + fp(end)
 	return (end - start) / 8.0 * total
 }
 
-func simpsons_composite(start float64, end float64, steps int, fp func(float64) float64) float64 {
+func SimpsonsComposite(start float64, end float64, steps int, fp func(float64) float64) float64 {
 
 	steps += (steps & 1)
 	h := (end - start) / float64(steps)
@@ -126,7 +127,7 @@ func simpsons_composite(start float64, end float64, steps int, fp func(float64) 
 	return h * total / 3.0
 }
 
-func simpsons38_composite(start float64, end float64, steps int, fp func(float64) float64) float64 {
+func Simpsons38Composite(start float64, end float64, steps int, fp func(float64) float64) float64 {
 
 	steps *= 3
 	rem := steps % 3
@@ -156,32 +157,32 @@ func simpsons38_composite(start float64, end float64, steps int, fp func(float64
 }
 
 // thin function -- prime the recursive pump and make the API match our other integration routines
-func simpsons_adaptive(start float64, end float64, steps int, f func(float64) float64) float64 {
+func SimpsonsAdaptive(start float64, end float64, steps int, f func(float64) float64) float64 {
 	//	epsilon := 1.0 / math.Pow(2, float64(steps))
 	epsilon := 10e-8
 	mid := (start + end) / 2
 	h := end - start
-	f_start := f(start)
-	f_end := f(end)
-	f_mid := f(mid)
-	S := (h / 6) * (f_start + 4*f_mid + f_end)
-	return simpsons_adaptive_helper(f, start, end, epsilon, S, f_start, f_mid, f_end, steps)
+	fStart := f(start)
+	fEnd := f(end)
+	fMid := f(mid)
+	S := (h / 6) * (fStart + 4*fMid + fEnd)
+	return simpsonsAdaptiveHelper(f, start, end, epsilon, S, fStart, fMid, fEnd, steps)
 }
 
-func simpsons_adaptive_helper(f func(float64) float64, start, end, epsilon, S, f_start, f_mid, f_end float64, bottom int) float64 {
+func simpsonsAdaptiveHelper(f func(float64) float64, start, end, epsilon, S, fStart, fMid, fEnd float64, bottom int) float64 {
 
 	// lots of variables are declared here to prevent multiple evalutions of the function
 	mid := (start + end) / 2
 	h := end - start
 
-	startmid_mid := (start + mid) / 2
-	f_startmid := f(startmid_mid)
+	startmidMid := (start + mid) / 2
+	fStartmid := f(startmidMid)
 
-	endmid_mid := (mid + end) / 2
-	f_endmid := f(endmid_mid)
+	endmidMid := (mid + end) / 2
+	fEndmid := f(endmidMid)
 
-	Sleft := (h / 12) * (f_start + 4*f_startmid + f_mid)
-	Sright := (h / 12) * (f_mid + 4*f_endmid + f_end)
+	Sleft := (h / 12) * (fStart + 4*fStartmid + fMid)
+	Sright := (h / 12) * (fMid + 4*fEndmid + fEnd)
 	S2 := Sleft + Sright
 
 	// we evaluate simpson's rule, then again summing the areas using the left and right midpoints.
@@ -191,8 +192,8 @@ func simpsons_adaptive_helper(f func(float64) float64, start, end, epsilon, S, f
 	}
 
 	// else recurse more
-	return simpsons_adaptive_helper(f, start, mid, epsilon/2, Sleft, f_start, f_startmid, f_mid, bottom-1) +
-		simpsons_adaptive_helper(f, mid, end, epsilon/2, Sright, f_mid, f_endmid, f_end, bottom-1)
+	return simpsonsAdaptiveHelper(f, start, mid, epsilon/2, Sleft, fStart, fStartmid, fMid, bottom-1) +
+		simpsonsAdaptiveHelper(f, mid, end, epsilon/2, Sright, fMid, fEndmid, fEnd, bottom-1)
 }
 
 /*

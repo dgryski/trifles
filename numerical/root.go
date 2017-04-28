@@ -4,7 +4,7 @@ import (
 	"math"
 )
 
-func bisect(f func(x float64) float64, x0, x1 float64) (root float64) {
+func Bisect(f func(x float64) float64, x0, x1 float64) (root float64) {
 
 	eps := 10e-8
 
@@ -24,7 +24,7 @@ func bisect(f func(x float64) float64, x0, x1 float64) (root float64) {
 	return root
 }
 
-func secant(f func(x float64) float64, x0, x1 float64) (root float64) {
+func Secant(f func(x float64) float64, x0, x1 float64) (root float64) {
 
 	eps := 10e-8
 
@@ -40,9 +40,9 @@ func secant(f func(x float64) float64, x0, x1 float64) (root float64) {
 }
 
 // wikipedia
-func falsi(f func(x float64) float64, s, t float64) (r float64) {
 
-	n := 0
+func Falsi(f func(x float64) float64, s, t float64) (r float64) {
+
 	side := 0
 
 	fs := f(s)
@@ -52,7 +52,7 @@ func falsi(f func(x float64) float64, s, t float64) (r float64) {
 
 	e := 5e-15 // eps
 
-	for n = 1; n <= m; n++ {
+	for n := 1; n <= m; n++ {
 		r = (fs*t - ft*s) / (fs - ft)
 		if math.Abs(t-s) < e*math.Abs(t+s) {
 			break
@@ -88,7 +88,8 @@ func max(a, b float64) float64 {
 }
 
 // Numerical Methods in Engineering with Python -> Go
-func ridder(f func(x float64) float64, a, b float64) (r float64) {
+
+func Ridder(f func(x float64) float64, a, b float64) (r float64) {
 
 	tol := 1.0e-9
 
