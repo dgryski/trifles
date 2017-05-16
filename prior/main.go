@@ -8,7 +8,6 @@ import (
 	"sort"
 	"text/tabwriter"
 
-	linebreak "github.com/dgryski/go-linebreak"
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
 )
