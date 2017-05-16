@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"sort"
+	"strings"
 	"text/tabwriter"
 
 	"github.com/google/go-github/github"
@@ -46,6 +47,11 @@ func main() {
 
 	sort.Sort(ByCreatedAt(all))
 
+	fmt.Fprintln(w, strings.Join([]string{
+		"Name",
+		"Description",
+		"Created",
+		"Last Modification"}, "\t"))
 	for _, r := range all {
 		// ignore forks
 		if r.GetFork() {
@@ -57,7 +63,11 @@ func main() {
 			log.Printf("missing description for %q", r.GetFullName())
 		}
 
-		fmt.Fprintln(w, r.GetFullName(), "\t", r.GetDescription(), "\t", r.GetCreatedAt().Format("2006-01-02"))
+		fmt.Fprintln(w, strings.Join([]string{
+			r.GetFullName(),
+			r.GetDescription(),
+			r.GetCreatedAt().Format("2006-01-02"),
+			r.GetPushedAt().Format("2006-01-02")}, "\t"))
 	}
 
 	w.Flush()
