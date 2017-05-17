@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"sort"
@@ -14,6 +16,10 @@ import (
 )
 
 func main() {
+
+	pretty := flag.Bool("pretty", false, "pretty output")
+	flag.Parse()
+
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: os.Getenv("GITHUB_TOKEN")},
@@ -22,7 +28,11 @@ func main() {
 
 	client := github.NewClient(tc)
 
-	w := tabwriter.NewWriter(os.Stdout, 0, 8, 0, '\t', 0)
+	var w io.Writer = os.Stdout
+
+	if *pretty {
+		w = tabwriter.NewWriter(os.Stdout, 0, 8, 0, '\t', 0)
+	}
 
 	var all []*github.Repository
 
@@ -52,6 +62,7 @@ func main() {
 		"Description",
 		"Created",
 		"Last Modification"}, "\t"))
+
 	for _, r := range all {
 		// ignore forks
 		if r.GetFork() {
@@ -70,7 +81,11 @@ func main() {
 			r.GetPushedAt().Format("2006-01-02")}, "\t"))
 	}
 
-	w.Flush()
+	if f, ok := w.(interface {
+		Flush() error
+	}); ok {
+		f.Flush()
+	}
 }
 
 type ByCreatedAt []*github.Repository
