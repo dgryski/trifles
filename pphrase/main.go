@@ -13,6 +13,7 @@ func main() {
 
 	wordlist := flag.String("w", "words.txt", "word list to use")
 	phraseLen := flag.Int("n", 5, "length of passphrase")
+	bracketed := flag.Bool("bracketed", false, "return passphrase inside brackets")
 
 	flag.Parse()
 
@@ -48,6 +49,13 @@ func main() {
 		phrase = append(phrase, words[word])
 	}
 
-	fmt.Println(phrase)
+	if *bracketed {
+		fmt.Println(phrase)
+	} else {
+		for _, word := range phrase {
+			fmt.Print(word + " ")
+		}
+		fmt.Println()
+	}
 
 }
