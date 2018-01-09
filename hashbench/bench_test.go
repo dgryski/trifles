@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"testing"
 
-	xxhash "github.com/OneOfOne/xxhash/native"
+	xxhash "github.com/OneOfOne/xxhash"
 	xxhashfast "github.com/cespare/xxhash"
 	dchestsip "github.com/dchest/siphash"
 	"github.com/dgryski/go-farm"
