@@ -115,7 +115,9 @@ func main() {
 
 		f = func(s string) bool {
 			if i := cache.Get(s); i == nil {
-				cache.Set(s, s)
+				if bouncer.allow(s) {
+					cache.Set(s, s)
+				}
 				return true
 			} else {
 				if i.(string) != s {
