@@ -11,6 +11,7 @@ Currently implemented:
 * clock-pro (external, from https://github.com/dgryski/go-clockpro )
 * arc (external, from https://github.com/dgryski/go-arc )
 * tinylfu (external, from https://github.com/dgryski/go-tinylfu )
+* tworand -- power of two-random-choices
 
 usage:
 
