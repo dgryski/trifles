@@ -4,15 +4,15 @@ package main
 
 sorted by misses
 
-tinylfu: 4.075395207s 10000000 total 2205147 misses
-clockpro: 3.133172079s 10000000 total 2212461 misses
-arc: 5.136880077s 10000000 total 2220016 misses
-slru2080: 6.36564715s 10000000 total 2254569 misses
-s4lru: 2.571416442s 10000000 total 2259629 misses
-slru5050: 6.266535668s 10000000 total 2360416 misses
-clock: 2.497958238s 10000000 total 2587380 misses
-lru: 5.020239605s 10000000 total 2643644 misses
-random: 2.523026752s 10000000 total 2900727 misses
+tinylfu: 1.926582242s 10000000 total 2201654 misses (hit rate 77 %)
+clockpro: 1.801118736s 10000000 total 2212491 misses (hit rate 77 %)
+arc: 3.281438966s 10000000 total 2220057 misses (hit rate 77 %)
+slru: 2.310323819s 10000000 total 2254240 misses (hit rate 77 %)
+s4lru: 1.562688403s 10000000 total 2259672 misses (hit rate 77 %)
+clock: 1.404290226s 10000000 total 2587426 misses (hit rate 74 %)
+lru: 2.073626834s 10000000 total 2643691 misses (hit rate 73 %)
+tworand: 1.60019126s 10000000 total 2736554 misses (hit rate 72 %)
+random: 1.578992853s 10000000 total 2900695 misses (hit rate 70 %)
 
 */
 
