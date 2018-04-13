@@ -11,6 +11,7 @@ Currently implemented:
 * arc (external, from https://github.com/dgryski/go-arc )
 * tinylfu (external, from https://github.com/dgryski/go-tinylfu )
 * tworand -- power of two-random-choices
+* randmark -- randomized marking
 
 usage:
 

@@ -29,6 +29,7 @@ import (
 	"github.com/dgryski/go-s4lru"
 	"github.com/dgryski/go-tinylfu"
 	"github.com/dgryski/trifles/cachetest/clock"
+	"github.com/dgryski/trifles/cachetest/randmark"
 	"github.com/dgryski/trifles/cachetest/random"
 	"github.com/dgryski/trifles/cachetest/slru"
 	"github.com/dgryski/trifles/cachetest/tworand"
@@ -93,6 +94,26 @@ func main() {
 	case "random":
 
 		cache := random.New(*n)
+
+		f = func(s string) bool {
+			if i := cache.Get(s); i == nil {
+				if bouncer.allow(s) {
+					cache.Set(s, s)
+				}
+				return true
+			} else {
+				if i.(string) != s {
+					panic("key != value")
+				}
+			}
+
+			return false
+		}
+
+
+	case "mark":
+
+		cache := randmark.New(*n)
 
 		f = func(s string) bool {
 			if i := cache.Get(s); i == nil {
