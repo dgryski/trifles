@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/dchest/siphash"
+	"github.com/dgryski/go-metro"
 	"github.com/dgryski/go-bloomf"
 )
 
@@ -11,7 +11,7 @@ type doorkeeper struct {
 
 func newDoorkeeper(size int) *doorkeeper {
 	return &doorkeeper{
-		bf: bloomf.New(size*9, 0.01, func(b []byte) uint64 { return siphash.Hash(0, 0, b) }),
+		bf: bloomf.New(size*9, 0.01, func(b []byte) uint64 { return metro.Hash64(b, 0) }),
 	}
 }
 
