@@ -21,6 +21,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math"
 	"os"
 	"time"
 
@@ -43,6 +44,7 @@ func main() {
 	alg := flag.String("alg", "", "algorithm")
 	file := flag.String("f", "", "input file")
 	door := flag.Bool("door", false, "use doorkeeper")
+	prob := flag.Float64("prob", math.NaN(), "use probkeeper")
 	cpuprofile := flag.Bool("cpuprofile", false, "cpuprofile")
 	memprofile := flag.Bool("memprofile", false, "memprofile")
 
@@ -67,10 +69,14 @@ func main() {
 
 	var f func(string) bool
 
-	var bouncer *doorkeeper
+	var bouncer interface { allow(s string) bool } = (*doorkeeper)(nil)
 
 	if *door {
 		bouncer = newDoorkeeper(*n)
+	}
+
+	if !math.IsNaN(*prob) {
+		bouncer = newProbkeeper(float32(*prob))
 	}
 
 	switch *alg {
