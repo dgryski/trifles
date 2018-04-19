@@ -43,7 +43,7 @@ func main() {
 	n := flag.Int("n", 1000, "cache size")
 	alg := flag.String("alg", "", "algorithm")
 	file := flag.String("f", "", "input file")
-	door := flag.Bool("door", false, "use doorkeeper")
+	bloom := flag.Bool("bloom", false, "use bloom doorkeeper")
 	prob := flag.Float64("prob", math.NaN(), "use probkeeper")
 	cpuprofile := flag.Bool("cpuprofile", false, "cpuprofile")
 	memprofile := flag.Bool("memprofile", false, "memprofile")
@@ -69,10 +69,10 @@ func main() {
 
 	var f func(string) bool
 
-	var bouncer interface { allow(s string) bool } = (*doorkeeper)(nil)
+	var bouncer doorkeeper = nullkeeper(0)
 
-	if *door {
-		bouncer = newDoorkeeper(*n)
+	if *bloom {
+		bouncer = newBloomkeeper(*n)
 	}
 
 	if !math.IsNaN(*prob) {
@@ -294,4 +294,14 @@ func main() {
 	}
 
 	fmt.Printf("%s: %s %d total %d misses (hit rate %d %%)\n", *alg, time.Since(t0), count, miss, int(100*(float64(count-miss)/float64(count))))
+}
+
+type doorkeeper interface {
+	allow(s string) bool
+}
+
+type nullkeeper int
+
+func (nullkeeper) allow(s string) bool {
+	return true
 }
