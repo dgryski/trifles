@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/sha1"
+	"encoding/binary"
 	"hash/fnv"
 	"strconv"
 	"testing"
@@ -17,6 +19,7 @@ import (
 	"github.com/dgryski/go-spooky"
 	"github.com/dgryski/go-stadtx"
 	"github.com/dgryski/go-t1ha"
+	"github.com/mmcloughlin/meow"
 	"github.com/opennota/fasthash"
 	"github.com/rbastic/go-zaphod64"
 	"github.com/surge/cityhash"
@@ -112,6 +115,20 @@ func BenchmarkStadtx(b *testing.B) { benchmarkHash(b, "Stadtx", hstadtx) }
 var htsip = func(k []byte) uint64 { return tsip.HashASM(0, 0, k) }
 
 func BenchmarkTsip(b *testing.B) { benchmarkHash(b, "Tsip", htsip) }
+
+var hsha1 = func(k []byte) uint64 {
+	b := sha1.Sum(k)
+	return binary.LittleEndian.Uint64(b[:8])
+}
+
+func BenchmarkSHA1(b *testing.B) { benchmarkHash(b, "SHA1", hsha1) }
+
+var hmeow = func(k []byte) uint64 {
+	b := meow.Checksum(0, k)
+	return binary.LittleEndian.Uint64(b[:8])
+}
+
+func BenchmarkMeow(b *testing.B) { benchmarkHash(b, "Meow", hmeow) }
 
 func benchmarkHash(b *testing.B, str string, h func([]byte) uint64) {
 	var sizes = []int{1, 2, 3, 4, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 1024, 8192}
