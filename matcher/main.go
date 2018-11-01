@@ -133,6 +133,22 @@ func main() {
 		log.Printf("time.Since(t0)=%+v\n", time.Since(t0))
 		log.Printf("found=%+v\n", found)
 
+	case "dmph":
+		initDMPH()
+
+		t0 := time.Now()
+		var found int
+		for i := 0; i < *iter; i++ {
+			for j, a := range arr[:*n] {
+				if MatchBloom(a) && MatchDMPH(strarr[j]) {
+					found++
+				}
+
+			}
+		}
+		log.Printf("time.Since(t0)=%+v\n", time.Since(t0))
+		log.Printf("found=%+v\n", found)
+
 	case "radix":
 		initRadix()
 
