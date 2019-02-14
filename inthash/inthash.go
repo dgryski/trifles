@@ -7,6 +7,8 @@ Taken from
 */
 package inthash
 
+import "math/bits"
+
 // Hash64 hashes a uint64
 func Hash64(key uint64) uint64 {
 	key = ^key + (key << 21) // key = (key << 21) - key - 1;
@@ -175,4 +177,47 @@ func Murmur3_64_Finalizer(key uint64) uint64 {
 	key *= 0xc4ceb9fe1a85ec53
 	key ^= key >> 33
 	return key
+}
+
+// https://nullprogram.com/blog/2018/07/31/
+
+// exact bias: 0.17353355999581582
+func Lowbias32(x uint32) uint32 {
+	x ^= x >> 16
+	x *= 0x7feb352d
+	x ^= x >> 15
+	x *= 0x846ca68b
+	x ^= x >> 16
+	return x
+}
+
+// inverse
+func Lowbias32_r(x uint32) uint32 {
+	x ^= x >> 16
+	x *= 0x43021123
+	x ^= x>>15 ^ x>>30
+	x *= 0x1d69e2a5
+	x ^= x >> 16
+	return x
+}
+
+// exact bias: 0.020888578919738908
+func Triple32(x uint32) uint32 {
+	x ^= x >> 17
+	x *= 0xed5ad4bb
+	x ^= x >> 11
+	x *= 0xac4c1b51
+	x ^= x >> 15
+	x *= 0x31848bab
+	x ^= x >> 14
+	return x
+}
+
+// http://mostlymangling.blogspot.com/2019/01/better-stronger-mixer-and-test-procedure.html
+func Rrxmrrxmsx_0(v uint64) uint64 {
+	v ^= bits.RotateLeft64(v, -25) ^ bits.RotateLeft64(v, -50)
+	v *= 0xA24BAED4963EE407
+	v ^= bits.RotateLeft64(v, -24) ^ bits.RotateLeft64(v, -49)
+	v *= 0x9FB21C651E98DF25
+	return v ^ v>>28
 }
