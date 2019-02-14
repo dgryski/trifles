@@ -1,19 +1,20 @@
 package tsip
 
+import (
+	"encoding/binary"
+	"math/bits"
+)
+
 type sip struct {
 	v0, v1 uint64
 }
 
-func rotl64(x uint64, r uint64) uint64 {
-	return (((x) << (r)) | ((x) >> (64 - r)))
-}
-
 func (s *sip) round() {
 	s.v0 += s.v1
-	s.v1 = rotl64(s.v1, 13) ^ s.v0
-	s.v0 = rotl64(s.v0, 35) + s.v1
-	s.v1 = rotl64(s.v1, 17) ^ s.v0
-	s.v0 = rotl64(s.v0, 21)
+	s.v1 = bits.RotateLeft64(s.v1, 13) ^ s.v0
+	s.v0 = bits.RotateLeft64(s.v0, 35) + s.v1
+	s.v1 = bits.RotateLeft64(s.v1, 17) ^ s.v0
+	s.v0 = bits.RotateLeft64(s.v0, 21)
 }
 
 func Hash(k0, k1 uint64, p []byte) uint64 {
@@ -25,7 +26,7 @@ func Hash(k0, k1 uint64, p []byte) uint64 {
 	b := uint64(len(p)) << 56
 
 	for len(p) >= 8 {
-		m := uint64(p[0]) | uint64(p[1])<<8 | uint64(p[2])<<16 | uint64(p[3])<<24 | uint64(p[4])<<32 | uint64(p[5])<<40 | uint64(p[6])<<48 | uint64(p[7])<<56
+		m := binary.LittleEndian.Uint64(p[:8])
 		s.v1 ^= m
 		s.round()
 		s.v0 ^= m
@@ -63,9 +64,9 @@ func Hash(k0, k1 uint64, p []byte) uint64 {
 	// finalization
 	s.v1 ^= 0xff
 	s.round()
-	s.v1 = rotl64(s.v1, 32)
+	s.v1 = bits.RotateLeft64(s.v1, 32)
 	s.round()
-	s.v1 = rotl64(s.v1, 32)
+	s.v1 = bits.RotateLeft64(s.v1, 32)
 
 	return s.v0 ^ s.v1
 }
