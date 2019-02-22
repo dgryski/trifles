@@ -25,6 +25,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/allegro/bigcache"
+	"github.com/coocood/freecache"
 	"github.com/dgryski/go-arc"
 	"github.com/dgryski/go-clockpro"
 	"github.com/dgryski/go-s4lru"
@@ -81,6 +83,56 @@ func main() {
 
 	switch *alg {
 
+	case "freecache":
+
+		// HDR (24) + Key (8) + Value (8) = 40
+		cache := freecache.NewCache(*n * 40)
+		f = func(s string) bool {
+			bs := []byte(s)
+			if i, err := cache.Get(bs); err == freecache.ErrNotFound {
+				if bouncer.allow(s) {
+					cache.Set(bs, bs, 0)
+				}
+				return true
+			} else {
+				if string(i) != s {
+					panic("key != value")
+				}
+			}
+
+			return false
+		}
+
+	case "bigcache":
+
+		// Entry size = key (8) + value (8) + header (18) = 34
+		cache, err := bigcache.NewBigCache(bigcache.Config{
+			Shards:             256,
+			LifeWindow:         0,
+			MaxEntriesInWindow: *n,
+			MaxEntrySize:       34,
+			HardMaxCacheSize:   *n * 34 / 1024 / 1024,
+			Verbose:            false,
+		})
+		if err != nil {
+			panic(err)
+		}
+
+		f = func(s string) bool {
+			if i, err := cache.Get(s); err == bigcache.ErrEntryNotFound {
+				if bouncer.allow(s) {
+					cache.Set(s, []byte(s))
+				}
+				return true
+			} else {
+				if string(i) != s {
+					panic("key != value")
+				}
+			}
+
+			return false
+		}
+
 	case "arc":
 
 		cache := arc.New(*n)
@@ -115,7 +167,6 @@ func main() {
 
 			return false
 		}
-
 
 	case "mark":
 
