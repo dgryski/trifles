@@ -83,6 +83,24 @@ func main() {
 
 	switch *alg {
 
+	case "groupcache":
+
+		cache := lru.New(*n)
+		f = func(s string) bool {
+			if i, ok := cache.Get(s); !ok {
+				if bouncer.allow(s) {
+					cache.Add(s, s)
+				}
+				return true
+			} else {
+				if i != s {
+					panic("key != value")
+				}
+			}
+
+			return false
+		}
+
 	case "freecache":
 
 		// HDR (24) + Key (8) + Value (8) = 40
