@@ -19,6 +19,7 @@ import (
 	"github.com/dgryski/go-spooky"
 	"github.com/dgryski/go-stadtx"
 	"github.com/dgryski/go-t1ha"
+	"github.com/dgryski/go-wyhash"
 	"github.com/mmcloughlin/meow"
 	"github.com/opennota/fasthash"
 	"github.com/rbastic/go-zaphod64"
@@ -115,6 +116,10 @@ func BenchmarkStadtx(b *testing.B) { benchmarkHash(b, "Stadtx", hstadtx) }
 var htsip = func(k []byte) uint64 { return tsip.HashASM(0, 0, k) }
 
 func BenchmarkTsip(b *testing.B) { benchmarkHash(b, "Tsip", htsip) }
+
+var hwyhash = func(k []byte) uint64 { return wyhash.Hash(k, 0) }
+
+func BenchmarkWyhash(b *testing.B) { benchmarkHash(b, "Tsip", htsip) }
 
 var hsha1 = func(k []byte) uint64 {
 	b := sha1.Sum(k)
