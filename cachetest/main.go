@@ -25,6 +25,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/VictoriaMetrics/fastcache"
 	"github.com/allegro/bigcache"
 	"github.com/coocood/freecache"
 	"github.com/dgryski/go-arc"
@@ -122,6 +123,26 @@ func main() {
 			if i, err := cache.Get(s); err == bigcache.ErrEntryNotFound {
 				if bouncer.allow(s) {
 					cache.Set(s, []byte(s))
+				}
+				return true
+			} else {
+				if string(i) != s {
+					panic("key != value")
+				}
+			}
+
+			return false
+		}
+
+	case "fastcache":
+
+		// Entry size = key (8) + value (8) + header (4) = 16
+		cache := fastcache.New(*n * 16)
+		f = func(s string) bool {
+			b := []byte(s)
+			if i := cache.Get(nil, b); i == nil || len(i) == 0 {
+				if bouncer.allow(s) {
+					cache.Set(b, b)
 				}
 				return true
 			} else {
