@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"testing"
 
+	"blainsmith.com/go/seahash"
 	xxhash "github.com/OneOfOne/xxhash"
 	xxhashfast "github.com/cespare/xxhash"
 	dchestsip "github.com/dchest/siphash"
@@ -20,10 +21,12 @@ import (
 	"github.com/dgryski/go-stadtx"
 	"github.com/dgryski/go-t1ha"
 	"github.com/dgryski/go-wyhash"
+	"github.com/dgryski/go-xxh3"
 	"github.com/mmcloughlin/meow"
 	"github.com/opennota/fasthash"
 	"github.com/rbastic/go-zaphod64"
 	"github.com/surge/cityhash"
+	"golang.org/x/crypto/blake2b"
 
 	tsip "github.com/dgryski/trifles/tsip/go"
 )
@@ -119,7 +122,15 @@ func BenchmarkTsip(b *testing.B) { benchmarkHash(b, "Tsip", htsip) }
 
 var hwyhash = func(k []byte) uint64 { return wyhash.Hash(k, 0) }
 
-func BenchmarkWyhash(b *testing.B) { benchmarkHash(b, "Tsip", htsip) }
+func BenchmarkWyhash(b *testing.B) { benchmarkHash(b, "Wyhash", hwyhash) }
+
+var hxxh3 = func(k []byte) uint64 { return xxh3.Hash(k, 0) }
+
+func BenchmarkXXH3(b *testing.B) { benchmarkHash(b, "XXH3", hxxh3) }
+
+var hseahash = func(k []byte) uint64 { return seahash.Sum64(k) }
+
+func BenchmarkSeahash(b *testing.B) { benchmarkHash(b, "Seahash", hseahash) }
 
 var hsha1 = func(k []byte) uint64 {
 	b := sha1.Sum(k)
@@ -127,6 +138,13 @@ var hsha1 = func(k []byte) uint64 {
 }
 
 func BenchmarkSHA1(b *testing.B) { benchmarkHash(b, "SHA1", hsha1) }
+
+var hblake = func(k []byte) uint64 {
+	b := blake2b.Sum256(k)
+	return binary.LittleEndian.Uint64(b[:8])
+}
+
+func BenchmarkBlake2b(b *testing.B) { benchmarkHash(b, "Blake", hblake) }
 
 var hmeow = func(k []byte) uint64 {
 	b := meow.Checksum(0, k)
