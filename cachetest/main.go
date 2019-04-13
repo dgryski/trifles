@@ -23,6 +23,7 @@ import (
 	"log"
 	"math"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/VictoriaMetrics/fastcache"
@@ -86,17 +87,19 @@ func main() {
 
 	case "freecache":
 
-		// HDR (24) + Key (8) + Value (8) = 40
-		cache := freecache.NewCache(*n * 40)
+		// HDR (24) + Key (64) + Value (1400) = 1488
+		cache := freecache.NewCache(*n * 1488)
 		f = func(s string) bool {
-			bs := []byte(s)
+			longKey := getLongerString(s, 64)
+			longVal := getLongerString(s, 1400)
+			bs := []byte(longKey)
 			if i, err := cache.Get(bs); err == freecache.ErrNotFound {
-				if bouncer.allow(s) {
-					cache.Set(bs, bs, 0)
+				if bouncer.allow(longKey) {
+					cache.Set(bs, []byte(longVal), 0)
 				}
 				return true
 			} else {
-				if string(i) != s {
+				if string(i) != longVal {
 					panic("key != value")
 				}
 			}
@@ -106,13 +109,13 @@ func main() {
 
 	case "bigcache":
 
-		// Entry size = key (8) + value (8) + header (18) = 34
+		// Entry size = key (64) + value (1400) + header (18) = 1482
 		cache, err := bigcache.NewBigCache(bigcache.Config{
 			Shards:             256,
 			LifeWindow:         0,
 			MaxEntriesInWindow: *n,
-			MaxEntrySize:       34,
-			HardMaxCacheSize:   *n * 34 / 1024 / 1024,
+			MaxEntrySize:       1482,
+			HardMaxCacheSize:   *n * 1482 / 1024 / 1024,
 			Verbose:            false,
 		})
 		if err != nil {
@@ -120,13 +123,15 @@ func main() {
 		}
 
 		f = func(s string) bool {
-			if i, err := cache.Get(s); err == bigcache.ErrEntryNotFound {
-				if bouncer.allow(s) {
-					cache.Set(s, []byte(s))
+			longKey := getLongerString(s, 64)
+			longVal := getLongerString(s, 1400)
+			if i, err := cache.Get(longKey); err == bigcache.ErrEntryNotFound {
+				if bouncer.allow(longKey) {
+					cache.Set(longKey, []byte(longVal))
 				}
 				return true
 			} else {
-				if string(i) != s {
+				if string(i) != longVal {
 					panic("key != value")
 				}
 			}
@@ -136,17 +141,20 @@ func main() {
 
 	case "fastcache":
 
-		// Entry size = key (8) + value (8) + header (4) = 16
+		// Entry size = key (64) + value (1400) + header (4) = 1468
 		cache := fastcache.New(*n * 16)
 		f = func(s string) bool {
-			b := []byte(s)
-			if i := cache.Get(nil, b); i == nil || len(i) == 0 {
-				if bouncer.allow(s) {
-					cache.Set(b, b)
+			longKey := getLongerString(s, 64)
+			longVal := getLongerString(s, 1400)
+
+			bs := []byte(longKey)
+			if i := cache.Get(nil, bs); i == nil || len(i) == 0 {
+				if bouncer.allow(longKey) {
+					cache.Set(bs, []byte(longVal))
 				}
 				return true
 			} else {
-				if string(i) != s {
+				if string(i) != longVal {
 					panic("key != value")
 				}
 			}
@@ -376,4 +384,12 @@ type nullkeeper int
 
 func (nullkeeper) allow(s string) bool {
 	return true
+}
+
+func getLongerString(s string, length int) string {
+	if len(s) >= length {
+		return s[:length]
+	}
+
+	return strings.Repeat("0", length-len(s)) + s
 }
