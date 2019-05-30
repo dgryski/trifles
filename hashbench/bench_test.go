@@ -23,9 +23,9 @@ import (
 	"github.com/dgryski/go-wyhash"
 	"github.com/dgryski/go-xxh3"
 	"github.com/mmcloughlin/meow"
-	"github.com/opennota/fasthash"
 	"github.com/rbastic/go-zaphod64"
 	"github.com/surge/cityhash"
+	zxxh3 "github.com/zeebo/xxh3"
 	"golang.org/x/crypto/blake2b"
 
 	tsip "github.com/dgryski/trifles/tsip/go"
@@ -52,7 +52,7 @@ var hsiphash = func(k []byte) uint64 { return dchestsip.Hash(0, 0, k) }
 
 func BenchmarkSipHash(b *testing.B) { benchmarkHash(b, "SipHash", hsiphash) }
 
-var hfarm = func(k []byte) uint64 { return farm.Hash64(k) }
+var hfarm = func(k []byte) uint64 { return farm.Fingerprint64(k) }
 
 func BenchmarkFarm(b *testing.B) { benchmarkHash(b, "Farm", hfarm) }
 
@@ -75,10 +75,6 @@ func BenchmarkXXHash(b *testing.B) { benchmarkHash(b, "XXHash", hxxhash) }
 var hxxhashfast = func(k []byte) uint64 { return xxhashfast.Sum64(k) }
 
 func BenchmarkXXFast(b *testing.B) { benchmarkHash(b, "XXFast", hxxhashfast) }
-
-var fsthash = func(k []byte) uint64 { return fasthash.Hash64(0, k) }
-
-func BenchmarkFasthash(b *testing.B) { benchmarkHash(b, "Fasthash", fsthash) }
 
 var high = func(k []byte) uint64 { return highway.Hash(highway.Lanes{}, k) }
 
@@ -127,6 +123,10 @@ func BenchmarkWyhash(b *testing.B) { benchmarkHash(b, "Wyhash", hwyhash) }
 var hxxh3 = func(k []byte) uint64 { return xxh3.Hash(k, 0) }
 
 func BenchmarkXXH3(b *testing.B) { benchmarkHash(b, "XXH3", hxxh3) }
+
+var hzxxh3 = func(k []byte) uint64 { return zxxh3.Hash(k) }
+
+func BenchmarkZeeboXXH3(b *testing.B) { benchmarkHash(b, "ZeeboXXH3", hzxxh3) }
 
 var hseahash = func(k []byte) uint64 { return seahash.Sum64(k) }
 
