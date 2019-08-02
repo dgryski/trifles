@@ -29,6 +29,7 @@ import (
 	"github.com/VictoriaMetrics/fastcache"
 	"github.com/allegro/bigcache"
 	"github.com/coocood/freecache"
+	"github.com/dgraph-io/ristretto"
 	"github.com/dgryski/go-arc"
 	"github.com/dgryski/go-clockpro"
 	"github.com/dgryski/go-s4lru"
@@ -84,6 +85,34 @@ func main() {
 	}
 
 	switch *alg {
+
+	case "ristretto":
+
+		cache, err := ristretto.NewCache(&ristretto.Config{
+			NumCounters: int64(*n * 10),
+			MaxCost:     int64(*n),
+			BufferItems: 64,
+		})
+		if err != nil {
+			panic(err)
+		}
+
+		f = func(s string) bool {
+			longKey := getLongerString(s, 64)
+			longVal := getLongerString(s, 1400)
+			if i, ok := cache.Get(longKey); !ok {
+				if bouncer.allow(longKey) {
+					cache.Set(longKey, []byte(longVal), 0)
+				}
+				return true
+			} else {
+				if string(i.([]byte)) != longVal {
+					panic("key != value")
+				}
+			}
+
+			return false
+		}
 
 	case "freecache":
 
