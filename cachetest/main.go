@@ -102,7 +102,7 @@ func main() {
 			longVal := getLongerString(s, 1400)
 			if i, ok := cache.Get(longKey); !ok {
 				if bouncer.allow(longKey) {
-					cache.Set(longKey, []byte(longVal), 0)
+					cache.Set(longKey, []byte(longVal), 1)
 				}
 				return true
 			} else {
