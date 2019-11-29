@@ -130,11 +130,6 @@ func SimpsonsComposite(start float64, end float64, steps int, fp func(float64) f
 func Simpsons38Composite(start float64, end float64, steps int, fp func(float64) float64) float64 {
 
 	steps *= 3
-	rem := steps % 3
-	if rem != 0 {
-		steps += 3 - rem
-	}
-
 	sections := steps / 3
 
 	h := (end - start) / float64(steps)
