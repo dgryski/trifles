@@ -31,3 +31,12 @@ func BenchmarkRegex(b *testing.B) {
 		}
 	}
 }
+
+func BenchmarkFSM(b *testing.B) {
+	var hits int
+	for i := 0; i < b.N; i++ {
+		if fsm_main(data) != -1 {
+			hits++
+		}
+	}
+}
