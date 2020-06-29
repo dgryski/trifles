@@ -11,7 +11,7 @@ import (
 func main() {
 	net := []string{"fsh", "catfish", "dogo", "fiiish"}
 	for _, caught := range net {
-		if fishfsm.Match([]byte(caught)) != -1 {
+		if fishfsm.Match(caught) != -1 {
 			fmt.Println("caught a fish: ", caught)
 		}
 	}

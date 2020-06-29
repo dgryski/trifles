@@ -1,6 +1,6 @@
 package fishfsm
 
-func Match(data []byte) int {
+func Match(data string) int {
 	var idx = ^uint(0)
 
 l0:
