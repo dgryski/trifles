@@ -9,12 +9,12 @@ var Sink bool
 
 func BenchmarkNaive(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		Sink = Sink || naive(dataA, dataB)
+		Sink = naive(dataA, dataB)
 	}
 }
 
 func BenchmarkUnrollXor(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		Sink = Sink || unrollxor(dataA, dataB)
+		Sink = unrollxor(dataA, dataB)
 	}
 }
