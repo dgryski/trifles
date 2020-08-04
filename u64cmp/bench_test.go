@@ -18,3 +18,9 @@ func BenchmarkUnrollXor(b *testing.B) {
 		Sink = unrollxor(dataA, dataB)
 	}
 }
+
+func BenchmarkBytesEqual(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		Sink = bytesEq(dataA, dataB)
+	}
+}
