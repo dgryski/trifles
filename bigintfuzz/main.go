@@ -48,7 +48,7 @@ func main() {
 		bigintAssignString(&ca, a.String())
 		bigintAssignString(&cb, b.String())
 
-		switch rnd.Intn(3) {
+		switch rnd.Intn(6) {
 
 		case 0:
 			bigintAdd(&ca, &cb)
