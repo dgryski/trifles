@@ -22,11 +22,12 @@ import (
 
 func main() {
 
-	var ca, cb C.bigint
 	var a, b, c big.Int
 
-	bigintInit(&ca)
-	bigintInit(&cb)
+	ca := bigintCreate();
+	cb := bigintCreate();
+	cc := bigintCreate();
+
 
 	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
 
@@ -43,16 +44,14 @@ func main() {
 		n = new(big.Int).Lsh(big.NewInt(1), uint(nsize))
 		b.Rand(rnd, n)
 
-		long := int32(rnd.Uint32())
+		ca = bigintAssignString(ca, a.String())
+		cb = bigintAssignString(cb, b.String())
 
-		bigintAssignString(&ca, a.String())
-		bigintAssignString(&cb, b.String())
-
-		switch rnd.Intn(6) {
+		switch rnd.Intn(3) {
 
 		case 0:
-			bigintAdd(&ca, &cb)
-			s := bigintFormat(&ca)
+			bigintAdd(ca, cb, cc)
+			s := bigintFormat(cc)
 
 			c.Add(&a, &b)
 			if cstr := (&c).String(); s != cstr {
@@ -60,7 +59,7 @@ func main() {
 			}
 
 		case 1:
-			r := bigintSub(&ca, &cb)
+			r := bigintSub(ca, cb, cc)
 			s := bigintFormat(r)
 
 			c.Sub(&a, &b)
@@ -69,42 +68,12 @@ func main() {
 			}
 
 		case 2:
-			r := bigintMul(&ca, &cb)
+			r := bigintMul(ca, cb, cc)
 			s := bigintFormat(r)
 
 			c.Mul(&a, &b)
 			if cstr := (&c).String(); s != cstr {
 				log("*", &a, &b, &c, s)
-			}
-
-		case 3:
-			r := bigintAddInt(&ca, long)
-			s := bigintFormat(r)
-
-			b.SetInt64(int64(long))
-			c.Add(&a, &b)
-			if cstr := (&c).String(); s != cstr {
-				log("l+", &a, &b, &c, s)
-			}
-
-		case 4:
-			r := bigintSubInt(&ca, long)
-			s := bigintFormat(r)
-
-			b.SetInt64(int64(long))
-			c.Sub(&a, &b)
-			if cstr := (&c).String(); s != cstr {
-				log("l-", &a, &b, &c, s)
-			}
-
-		case 5:
-			r := bigintMulInt(&ca, long)
-			s := bigintFormat(r)
-
-			b.SetInt64(int64(long))
-			c.Mul(&a, &b)
-			if cstr := (&c).String(); s != cstr {
-				log("l*", &a, &b, &c, s)
 			}
 		}
 	}
@@ -140,38 +109,26 @@ func log(op string, a, b, c *big.Int, s string) {
 	os.Exit(1)
 }
 
-func bigintInit(a *C.bigint) {
-	C.bigint_init(a)
+func bigintCreate() *C.bigint {
+	return C.bigint_create()
 }
 
-func bigintAssignString(a *C.bigint, s string) {
+func bigintAssignString(a *C.bigint, s string) *C.bigint {
 	cs := C.CString(s)
 	defer C.free(unsafe.Pointer(cs))
-	C.bigint_assign_string(a, cs, 10)
+	return C.bigint_assign_string(a, cs)
 }
 
-func bigintAdd(a, b *C.bigint) *C.bigint {
-	return C.bigint_add_bigint(a, b)
+func bigintAdd(a, b, c *C.bigint) *C.bigint {
+	return C.bigint_add(a, b, c)
 }
 
-func bigintAddInt(a *C.bigint, b int32) *C.bigint {
-	return C.bigint_add_integer(a, C.long(b))
+func bigintSub(a, b, c *C.bigint) *C.bigint {
+	return C.bigint_sub(a, b, c)
 }
 
-func bigintSub(a, b *C.bigint) *C.bigint {
-	return C.bigint_sub_bigint(a, b)
-}
-
-func bigintSubInt(a *C.bigint, b int32) *C.bigint {
-	return C.bigint_sub_integer(a, C.long(b))
-}
-
-func bigintMul(a, b *C.bigint) *C.bigint {
-	return C.bigint_mul_bigint(a, b)
-}
-
-func bigintMulInt(a *C.bigint, b int32) *C.bigint {
-	return C.bigint_mul_integer(a, C.long(b))
+func bigintMul(a, b, c *C.bigint) *C.bigint {
+	return C.bigint_mul(a, b, c)
 }
 
 func bigintFormat(a *C.bigint) string {
