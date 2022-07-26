@@ -64,7 +64,7 @@ func (op i32Op) eval(args []Node) int32 {
 	case i32Const:
 		return args[0].i32
 	case i32Mul:
-		return args[0].i32 * args[0].i32
+		return args[0].i32 * args[1].i32
 	case i32Or:
 		return args[0].i32 | args[1].i32
 	case i32RemS:
@@ -159,10 +159,13 @@ func (g *generator) i32() Node {
 
 func main() {
 	rand.Seed(time.Now().UnixNano())
-	fmt.Println(`(module (func (export "_start")  (result i32)`)
+	fmt.Println(`(module (func (export "_start")`)
 	fuel := rand.Intn(100)
 	g := generator{fuel: fuel}
 	n := g.i32()
 	n.Write(os.Stdout)
+	fmt.Println("i32.const " + strconv.FormatInt(int64(n.i32), 10))
+	fmt.Println("i32.ne")
+	fmt.Println("(if (then unreachable))")
 	fmt.Println(") )")
 }
