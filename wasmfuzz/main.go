@@ -11,53 +11,52 @@ import (
 )
 
 // TODO:
-// - rename i32Op cdodes to something else, because they're not just i32 ops anymore
 // - add more optocdes: shifts, rotates, bitops, ...
 // - add float ops
 // - add i64 ops
 // - add opcodes for tables/...
 // - add simd opcodes
 
-type i32Op int
+type opcode int
 
 const (
-	i32Add = iota
-	i32And
-	i32Call
-	i32Const
-	i32LocalGet
-	i32Mul
-	i32Or
-	i32RemS
-	i32Sub
-	i32Xor
+	opI32Add = iota
+	opI32And
+	opCall
+	opI32Const
+	opLocalGet
+	opI32Mul
+	opI32Or
+	opI32RemS
+	opI32Sub
+	opI32Xor
 
-	i32MAXOPCODE
+	opMAXOPCODE
 )
 
-func (op i32Op) String() string {
+func (op opcode) String() string {
 	switch op {
-	case i32Add:
+	case opI32Add:
 		return "i32.add"
-	case i32And:
+	case opI32And:
 		return "i32.and"
-	case i32Call:
+	case opCall:
 		return "call"
-	case i32Const:
+	case opI32Const:
 		return "i32.const"
-	case i32LocalGet:
+	case opLocalGet:
 		return "local.get"
-	case i32Mul:
+	case opI32Mul:
 		return "i32.mul"
-	case i32Or:
+	case opI32Or:
 		return "i32.or"
-	case i32RemS:
+	case opI32RemS:
 		return "i32.rem_s"
-	case i32Sub:
+	case opI32Sub:
 		return "i32.sub"
-	case i32Xor:
+	case opI32Xor:
 		return "i32.xor"
-	case i32MAXOPCODE:
+	case opMAXOPCODE:
 		return "i32MAXOPCODE"
 	}
 
@@ -65,7 +64,7 @@ func (op i32Op) String() string {
 }
 
 type Node struct {
-	op   i32Op
+	op   opcode
 	args []Node
 	i32  int32
 }
@@ -75,7 +74,7 @@ func (n *Node) Write(w io.Writer) {
 		arg.Write(w)
 	}
 
-	if n.op == i32Const || n.op == i32LocalGet || n.op == i32Call {
+	if n.op == opI32Const || n.op == opLocalGet || n.op == opCall {
 		io.WriteString(w, n.op.String()+" "+strconv.FormatInt(int64(n.i32), 10)+"\n")
 		return
 	}
@@ -83,8 +82,8 @@ func (n *Node) Write(w io.Writer) {
 	io.WriteString(w, n.op.String()+"\n")
 }
 
-func (op i32Op) arity() int {
-	if op == i32Const {
+func (op opcode) arity() int {
+	if op == opI32Const {
 		return 0
 	}
 
@@ -110,14 +109,14 @@ func (g *generator) i32(f *Func) Node {
 		// sometimes generate a local.get
 		if rand.Intn(3) == 0 && f.nargs > 0 {
 			return Node{
-				op:  i32LocalGet,
+				op:  opLocalGet,
 				i32: int32(rand.Intn(f.nargs)),
 			}
 		}
 
 		// generate a regular i32.const
 		n := Node{
-			op:  i32Const,
+			op:  opI32Const,
 			i32: rand.Int31(), // TODO(dgryski): generate edge values some of the time
 		}
 
@@ -133,9 +132,9 @@ func (g *generator) i32(f *Func) Node {
 
 	g.fuel--
 
-	op := i32Op(rand.Intn(i32MAXOPCODE))
+	op := opcode(rand.Intn(opMAXOPCODE))
 	switch op {
-	case i32Add, i32And, i32Mul, i32Or, i32RemS, i32Sub, i32Xor:
+	case opI32Add, opI32And, opI32Mul, opI32Or, opI32RemS, opI32Sub, opI32Xor:
 		var args []Node
 		nargs := op.arity()
 		for i := 0; i < nargs; i++ {
@@ -150,7 +149,7 @@ func (g *generator) i32(f *Func) Node {
 			args: args,
 		}
 
-	case i32Call:
+	case opCall:
 		if rand.Intn(3) == 0 {
 			idx := int32(rand.Intn(len(g.funcs)))
 			if idx != f.idx {
@@ -161,7 +160,7 @@ func (g *generator) i32(f *Func) Node {
 					args = append(args, g.i32(f))
 				}
 				n := Node{
-					op:   i32Call,
+					op:   opCall,
 					args: args,
 					i32:  idx,
 				}
@@ -190,11 +189,11 @@ func (g *generator) i32(f *Func) Node {
 			i32:  newf.idx,
 		}
 
-	case i32LocalGet:
+	case opLocalGet:
 		if f.nargs == 0 {
 			// no arguments to current function; generate a random const instead
 			return Node{
-				op:  i32Const,
+				op:  opI32Const,
 				i32: rand.Int31(), // TODO(dgryski): generate edge values some of the time
 			}
 		}
@@ -203,9 +202,9 @@ func (g *generator) i32(f *Func) Node {
 			i32: int32(rand.Intn(f.nargs)),
 		}
 
-	case i32Const:
+	case opI32Const:
 		return Node{
-			op:  i32Const,
+			op:  opI32Const,
 			i32: rand.Int31(), // TODO(dgryski): select edge case sometimes
 		}
 	}
