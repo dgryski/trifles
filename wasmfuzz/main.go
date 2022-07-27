@@ -10,6 +10,14 @@ import (
 	"time"
 )
 
+// TODO:
+// - rename i32Op cdodes to something else, because they're not just i32 ops anymore
+// - add more optocdes: shifts, rotates, bitops, ...
+// - add float ops
+// - add i64 ops
+// - add opcodes for tables/...
+// - add simd opcodes
+
 type i32Op int
 
 const (
@@ -118,6 +126,10 @@ func (g *generator) i32(f *Func) Node {
 		}
 		return n
 	}
+
+	// TODO:dgryski add semantic preserving operations here:
+	// call an identity function, + 0, * 1,  xor 0, xor N / xor N, and -1,
+	// if 0 unreachable else X, if 1 X else unreachable ; while(1) X break;
 
 	g.fuel--
 
