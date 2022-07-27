@@ -11,7 +11,6 @@ import (
 )
 
 // TODO:
-// - add more optocdes: shifts, rotates, bitops, ...
 // - add float ops
 // - add i64 ops
 // - add opcodes for tables/...
@@ -22,14 +21,23 @@ type opcode int
 const (
 	opI32Add = iota
 	opI32And
-	opCall
+	opI32Clz
 	opI32Const
-	opLocalGet
+	opI32Ctz
 	opI32Mul
+	opI32Popcnt
 	opI32Or
 	opI32RemS
+	opI32Rotl
+	opI32Rotr
+	opI32Shl
+	opI32ShrS
+	opI32ShrU
 	opI32Sub
 	opI32Xor
+
+	opLocalGet
+	opCall
 
 	opMAXOPCODE
 )
@@ -40,22 +48,40 @@ func (op opcode) String() string {
 		return "i32.add"
 	case opI32And:
 		return "i32.and"
-	case opCall:
-		return "call"
+	case opI32Clz:
+		return "i32.clz"
 	case opI32Const:
 		return "i32.const"
-	case opLocalGet:
-		return "local.get"
+	case opI32Ctz:
+		return "i32.ctz"
 	case opI32Mul:
 		return "i32.mul"
+	case opI32Popcnt:
+		return "i32.popcnt"
 	case opI32Or:
 		return "i32.or"
 	case opI32RemS:
 		return "i32.rem_s"
+	case opI32Rotl:
+		return "i32.rotl"
+	case opI32Rotr:
+		return "i32.rotr"
+	case opI32Shl:
+		return "i32.shl"
+	case opI32ShrS:
+		return "i32.shr_s"
+	case opI32ShrU:
+		return "i32.shr_u"
 	case opI32Sub:
 		return "i32.sub"
 	case opI32Xor:
 		return "i32.xor"
+
+	case opCall:
+		return "call"
+	case opLocalGet:
+		return "local.get"
+
 	case opMAXOPCODE:
 		return "i32MAXOPCODE"
 	}
@@ -85,6 +111,10 @@ func (n *Node) Write(w io.Writer) {
 func (op opcode) arity() int {
 	if op == opI32Const {
 		return 0
+	}
+
+	if op == opI32Clz || op == opI32Ctz || op == opI32Popcnt {
+		return 1
 	}
 
 	return 2
@@ -134,20 +164,6 @@ func (g *generator) i32(f *Func) Node {
 
 	op := opcode(rand.Intn(opMAXOPCODE))
 	switch op {
-	case opI32Add, opI32And, opI32Mul, opI32Or, opI32RemS, opI32Sub, opI32Xor:
-		var args []Node
-		nargs := op.arity()
-		for i := 0; i < nargs; i++ {
-			args = append(args, g.i32(f))
-		}
-
-		// ideally we'd be able to avoid divide-by-zero here, but ditching it for now;
-		// too hard to statically determine now that we've added function calls
-
-		return Node{
-			op:   op,
-			args: args,
-		}
 
 	case opCall:
 		if rand.Intn(3) == 0 {
@@ -206,6 +222,20 @@ func (g *generator) i32(f *Func) Node {
 		return Node{
 			op:  opI32Const,
 			i32: rand.Int31(), // TODO(dgryski): select edge case sometimes
+		}
+	default:
+		var args []Node
+		nargs := op.arity()
+		for i := 0; i < nargs; i++ {
+			args = append(args, g.i32(f))
+		}
+
+		// ideally we'd be able to avoid divide-by-zero here, but ditching it for now;
+		// too hard to statically determine now that we've added function calls
+
+		return Node{
+			op:   op,
+			args: args,
 		}
 	}
 
