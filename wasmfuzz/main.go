@@ -37,7 +37,9 @@ const (
 	opI32Xor
 
 	opLocalGet
+	opLocalSet
 	opCall
+	opSelect
 
 	opMAXOPCODE
 )
@@ -76,11 +78,14 @@ func (op opcode) String() string {
 		return "i32.sub"
 	case opI32Xor:
 		return "i32.xor"
-
+	case opSelect:
+		return "select"
 	case opCall:
 		return "call"
 	case opLocalGet:
 		return "local.get"
+	case opLocalSet:
+		return "local.set"
 
 	case opMAXOPCODE:
 		return "i32MAXOPCODE"
@@ -96,11 +101,12 @@ type Node struct {
 }
 
 func (n *Node) Write(w io.Writer) {
+
 	for _, arg := range n.args {
 		arg.Write(w)
 	}
 
-	if n.op == opI32Const || n.op == opLocalGet || n.op == opCall {
+	if n.op == opI32Const || n.op == opLocalGet || n.op == opLocalSet || n.op == opCall {
 		io.WriteString(w, n.op.String()+" "+strconv.FormatInt(int64(n.i32), 10)+"\n")
 		return
 	}
@@ -117,14 +123,19 @@ func (op opcode) arity() int {
 		return 1
 	}
 
+	if op == opSelect {
+		return 3
+	}
+
 	return 2
 }
 
 type Func struct {
-	name  string
-	nargs int
-	body  Node
-	idx   int32
+	name    string
+	nargs   int
+	nlocals int
+	body    Node
+	idx     int32
 }
 
 type generator struct {
@@ -137,10 +148,10 @@ func (g *generator) i32(f *Func) Node {
 	if g.fuel == 0 || rand.Intn(5) == 0 {
 
 		// sometimes generate a local.get
-		if rand.Intn(3) == 0 && f.nargs > 0 {
+		if rand.Intn(3) == 0 && (f.nargs+f.nlocals) > 0 {
 			return Node{
 				op:  opLocalGet,
-				i32: int32(rand.Intn(f.nargs)),
+				i32: int32(rand.Intn(f.nargs + f.nlocals)),
 			}
 		}
 
@@ -187,8 +198,10 @@ func (g *generator) i32(f *Func) Node {
 
 		// generate a new function instead
 		nargs := rand.Intn(16)
+		nlocals := rand.Intn(16)
 		newf := Func{
-			nargs: nargs,
+			nargs:   nargs,
+			nlocals: nlocals,
 		}
 		newf.body = g.i32(&newf)
 		g.funcs = append(g.funcs, newf)
@@ -215,7 +228,23 @@ func (g *generator) i32(f *Func) Node {
 		}
 		return Node{
 			op:  op,
-			i32: int32(rand.Intn(f.nargs)),
+			i32: int32(rand.Intn(f.nargs + f.nlocals)),
+		}
+
+	case opLocalSet:
+		if (f.nargs + f.nlocals) == 0 {
+			// no arguments to current function; generate a random const instead
+			return Node{
+				op:  opI32Const,
+				i32: rand.Int31(), // TODO(dgryski): generate edge values some of the time
+			}
+		}
+
+		// generate two arguments; one for the set, one to leave on the stack as the generated i32
+		return Node{
+			op:   op,
+			args: []Node{g.i32(f), g.i32(f)},
+			i32:  int32(rand.Intn(f.nargs + f.nlocals)),
 		}
 
 	case opI32Const:
@@ -254,6 +283,9 @@ func (g *generator) Write(w io.Writer) {
 			io.WriteString(w, "(param i32) ")
 		}
 		io.WriteString(w, "(result i32) ")
+		for i := 0; i < f.nlocals; i++ {
+			io.WriteString(w, "(local i32) ")
+		}
 		io.WriteString(w, "\n")
 		f.body.Write(w)
 		io.WriteString(w, ")\n")
