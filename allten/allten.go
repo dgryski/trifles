@@ -131,7 +131,7 @@ func solve(numbers []int, target float64) expr {
 			}
 		}
 
-		// last nunmber
+		// last number
 		n, in = randelt(in)
 		ops = append(ops, operation{n, opPush})
 		nnum++
