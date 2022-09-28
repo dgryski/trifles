@@ -170,7 +170,7 @@ func main() {
 		numbers = append(numbers, int(n))
 	}
 
-	targets := []int{1, 2, 3, 4, 5, 6, 7, 8, 9}
+	targets := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 	if *target != 0 {
 		targets = []int{*target}
 	}
