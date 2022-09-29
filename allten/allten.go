@@ -175,16 +175,17 @@ func main() {
 		targets = []int{*target}
 	}
 
-target:
 	for _, t := range targets {
+		var solnFound bool
 		for i := 0; i < *solns; i++ {
 			ops := solve(numbers, float64(t))
 			if ops != nil {
+				solnFound = true
 				fmt.Println(ops, "=", t)
-			} else {
-				fmt.Println(";", t, ": no solution found")
-				continue target
 			}
+		}
+		if !solnFound {
+			fmt.Println(";", t, ": no solution found")
 		}
 	}
 }
