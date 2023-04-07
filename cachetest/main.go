@@ -342,8 +342,15 @@ func main() {
 		}
 
 	case "slru":
-
-		cache := slru.New(int(float64(*n)*0.2), int(float64(*n)*0.8))
+		o := *n / 5
+		if o == 0 {
+			o = 1
+		}
+		t := *n - o
+		if t == 0 {
+			t = 1
+		}
+		cache := slru.New(o, t)
 
 		f = func(s string) bool {
 			if i := cache.Get(s); i == nil {
