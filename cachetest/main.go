@@ -285,7 +285,7 @@ func main() {
 
 	case "tinylfu":
 
-		cache := tinylfu.New(*n, *n*10)
+		cache := tinylfu.New[string](*n, *n*10)
 
 		f = func(s string) bool {
 			if v, ok := cache.Get(s); !ok {
@@ -294,7 +294,7 @@ func main() {
 				}
 				return true
 			} else {
-				if v.(string) != s {
+				if v != s {
 					panic("key != value")
 				}
 			}
