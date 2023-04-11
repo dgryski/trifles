@@ -1,6 +1,7 @@
 package main
 
-func matchSSHD(data []byte) bool {
+//go:nobounds
+func MatchRagel(data []byte) bool {
 
 %% machine scanner;
 %% write data;
