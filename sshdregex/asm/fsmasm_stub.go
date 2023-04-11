@@ -3,4 +3,4 @@
 package asm
 
 //go:noescape
-func MatchASM(data []byte) int
+func Match(data []byte) int

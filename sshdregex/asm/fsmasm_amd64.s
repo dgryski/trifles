@@ -1,9 +1,7 @@
-//go:build amd64 && !purego
-
 #include "textflag.h"
 
-// func MatchASM(data []byte) int
-TEXT    ·MatchASM(SB), NOSPLIT, $0-32
+// func Match(data []byte) int
+TEXT    ·Match(SB), NOSPLIT, $0-32
 	MOVQ data_base+0(FP), DI
 	MOVQ data_len+8(FP), SI
 	ADDQ   DI, SI
@@ -215,14 +213,26 @@ state_12:
 	MOVBLZX (DI), DX
 	ADDQ    $1, DI
 
-	CMPL    DX, $0x09
-	JE    state_12
+	CMPL    DX, $0x08
+	JBE   state_0
+
+	CMPL    DX, $0x0d
+	JBE   state_12
+
+	CMPL    DX, $0x1f
+	JBE   state_0
 
 	CMPL    DX, $0x20
 	JE    state_12
 
+	CMPL    DX, $0x45
+	JBE   state_0
+
 	CMPL    DX, $0x46
 	JE    state_13
+
+	CMPL    DX, $0x72
+	JBE   state_0
 
 	CMPL    DX, $0x73
 	JE    state_1
@@ -511,14 +521,26 @@ state_30:
 	MOVBLZX (DI), DX
 	ADDQ    $1, DI
 
-	CMPL    DX, $0x09
-	JE    state_30
+	CMPL    DX, $0x08
+	JBE   state_18
+
+	CMPL    DX, $0x0d
+	JBE   state_30
+
+	CMPL    DX, $0x1f
+	JBE   state_18
 
 	CMPL    DX, $0x20
 	JE    state_30
 
+	CMPL    DX, $0x45
+	JBE   state_18
+
 	CMPL    DX, $0x46
 	JE    state_31
+
+	CMPL    DX, $0x72
+	JBE   state_18
 
 	CMPL    DX, $0x73
 	JE    state_19

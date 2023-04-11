@@ -2,6 +2,6 @@
 
 package asm
 
-func MatchASM(data []byte) int {
+func Match(data []byte) int {
 	return 0
 }

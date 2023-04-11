@@ -1,6 +1,5 @@
 package main
 
-//go:nobounds
 func Match(data []byte) int {
 	var idx = ^uint(0)
 
@@ -13,7 +12,7 @@ l0:
 		goto l0
 	}
 
-l1:
+l1: // e.g. "s"
 	if idx++; idx >= uint(len(data)) {
 		return -1
 	}
@@ -22,7 +21,7 @@ l1:
 		goto l0
 	}
 
-l2:
+l2: // e.g. "ss"
 	if idx++; idx >= uint(len(data)) {
 		return -1
 	}
@@ -39,7 +38,7 @@ l2:
 		goto l0
 	}
 
-l3:
+l3: // e.g. "ssh"
 	if idx++; idx >= uint(len(data)) {
 		return -1
 	}
@@ -56,7 +55,7 @@ l3:
 		goto l0
 	}
 
-l4:
+l4: // e.g. "sshd"
 	if idx++; idx >= uint(len(data)) {
 		return -1
 	}
@@ -73,7 +72,7 @@ l4:
 		goto l0
 	}
 
-l5:
+l5: // e.g. "sshd["
 	if idx++; idx >= uint(len(data)) {
 		return -1
 	}
@@ -98,7 +97,7 @@ l5:
 		goto l0
 	}
 
-l6:
+l6: // e.g. "sshd[0"
 	if idx++; idx >= uint(len(data)) {
 		return -1
 	}
@@ -123,7 +122,7 @@ l6:
 		goto l0
 	}
 
-l7:
+l7: // e.g. "sshd[00"
 	if idx++; idx >= uint(len(data)) {
 		return -1
 	}
@@ -148,7 +147,7 @@ l7:
 		goto l0
 	}
 
-l8:
+l8: // e.g. "sshd[000"
 	if idx++; idx >= uint(len(data)) {
 		return -1
 	}
@@ -173,7 +172,7 @@ l8:
 		goto l0
 	}
 
-l9:
+l9: // e.g. "sshd[0000"
 	if idx++; idx >= uint(len(data)) {
 		return -1
 	}
@@ -198,7 +197,7 @@ l9:
 		goto l0
 	}
 
-l10:
+l10: // e.g. "sshd[00000"
 	if idx++; idx >= uint(len(data)) {
 		return -1
 	}
@@ -215,7 +214,7 @@ l10:
 		goto l0
 	}
 
-l11:
+l11: // e.g. "sshd[00000]"
 	if idx++; idx >= uint(len(data)) {
 		return -1
 	}
@@ -232,21 +231,37 @@ l11:
 		goto l0
 	}
 
-l12:
+l12: // e.g. "sshd[00000]:"
 	if idx++; idx >= uint(len(data)) {
 		return -1
 	}
 
-	if data[idx] == '\t' {
+	if data[idx] <= '\b' {
+		goto l0
+	}
+
+	if data[idx] <= '\r' {
 		goto l12
+	}
+
+	if data[idx] <= '\x1f' {
+		goto l0
 	}
 
 	if data[idx] == ' ' {
 		goto l12
 	}
 
+	if data[idx] <= 'E' {
+		goto l0
+	}
+
 	if data[idx] == 'F' {
 		goto l13
+	}
+
+	if data[idx] <= 'r' {
+		goto l0
 	}
 
 	if data[idx] == 's' {
@@ -257,7 +272,7 @@ l12:
 		goto l0
 	}
 
-l13:
+l13: // e.g. "sshd[00000]:F"
 	if idx++; idx >= uint(len(data)) {
 		return -1
 	}
@@ -274,7 +289,7 @@ l13:
 		goto l0
 	}
 
-l14:
+l14: // e.g. "sshd[00000]:Fa"
 	if idx++; idx >= uint(len(data)) {
 		return -1
 	}
@@ -291,7 +306,7 @@ l14:
 		goto l0
 	}
 
-l15:
+l15: // e.g. "sshd[00000]:Fai"
 	if idx++; idx >= uint(len(data)) {
 		return -1
 	}
@@ -308,7 +323,7 @@ l15:
 		goto l0
 	}
 
-l16:
+l16: // e.g. "sshd[00000]:Fail"
 	if idx++; idx >= uint(len(data)) {
 		return -1
 	}
@@ -325,7 +340,7 @@ l16:
 		goto l0
 	}
 
-l17:
+l17: // e.g. "sshd[00000]:Faile"
 	if idx++; idx >= uint(len(data)) {
 		return -1
 	}
@@ -342,7 +357,7 @@ l17:
 		goto l0
 	}
 
-l18:
+l18: // e.g. "sshd[00000]:Failed"
 	if idx++; idx >= uint(len(data)) {
 		return 18
 	}
@@ -351,7 +366,7 @@ l18:
 		goto l18
 	}
 
-l19:
+l19: // e.g. "sshd[00000]:Faileds"
 	if idx++; idx >= uint(len(data)) {
 		return 19
 	}
@@ -360,7 +375,7 @@ l19:
 		goto l18
 	}
 
-l20:
+l20: // e.g. "sshd[00000]:Failedss"
 	if idx++; idx >= uint(len(data)) {
 		return 20
 	}
@@ -377,7 +392,7 @@ l20:
 		goto l18
 	}
 
-l21:
+l21: // e.g. "sshd[00000]:Failedssh"
 	if idx++; idx >= uint(len(data)) {
 		return 21
 	}
@@ -394,7 +409,7 @@ l21:
 		goto l18
 	}
 
-l22:
+l22: // e.g. "sshd[00000]:Failedsshd"
 	if idx++; idx >= uint(len(data)) {
 		return 22
 	}
@@ -411,7 +426,7 @@ l22:
 		goto l18
 	}
 
-l23:
+l23: // e.g. "sshd[00000]:Failedsshd["
 	if idx++; idx >= uint(len(data)) {
 		return 23
 	}
@@ -436,7 +451,7 @@ l23:
 		goto l18
 	}
 
-l24:
+l24: // e.g. "sshd[00000]:Failedsshd[0"
 	if idx++; idx >= uint(len(data)) {
 		return 24
 	}
@@ -461,7 +476,7 @@ l24:
 		goto l18
 	}
 
-l25:
+l25: // e.g. "sshd[00000]:Failedsshd[00"
 	if idx++; idx >= uint(len(data)) {
 		return 25
 	}
@@ -486,7 +501,7 @@ l25:
 		goto l18
 	}
 
-l26:
+l26: // e.g. "sshd[00000]:Failedsshd[000"
 	if idx++; idx >= uint(len(data)) {
 		return 26
 	}
@@ -511,7 +526,7 @@ l26:
 		goto l18
 	}
 
-l27:
+l27: // e.g. "sshd[00000]:Failedsshd[0000"
 	if idx++; idx >= uint(len(data)) {
 		return 27
 	}
@@ -536,7 +551,7 @@ l27:
 		goto l18
 	}
 
-l28:
+l28: // e.g. "sshd[00000]:Failedsshd[00000"
 	if idx++; idx >= uint(len(data)) {
 		return 28
 	}
@@ -553,7 +568,7 @@ l28:
 		goto l18
 	}
 
-l29:
+l29: // e.g. "sshd[00000]:Failedsshd[00000]"
 	if idx++; idx >= uint(len(data)) {
 		return 29
 	}
@@ -570,21 +585,37 @@ l29:
 		goto l18
 	}
 
-l30:
+l30: // e.g. "sshd[00000]:Failedsshd[00000]:"
 	if idx++; idx >= uint(len(data)) {
 		return 30
 	}
 
-	if data[idx] == '\t' {
+	if data[idx] <= '\b' {
+		goto l18
+	}
+
+	if data[idx] <= '\r' {
 		goto l30
+	}
+
+	if data[idx] <= '\x1f' {
+		goto l18
 	}
 
 	if data[idx] == ' ' {
 		goto l30
 	}
 
+	if data[idx] <= 'E' {
+		goto l18
+	}
+
 	if data[idx] == 'F' {
 		goto l31
+	}
+
+	if data[idx] <= 'r' {
+		goto l18
 	}
 
 	if data[idx] == 's' {
@@ -595,7 +626,7 @@ l30:
 		goto l18
 	}
 
-l31:
+l31: // e.g. "sshd[00000]:Failedsshd[00000]:F"
 	if idx++; idx >= uint(len(data)) {
 		return 31
 	}
@@ -612,7 +643,7 @@ l31:
 		goto l18
 	}
 
-l32:
+l32: // e.g. "sshd[00000]:Failedsshd[00000]:Fa"
 	if idx++; idx >= uint(len(data)) {
 		return 32
 	}
@@ -629,7 +660,7 @@ l32:
 		goto l18
 	}
 
-l33:
+l33: // e.g. "sshd[00000]:Failedsshd[00000]:Fai"
 	if idx++; idx >= uint(len(data)) {
 		return 33
 	}
@@ -646,7 +677,7 @@ l33:
 		goto l18
 	}
 
-l34:
+l34: // e.g. "sshd[00000]:Failedsshd[00000]:Fail"
 	if idx++; idx >= uint(len(data)) {
 		return 34
 	}

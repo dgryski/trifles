@@ -69,7 +69,7 @@ func BenchmarkMatchASM(b *testing.B) {
 	var hits int
 
 	for i := 0; i < b.N; i++ {
-		if asm.MatchASM(data) != -1 {
+		if asm.Match(data) != -1 {
 			hits++
 		}
 	}

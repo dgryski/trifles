@@ -14,13 +14,13 @@ l0:
 	c = (unsigned char) *p++;
 	if (c != 's') goto l0;
 
-l1:
+l1: /* e.g. "s" */
 	if (p == e) return -1;
 
 	c = (unsigned char) *p++;
 	if (c != 's') goto l0;
 
-l2:
+l2: /* e.g. "ss" */
 	if (p == e) return -1;
 
 	c = (unsigned char) *p++;
@@ -28,7 +28,7 @@ l2:
 	if (c == 's') goto l2;
 	goto l0;
 
-l3:
+l3: /* e.g. "ssh" */
 	if (p == e) return -1;
 
 	c = (unsigned char) *p++;
@@ -36,7 +36,7 @@ l3:
 	if (c == 's') goto l1;
 	goto l0;
 
-l4:
+l4: /* e.g. "sshd" */
 	if (p == e) return -1;
 
 	c = (unsigned char) *p++;
@@ -44,7 +44,7 @@ l4:
 	if (c == 's') goto l1;
 	goto l0;
 
-l5:
+l5: /* e.g. "sshd[" */
 	if (p == e) return -1;
 
 	c = (unsigned char) *p++;
@@ -54,7 +54,7 @@ l5:
 	if (c == 's') goto l1;
 	goto l0;
 
-l6:
+l6: /* e.g. "sshd[0" */
 	if (p == e) return -1;
 
 	c = (unsigned char) *p++;
@@ -64,7 +64,7 @@ l6:
 	if (c == 's') goto l1;
 	goto l0;
 
-l7:
+l7: /* e.g. "sshd[00" */
 	if (p == e) return -1;
 
 	c = (unsigned char) *p++;
@@ -74,7 +74,7 @@ l7:
 	if (c == 's') goto l1;
 	goto l0;
 
-l8:
+l8: /* e.g. "sshd[000" */
 	if (p == e) return -1;
 
 	c = (unsigned char) *p++;
@@ -84,7 +84,7 @@ l8:
 	if (c == 's') goto l1;
 	goto l0;
 
-l9:
+l9: /* e.g. "sshd[0000" */
 	if (p == e) return -1;
 
 	c = (unsigned char) *p++;
@@ -94,7 +94,7 @@ l9:
 	if (c == 's') goto l1;
 	goto l0;
 
-l10:
+l10: /* e.g. "sshd[00000" */
 	if (p == e) return -1;
 
 	c = (unsigned char) *p++;
@@ -102,7 +102,7 @@ l10:
 	if (c == 's') goto l1;
 	goto l0;
 
-l11:
+l11: /* e.g. "sshd[00000]" */
 	if (p == e) return -1;
 
 	c = (unsigned char) *p++;
@@ -110,17 +110,21 @@ l11:
 	if (c == 's') goto l1;
 	goto l0;
 
-l12:
+l12: /* e.g. "sshd[00000]:" */
 	if (p == e) return -1;
 
 	c = (unsigned char) *p++;
-	if (c == '\t') goto l12;
+	if (c <= '\b') goto l0;
+	if (c <= '\r') goto l12;
+	if (c <= '\x1f') goto l0;
 	if (c == ' ') goto l12;
+	if (c <= 'E') goto l0;
 	if (c == 'F') goto l13;
+	if (c <= 'r') goto l0;
 	if (c == 's') goto l1;
 	goto l0;
 
-l13:
+l13: /* e.g. "sshd[00000]:F" */
 	if (p == e) return -1;
 
 	c = (unsigned char) *p++;
@@ -128,7 +132,7 @@ l13:
 	if (c == 's') goto l1;
 	goto l0;
 
-l14:
+l14: /* e.g. "sshd[00000]:Fa" */
 	if (p == e) return -1;
 
 	c = (unsigned char) *p++;
@@ -136,7 +140,7 @@ l14:
 	if (c == 's') goto l1;
 	goto l0;
 
-l15:
+l15: /* e.g. "sshd[00000]:Fai" */
 	if (p == e) return -1;
 
 	c = (unsigned char) *p++;
@@ -144,7 +148,7 @@ l15:
 	if (c == 's') goto l1;
 	goto l0;
 
-l16:
+l16: /* e.g. "sshd[00000]:Fail" */
 	if (p == e) return -1;
 
 	c = (unsigned char) *p++;
@@ -152,7 +156,7 @@ l16:
 	if (c == 's') goto l1;
 	goto l0;
 
-l17:
+l17: /* e.g. "sshd[00000]:Faile" */
 	if (p == e) return -1;
 
 	c = (unsigned char) *p++;
@@ -160,44 +164,44 @@ l17:
 	if (c == 's') goto l1;
 	goto l0;
 
-l18:
-	if (p == e) return 0x1; /* "sshd\[[0-9]{5}\]:[[:blank:]]*Failed" */
+l18: /* e.g. "sshd[00000]:Failed" */
+	if (p == e) return 0x1; /* "sshd\[\d{5}\]:\s*Failed" */
 
 	c = (unsigned char) *p++;
 	if (c != 's') goto l18;
 
-l19:
-	if (p == e) return 0x1; /* "sshd\[[0-9]{5}\]:[[:blank:]]*Failed" */
+l19: /* e.g. "sshd[00000]:Faileds" */
+	if (p == e) return 0x1; /* "sshd\[\d{5}\]:\s*Failed" */
 
 	c = (unsigned char) *p++;
 	if (c != 's') goto l18;
 
-l20:
-	if (p == e) return 0x1; /* "sshd\[[0-9]{5}\]:[[:blank:]]*Failed" */
+l20: /* e.g. "sshd[00000]:Failedss" */
+	if (p == e) return 0x1; /* "sshd\[\d{5}\]:\s*Failed" */
 
 	c = (unsigned char) *p++;
 	if (c == 'h') goto l21;
 	if (c == 's') goto l20;
 	goto l18;
 
-l21:
-	if (p == e) return 0x1; /* "sshd\[[0-9]{5}\]:[[:blank:]]*Failed" */
+l21: /* e.g. "sshd[00000]:Failedssh" */
+	if (p == e) return 0x1; /* "sshd\[\d{5}\]:\s*Failed" */
 
 	c = (unsigned char) *p++;
 	if (c == 'd') goto l22;
 	if (c == 's') goto l19;
 	goto l18;
 
-l22:
-	if (p == e) return 0x1; /* "sshd\[[0-9]{5}\]:[[:blank:]]*Failed" */
+l22: /* e.g. "sshd[00000]:Failedsshd" */
+	if (p == e) return 0x1; /* "sshd\[\d{5}\]:\s*Failed" */
 
 	c = (unsigned char) *p++;
 	if (c == '[') goto l23;
 	if (c == 's') goto l19;
 	goto l18;
 
-l23:
-	if (p == e) return 0x1; /* "sshd\[[0-9]{5}\]:[[:blank:]]*Failed" */
+l23: /* e.g. "sshd[00000]:Failedsshd[" */
+	if (p == e) return 0x1; /* "sshd\[\d{5}\]:\s*Failed" */
 
 	c = (unsigned char) *p++;
 	if (c <= '/') goto l18;
@@ -206,8 +210,8 @@ l23:
 	if (c == 's') goto l19;
 	goto l18;
 
-l24:
-	if (p == e) return 0x1; /* "sshd\[[0-9]{5}\]:[[:blank:]]*Failed" */
+l24: /* e.g. "sshd[00000]:Failedsshd[0" */
+	if (p == e) return 0x1; /* "sshd\[\d{5}\]:\s*Failed" */
 
 	c = (unsigned char) *p++;
 	if (c <= '/') goto l18;
@@ -216,8 +220,8 @@ l24:
 	if (c == 's') goto l19;
 	goto l18;
 
-l25:
-	if (p == e) return 0x1; /* "sshd\[[0-9]{5}\]:[[:blank:]]*Failed" */
+l25: /* e.g. "sshd[00000]:Failedsshd[00" */
+	if (p == e) return 0x1; /* "sshd\[\d{5}\]:\s*Failed" */
 
 	c = (unsigned char) *p++;
 	if (c <= '/') goto l18;
@@ -226,8 +230,8 @@ l25:
 	if (c == 's') goto l19;
 	goto l18;
 
-l26:
-	if (p == e) return 0x1; /* "sshd\[[0-9]{5}\]:[[:blank:]]*Failed" */
+l26: /* e.g. "sshd[00000]:Failedsshd[000" */
+	if (p == e) return 0x1; /* "sshd\[\d{5}\]:\s*Failed" */
 
 	c = (unsigned char) *p++;
 	if (c <= '/') goto l18;
@@ -236,8 +240,8 @@ l26:
 	if (c == 's') goto l19;
 	goto l18;
 
-l27:
-	if (p == e) return 0x1; /* "sshd\[[0-9]{5}\]:[[:blank:]]*Failed" */
+l27: /* e.g. "sshd[00000]:Failedsshd[0000" */
+	if (p == e) return 0x1; /* "sshd\[\d{5}\]:\s*Failed" */
 
 	c = (unsigned char) *p++;
 	if (c <= '/') goto l18;
@@ -246,58 +250,62 @@ l27:
 	if (c == 's') goto l19;
 	goto l18;
 
-l28:
-	if (p == e) return 0x1; /* "sshd\[[0-9]{5}\]:[[:blank:]]*Failed" */
+l28: /* e.g. "sshd[00000]:Failedsshd[00000" */
+	if (p == e) return 0x1; /* "sshd\[\d{5}\]:\s*Failed" */
 
 	c = (unsigned char) *p++;
 	if (c == ']') goto l29;
 	if (c == 's') goto l19;
 	goto l18;
 
-l29:
-	if (p == e) return 0x1; /* "sshd\[[0-9]{5}\]:[[:blank:]]*Failed" */
+l29: /* e.g. "sshd[00000]:Failedsshd[00000]" */
+	if (p == e) return 0x1; /* "sshd\[\d{5}\]:\s*Failed" */
 
 	c = (unsigned char) *p++;
 	if (c == ':') goto l30;
 	if (c == 's') goto l19;
 	goto l18;
 
-l30:
-	if (p == e) return 0x1; /* "sshd\[[0-9]{5}\]:[[:blank:]]*Failed" */
+l30: /* e.g. "sshd[00000]:Failedsshd[00000]:" */
+	if (p == e) return 0x1; /* "sshd\[\d{5}\]:\s*Failed" */
 
 	c = (unsigned char) *p++;
-	if (c == '\t') goto l30;
+	if (c <= '\b') goto l18;
+	if (c <= '\r') goto l30;
+	if (c <= '\x1f') goto l18;
 	if (c == ' ') goto l30;
+	if (c <= 'E') goto l18;
 	if (c == 'F') goto l31;
+	if (c <= 'r') goto l18;
 	if (c == 's') goto l19;
 	goto l18;
 
-l31:
-	if (p == e) return 0x1; /* "sshd\[[0-9]{5}\]:[[:blank:]]*Failed" */
+l31: /* e.g. "sshd[00000]:Failedsshd[00000]:F" */
+	if (p == e) return 0x1; /* "sshd\[\d{5}\]:\s*Failed" */
 
 	c = (unsigned char) *p++;
 	if (c == 'a') goto l32;
 	if (c == 's') goto l19;
 	goto l18;
 
-l32:
-	if (p == e) return 0x1; /* "sshd\[[0-9]{5}\]:[[:blank:]]*Failed" */
+l32: /* e.g. "sshd[00000]:Failedsshd[00000]:Fa" */
+	if (p == e) return 0x1; /* "sshd\[\d{5}\]:\s*Failed" */
 
 	c = (unsigned char) *p++;
 	if (c == 'i') goto l33;
 	if (c == 's') goto l19;
 	goto l18;
 
-l33:
-	if (p == e) return 0x1; /* "sshd\[[0-9]{5}\]:[[:blank:]]*Failed" */
+l33: /* e.g. "sshd[00000]:Failedsshd[00000]:Fai" */
+	if (p == e) return 0x1; /* "sshd\[\d{5}\]:\s*Failed" */
 
 	c = (unsigned char) *p++;
 	if (c == 'l') goto l34;
 	if (c == 's') goto l19;
 	goto l18;
 
-l34:
-	if (p == e) return 0x1; /* "sshd\[[0-9]{5}\]:[[:blank:]]*Failed" */
+l34: /* e.g. "sshd[00000]:Failedsshd[00000]:Fail" */
+	if (p == e) return 0x1; /* "sshd\[\d{5}\]:\s*Failed" */
 
 	c = (unsigned char) *p++;
 	if (c == 's') goto l19;
