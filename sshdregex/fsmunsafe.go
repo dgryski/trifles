@@ -1,36 +1,50 @@
 package main
 
+import "unsafe"
+
+//go:nobounds
 func UnsafeMatch(data []byte) int {
-	var idx = ^uint(0)
+	var ptr, end *byte
+	if len(data) > 0 {
+		ptr = (*byte)(unsafe.Pointer(&data[0]))
+		end = (*byte)(unsafe.Add(unsafe.Pointer(ptr), len(data)))
+	}
+	var c byte
 
 l0:
-	if idx++; idx >= uint(len(data)) {
+	if ptr == end {
 		return -1
 	}
+	ptr = (*byte)(unsafe.Add(unsafe.Pointer(ptr), 1))
+	c = *ptr
 
-	if data[idx] != 's' {
+	if c != 's' {
 		goto l0
 	}
 
 l1: // e.g. "s"
-	if idx++; idx >= uint(len(data)) {
+	if ptr == end {
 		return -1
 	}
+	ptr = (*byte)(unsafe.Add(unsafe.Pointer(ptr), 1))
+	c = *ptr
 
-	if data[idx] != 's' {
+	if c != 's' {
 		goto l0
 	}
 
 l2: // e.g. "ss"
-	if idx++; idx >= uint(len(data)) {
+	if ptr == end {
 		return -1
 	}
+	ptr = (*byte)(unsafe.Add(unsafe.Pointer(ptr), 1))
+	c = *ptr
 
-	if data[idx] == 'h' {
+	if c == 'h' {
 		goto l3
 	}
 
-	if data[idx] == 's' {
+	if c == 's' {
 		goto l2
 	}
 
@@ -39,15 +53,17 @@ l2: // e.g. "ss"
 	}
 
 l3: // e.g. "ssh"
-	if idx++; idx >= uint(len(data)) {
+	if ptr == end {
 		return -1
 	}
+	ptr = (*byte)(unsafe.Add(unsafe.Pointer(ptr), 1))
+	c = *ptr
 
-	if data[idx] == 'd' {
+	if c == 'd' {
 		goto l4
 	}
 
-	if data[idx] == 's' {
+	if c == 's' {
 		goto l1
 	}
 
@@ -56,15 +72,17 @@ l3: // e.g. "ssh"
 	}
 
 l4: // e.g. "sshd"
-	if idx++; idx >= uint(len(data)) {
+	if ptr == end {
 		return -1
 	}
+	ptr = (*byte)(unsafe.Add(unsafe.Pointer(ptr), 1))
+	c = *ptr
 
-	if data[idx] == '[' {
+	if c == '[' {
 		goto l5
 	}
 
-	if data[idx] == 's' {
+	if c == 's' {
 		goto l1
 	}
 
@@ -73,23 +91,25 @@ l4: // e.g. "sshd"
 	}
 
 l5: // e.g. "sshd["
-	if idx++; idx >= uint(len(data)) {
+	if ptr == end {
 		return -1
 	}
+	ptr = (*byte)(unsafe.Add(unsafe.Pointer(ptr), 1))
+	c = *ptr
 
-	if data[idx] <= '/' {
+	if c <= '/' {
 		goto l0
 	}
 
-	if data[idx] <= '9' {
+	if c <= '9' {
 		goto l6
 	}
 
-	if data[idx] <= 'r' {
+	if c <= 'r' {
 		goto l0
 	}
 
-	if data[idx] == 's' {
+	if c == 's' {
 		goto l1
 	}
 
@@ -98,23 +118,25 @@ l5: // e.g. "sshd["
 	}
 
 l6: // e.g. "sshd[0"
-	if idx++; idx >= uint(len(data)) {
+	if ptr == end {
 		return -1
 	}
+	ptr = (*byte)(unsafe.Add(unsafe.Pointer(ptr), 1))
+	c = *ptr
 
-	if data[idx] <= '/' {
+	if c <= '/' {
 		goto l0
 	}
 
-	if data[idx] <= '9' {
+	if c <= '9' {
 		goto l7
 	}
 
-	if data[idx] <= 'r' {
+	if c <= 'r' {
 		goto l0
 	}
 
-	if data[idx] == 's' {
+	if c == 's' {
 		goto l1
 	}
 
@@ -123,23 +145,25 @@ l6: // e.g. "sshd[0"
 	}
 
 l7: // e.g. "sshd[00"
-	if idx++; idx >= uint(len(data)) {
+	if ptr == end {
 		return -1
 	}
+	ptr = (*byte)(unsafe.Add(unsafe.Pointer(ptr), 1))
+	c = *ptr
 
-	if data[idx] <= '/' {
+	if c <= '/' {
 		goto l0
 	}
 
-	if data[idx] <= '9' {
+	if c <= '9' {
 		goto l8
 	}
 
-	if data[idx] <= 'r' {
+	if c <= 'r' {
 		goto l0
 	}
 
-	if data[idx] == 's' {
+	if c == 's' {
 		goto l1
 	}
 
@@ -148,23 +172,25 @@ l7: // e.g. "sshd[00"
 	}
 
 l8: // e.g. "sshd[000"
-	if idx++; idx >= uint(len(data)) {
+	if ptr == end {
 		return -1
 	}
+	ptr = (*byte)(unsafe.Add(unsafe.Pointer(ptr), 1))
+	c = *ptr
 
-	if data[idx] <= '/' {
+	if c <= '/' {
 		goto l0
 	}
 
-	if data[idx] <= '9' {
+	if c <= '9' {
 		goto l9
 	}
 
-	if data[idx] <= 'r' {
+	if c <= 'r' {
 		goto l0
 	}
 
-	if data[idx] == 's' {
+	if c == 's' {
 		goto l1
 	}
 
@@ -173,23 +199,25 @@ l8: // e.g. "sshd[000"
 	}
 
 l9: // e.g. "sshd[0000"
-	if idx++; idx >= uint(len(data)) {
+	if ptr == end {
 		return -1
 	}
+	ptr = (*byte)(unsafe.Add(unsafe.Pointer(ptr), 1))
+	c = *ptr
 
-	if data[idx] <= '/' {
+	if c <= '/' {
 		goto l0
 	}
 
-	if data[idx] <= '9' {
+	if c <= '9' {
 		goto l10
 	}
 
-	if data[idx] <= 'r' {
+	if c <= 'r' {
 		goto l0
 	}
 
-	if data[idx] == 's' {
+	if c == 's' {
 		goto l1
 	}
 
@@ -198,15 +226,17 @@ l9: // e.g. "sshd[0000"
 	}
 
 l10: // e.g. "sshd[00000"
-	if idx++; idx >= uint(len(data)) {
+	if ptr == end {
 		return -1
 	}
+	ptr = (*byte)(unsafe.Add(unsafe.Pointer(ptr), 1))
+	c = *ptr
 
-	if data[idx] == ']' {
+	if c == ']' {
 		goto l11
 	}
 
-	if data[idx] == 's' {
+	if c == 's' {
 		goto l1
 	}
 
@@ -215,15 +245,17 @@ l10: // e.g. "sshd[00000"
 	}
 
 l11: // e.g. "sshd[00000]"
-	if idx++; idx >= uint(len(data)) {
+	if ptr == end {
 		return -1
 	}
+	ptr = (*byte)(unsafe.Add(unsafe.Pointer(ptr), 1))
+	c = *ptr
 
-	if data[idx] == ':' {
+	if c == ':' {
 		goto l12
 	}
 
-	if data[idx] == 's' {
+	if c == 's' {
 		goto l1
 	}
 
@@ -232,39 +264,41 @@ l11: // e.g. "sshd[00000]"
 	}
 
 l12: // e.g. "sshd[00000]:"
-	if idx++; idx >= uint(len(data)) {
+	if ptr == end {
 		return -1
 	}
+	ptr = (*byte)(unsafe.Add(unsafe.Pointer(ptr), 1))
+	c = *ptr
 
-	if data[idx] <= '\b' {
+	if c <= '\b' {
 		goto l0
 	}
 
-	if data[idx] <= '\r' {
+	if c <= '\r' {
 		goto l12
 	}
 
-	if data[idx] <= '\x1f' {
+	if c <= '\x1f' {
 		goto l0
 	}
 
-	if data[idx] == ' ' {
+	if c == ' ' {
 		goto l12
 	}
 
-	if data[idx] <= 'E' {
+	if c <= 'E' {
 		goto l0
 	}
 
-	if data[idx] == 'F' {
+	if c == 'F' {
 		goto l13
 	}
 
-	if data[idx] <= 'r' {
+	if c <= 'r' {
 		goto l0
 	}
 
-	if data[idx] == 's' {
+	if c == 's' {
 		goto l1
 	}
 
@@ -273,15 +307,17 @@ l12: // e.g. "sshd[00000]:"
 	}
 
 l13: // e.g. "sshd[00000]:F"
-	if idx++; idx >= uint(len(data)) {
+	if ptr == end {
 		return -1
 	}
+	ptr = (*byte)(unsafe.Add(unsafe.Pointer(ptr), 1))
+	c = *ptr
 
-	if data[idx] == 'a' {
+	if c == 'a' {
 		goto l14
 	}
 
-	if data[idx] == 's' {
+	if c == 's' {
 		goto l1
 	}
 
@@ -290,15 +326,17 @@ l13: // e.g. "sshd[00000]:F"
 	}
 
 l14: // e.g. "sshd[00000]:Fa"
-	if idx++; idx >= uint(len(data)) {
+	if ptr == end {
 		return -1
 	}
+	ptr = (*byte)(unsafe.Add(unsafe.Pointer(ptr), 1))
+	c = *ptr
 
-	if data[idx] == 'i' {
+	if c == 'i' {
 		goto l15
 	}
 
-	if data[idx] == 's' {
+	if c == 's' {
 		goto l1
 	}
 
@@ -307,15 +345,17 @@ l14: // e.g. "sshd[00000]:Fa"
 	}
 
 l15: // e.g. "sshd[00000]:Fai"
-	if idx++; idx >= uint(len(data)) {
+	if ptr == end {
 		return -1
 	}
+	ptr = (*byte)(unsafe.Add(unsafe.Pointer(ptr), 1))
+	c = *ptr
 
-	if data[idx] == 'l' {
+	if c == 'l' {
 		goto l16
 	}
 
-	if data[idx] == 's' {
+	if c == 's' {
 		goto l1
 	}
 
@@ -324,15 +364,17 @@ l15: // e.g. "sshd[00000]:Fai"
 	}
 
 l16: // e.g. "sshd[00000]:Fail"
-	if idx++; idx >= uint(len(data)) {
+	if ptr == end {
 		return -1
 	}
+	ptr = (*byte)(unsafe.Add(unsafe.Pointer(ptr), 1))
+	c = *ptr
 
-	if data[idx] == 'e' {
+	if c == 'e' {
 		goto l17
 	}
 
-	if data[idx] == 's' {
+	if c == 's' {
 		goto l1
 	}
 
@@ -341,15 +383,17 @@ l16: // e.g. "sshd[00000]:Fail"
 	}
 
 l17: // e.g. "sshd[00000]:Faile"
-	if idx++; idx >= uint(len(data)) {
+	if ptr == end {
 		return -1
 	}
+	ptr = (*byte)(unsafe.Add(unsafe.Pointer(ptr), 1))
+	c = *ptr
 
-	if data[idx] == 'd' {
+	if c == 'd' {
 		goto l18
 	}
 
-	if data[idx] == 's' {
+	if c == 's' {
 		goto l1
 	}
 
