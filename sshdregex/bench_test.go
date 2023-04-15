@@ -45,7 +45,33 @@ func BenchmarkFSM(b *testing.B) {
 	var hits int
 
 	for i := 0; i < b.N; i++ {
-		if Match(data) != -1 {
+		var d []byte
+		if i >= len(data) {
+			d = data[i%len(data):]
+		} else {
+			d = data[:i]
+		}
+
+		if Match(d) != -1 {
+			hits++
+		}
+	}
+
+	sink += hits
+}
+
+func BenchmarkFSMUnsafe(b *testing.B) {
+	var hits int
+
+	for i := 0; i < b.N; i++ {
+		var d []byte
+		if i >= len(data) {
+			d = data[i%len(data):]
+		} else {
+			d = data[:i]
+		}
+
+		if UnsafeMatch(d) != -1 {
 			hits++
 		}
 	}
@@ -57,7 +83,14 @@ func BenchmarkFSMC(b *testing.B) {
 	var hits int
 
 	for i := 0; i < b.N; i++ {
-		if c.Match(data) != -1 {
+		var d []byte
+		if i >= len(data) {
+			d = data[i%len(data):]
+		} else {
+			d = data[:i]
+		}
+
+		if c.Match(d) != -1 {
 			hits++
 		}
 	}
