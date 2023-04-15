@@ -1,4 +1,4 @@
-//go:build !tinygo
+//go:build amd64 && !tinygo
 
 package asm
 

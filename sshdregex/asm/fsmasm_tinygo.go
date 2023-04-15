@@ -1,4 +1,4 @@
-//go:build purego || tinygo
+//go:build wasi || wasip1 || tinygo
 
 package asm
 
